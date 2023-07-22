@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Fine-tuning LLM vs In-context learning | CohleM</title>
+<meta name="keywords" content="">
+<meta name="description" content="This is my experience and experimentation that I did while building a product for the use case of using LLMs for our own data for question answering. If you&rsquo;re doing something similar, this could be of some help.
+The most commonly used methods while using LLMs with our own data were typically
+Fine-tuning the model with your own data Using Retrieval Augmented Generation (RAG) techniques Fine-tuning the model with your own data This is the initial method and follows the general structure of training a model">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/posts/llmvsincontext/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://cohlem.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://cohlem.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X6LV4QY2G2"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
+}
+</script>
+<meta property="og:title" content="Fine-tuning LLM vs In-context learning" />
+<meta property="og:description" content="This is my experience and experimentation that I did while building a product for the use case of using LLMs for our own data for question answering. If you&rsquo;re doing something similar, this could be of some help.
+The most commonly used methods while using LLMs with our own data were typically
+Fine-tuning the model with your own data Using Retrieval Augmented Generation (RAG) techniques Fine-tuning the model with your own data This is the initial method and follows the general structure of training a model" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/posts/llmvsincontext/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-07-22T20:40:19+05:45" />
+<meta property="article:modified_time" content="2023-07-22T20:40:19+05:45" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Fine-tuning LLM vs In-context learning"/>
+<meta name="twitter:description" content="This is my experience and experimentation that I did while building a product for the use case of using LLMs for our own data for question answering. If you&rsquo;re doing something similar, this could be of some help.
+The most commonly used methods while using LLMs with our own data were typically
+Fine-tuning the model with your own data Using Retrieval Augmented Generation (RAG) techniques Fine-tuning the model with your own data This is the initial method and follows the general structure of training a model"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Posts",
+      "item": "https://cohlem.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "Fine-tuning LLM vs In-context learning",
+      "item": "https://cohlem.github.io/posts/llmvsincontext/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Fine-tuning LLM vs In-context learning",
+  "name": "Fine-tuning LLM vs In-context learning",
+  "description": "This is my experience and experimentation that I did while building a product for the use case of using LLMs for our own data for question answering. If you\u0026rsquo;re doing something similar, this could be of some help.\nThe most commonly used methods while using LLMs with our own data were typically\nFine-tuning the model with your own data Using Retrieval Augmented Generation (RAG) techniques Fine-tuning the model with your own data This is the initial method and follows the general structure of training a model",
+  "keywords": [
+    
+  ],
+  "articleBody": "This is my experience and experimentation that I did while building a product for the use case of using LLMs for our own data for question answering. If you’re doing something similar, this could be of some help.\nThe most commonly used methods while using LLMs with our own data were typically\nFine-tuning the model with your own data Using Retrieval Augmented Generation (RAG) techniques Fine-tuning the model with your own data This is the initial method and follows the general structure of training a model\nData preparation Train Evaluate For my task, I chose to train OpenAI’s davinci base model\nThere were mostly no hyperparameters to tune, as OpenAI takes care of it outside the box. Training the model involved more instruction tuning, instructing the model to act in a similar way, rather than just training the model to save data in its model weights. The effectiveness of instruction tuning mostly depended on the data preparation process. Data preparation involved formatting the data into pairs of .\nThis is a crucial step for better outputs and depends on the size of the training data. When the model was trained with a small amount of data, it mostly followed the instructions but had limited knowledge and memory of facts from the dataset. In most cases, while testing the model, it followed the instructions but often produced incorrect answers. When the scale of data was increased, it started to follow both the instructions and retain more knowledge. So, this process was crucial in identifying when training OpenAI’s models worked best. If you’re using it to train on a small scale of data, this would not yield the desired output, and I would recommend using the other process I employed for small-sized data.\nUsing Retrieval Augmented Generation (RAG) techniques This technique is sometimes referred to as In-context Learning. This is one of the most trending topics since the release of ChatGPT, and you might have heard the phrase “chat with your own data.” This process is simple yet very effective when you have your own small-scale data, which I used for question answering. The process involves:\nDividing the data into chunks Here, the format of the data doesn’t really matter. The only thing we need to take care of is the size of the chunks. The chunk size should always be smaller than the context length of LLMs, providing space for prompt and completion texts. In my case, the context length of gpt-3.5-turbo was 4,096 tokens, and I divided the chunks into token sizes of 1000. I chose a token size of 1000 for and retrieved top-3 chunks to be passed to the LLM.\nConverting the chunks into embeddings This process generates embeddings, which are vector representations of our chunks. I experimented with a couple of embedding models, each having its pros and cons. My recommendations for each of the embedding models are as follows:\nall-MiniLM-L12-v2: Useful when you need fast conversion from chunks to embeddings. It has a relatively small dimension of 384 and does a decent job in converting to embeddings.\nOpenAI’s text-embedding-ada-002: Useful when you need to generate highly accurate embeddings. If you are using it in real-time, it would be too slow due to its high dimension size of 1536, and API calling makes it even slower.\nInstructor: Useful when you need the accuracy level of text-embedding-ada-002 and fast conversion from text to embeddings. This model is blazingly fast and would save on cost when you embed lots of data.\nI went with the Instructor-XL model.\nStoring the embeddings Many vector database companies have risen around this use case of storing embeddings, such as Pinecone, Chroma, and many more. The trend is to follow the hype and opt for vector databases, which, in fact, are completely useless. If your embeddings are really big, I would recommend using vector databases; otherwise, for medium to small-scale data, ndarray would do a great job. I decided to just use a numpy array.\nRetrieval Relevant chunks are retrieved based on the similarity between the user’s query’s embeddings and the chunks’ embeddings. Metrics like dot product, cosine similarity, are widely adopted, whereas cosine similarity would suffice. After evaluating the similarity, the top-k chunks are retrieved. We can use reranking to improve the quality of relevant chunks, but top-k would suffice. After retrieving, we are ready to feed the retrieved chunks and the user’s query to LLM by combining them with prompting.\nPrompting Prompting has been the most important step in getting the desired output. For me, this has turned out to be harder than doing research, writing code, and debugging combined. Writing quality prompts is hard. I experimented with a couple of prompting techniques in this project.\nFew-shot prompting, few-shot combined with Chain of Thought (CoT) prompting, but I couldn’t achieve the desired output. I noticed some problems with these techniques for my use case. These prompting techniques caused too many logic jumps, and the desired logic was never analyzed by the LLM. What worked for me was the map-reduce method and double prompting (which involves calling LLM twice, with 2 prompts, where the latter prompt is combined with the former LLM output). Both methods worked fine, with map-reduce being more expensive. I opted for double prompting and was able to generate the desired output. So, prompting has been challenging for me. Just a thought: maybe we should do some reverse engineering someday and train the prompts with the desired output as context, as described in the AUTOPROMPT paper 😅.\n",
+  "wordCount" : "918",
+  "inLanguage": "en",
+  "datePublished": "2023-07-22T20:40:19+05:45",
+  "dateModified": "2023-07-22T20:40:19+05:45",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/posts/llmvsincontext/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://cohlem.github.io" accesskey="h" title="CohleM (Alt + H)">CohleM</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://cohlem.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/archives/" title="Archive">
+                    <span>Archive</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/posts/">Posts</a></div>
+    <h1 class="post-title">
+      Fine-tuning LLM vs In-context learning
+    </h1>
+    <div class="post-meta"><span title='2023-07-22 20:40:19 +0545 +0545'>July 22, 2023</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;CohleM
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#fine-tuning-the-model-with-your-own-data" aria-label="Fine-tuning the model with your own data">Fine-tuning the model with your own data</a></li>
+                <li>
+                    <a href="#using-retrieval-augmented-generation-rag-techniques" aria-label="Using Retrieval Augmented Generation (RAG) techniques">Using Retrieval Augmented Generation (RAG) techniques</a><ul>
+                        
+                <li>
+                    <a href="#dividing-the-data-into-chunks" aria-label="Dividing the data into chunks">Dividing the data into chunks</a></li>
+                <li>
+                    <a href="#converting-the-chunks-into-embeddings" aria-label="Converting the chunks into embeddings">Converting the chunks into embeddings</a></li>
+                <li>
+                    <a href="#storing-the-embeddings" aria-label="Storing the embeddings">Storing the embeddings</a></li>
+                <li>
+                    <a href="#retrieval" aria-label="Retrieval">Retrieval</a></li>
+                <li>
+                    <a href="#prompting" aria-label="Prompting">Prompting</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>This is my experience and experimentation that I did while building a product for the use case of using LLMs for our own data for question answering. If you&rsquo;re doing something similar, this could be of some help.</p>
+<p>The most commonly used methods while using LLMs with our own data were typically</p>
+<ul>
+<li><strong>Fine-tuning the model with your own data</strong></li>
+<li><strong>Using Retrieval Augmented Generation (RAG) techniques</strong></li>
+</ul>
+<h2 id="fine-tuning-the-model-with-your-own-data">Fine-tuning the model with your own data<a hidden class="anchor" aria-hidden="true" href="#fine-tuning-the-model-with-your-own-data">#</a></h2>
+<p>This is the initial method and follows the general structure of training a model</p>
+<ul>
+<li>Data preparation</li>
+<li>Train</li>
+<li>Evaluate</li>
+</ul>
+<p>For my task, I chose to train <strong>OpenAI&rsquo;s davinci base model</strong></p>
+<p>There were mostly no hyperparameters to tune, as OpenAI takes care of it outside the box. Training the model involved more instruction tuning, instructing the model to act in a similar way, rather than just training the model to save data in its model weights. The effectiveness of instruction tuning mostly depended on the data preparation process. Data preparation involved formatting the data into pairs of <em>&lt;instruction, completion&gt;</em>.</p>
+<p>This is a crucial step for better outputs and depends on the size of the training data. When the model was trained with a small amount of data, it mostly followed the instructions but had limited knowledge and memory of facts from the dataset. In most cases, while testing the model, it followed the instructions but often produced incorrect answers. When the scale of data was increased, it started to follow both the instructions and retain more knowledge. So, this process was crucial in identifying when training OpenAI&rsquo;s models worked best. If you&rsquo;re using it to train on a small scale of data, this would not yield the desired output, and I would recommend using the other process I employed for small-sized data.</p>
+<h2 id="using-retrieval-augmented-generation-rag-techniques">Using Retrieval Augmented Generation (RAG) techniques<a hidden class="anchor" aria-hidden="true" href="#using-retrieval-augmented-generation-rag-techniques">#</a></h2>
+<p>This technique is sometimes referred to as In-context Learning.
+This is one of the most trending topics since the release of ChatGPT, and you might have heard the phrase &ldquo;chat with your own data.&rdquo; This process is simple yet very effective when you have your own small-scale data, which I used for question answering. The process involves:</p>
+<h3 id="dividing-the-data-into-chunks">Dividing the data into chunks<a hidden class="anchor" aria-hidden="true" href="#dividing-the-data-into-chunks">#</a></h3>
+<p>Here, the format of the data doesn&rsquo;t really matter. The only thing we need to take care of is the size of the chunks. The chunk size should always be smaller than the context length of LLMs, providing space for prompt and completion texts. In my case, the context length of gpt-3.5-turbo was 4,096 tokens, and I divided the chunks into token sizes of 1000. I chose a token size of 1000 for and retrieved top-3 chunks to be passed to the LLM.</p>
+<h3 id="converting-the-chunks-into-embeddings">Converting the chunks into embeddings<a hidden class="anchor" aria-hidden="true" href="#converting-the-chunks-into-embeddings">#</a></h3>
+<p>This process generates embeddings, which are vector representations of our chunks. I experimented with a couple of embedding models, each having its pros and cons. My recommendations for each of the embedding models are as follows:</p>
+<ol>
+<li>
+<p><strong>all-MiniLM-L12-v2</strong>: Useful when you need fast conversion from chunks to embeddings. It has a relatively small dimension of 384 and does a decent job in converting to embeddings.</p>
+</li>
+<li>
+<p><strong>OpenAI&rsquo;s text-embedding-ada-002</strong>: Useful when you need to generate highly accurate embeddings. If you are using it in real-time, it would be too slow due to its high dimension size of 1536, and API calling makes it even slower.</p>
+</li>
+<li>
+<p><strong>Instructor</strong>: Useful when you need the accuracy level of text-embedding-ada-002 and fast conversion from text to embeddings. This model is blazingly fast and would save on cost when you embed lots of data.</p>
+</li>
+</ol>
+<p>I went with the Instructor-XL model.</p>
+<h3 id="storing-the-embeddings">Storing the embeddings<a hidden class="anchor" aria-hidden="true" href="#storing-the-embeddings">#</a></h3>
+<p>Many vector database companies have risen around this use case of storing embeddings, such as Pinecone, Chroma, and many more. The trend is to follow the hype and opt for vector databases, which, in fact, are completely useless. If your embeddings are really big, I would recommend using vector databases; otherwise, for medium to small-scale data, ndarray would do a great job. I decided to just use a numpy array.</p>
+<h3 id="retrieval">Retrieval<a hidden class="anchor" aria-hidden="true" href="#retrieval">#</a></h3>
+<p>Relevant chunks are retrieved based on the similarity between the user&rsquo;s query&rsquo;s embeddings and the chunks&rsquo; embeddings. Metrics like dot product, cosine similarity, are widely adopted, whereas cosine similarity would suffice. After evaluating the similarity, the top-k chunks are retrieved. We can use reranking to improve the quality of relevant chunks, but top-k would suffice. After retrieving, we are ready to feed the retrieved chunks and the user&rsquo;s query to LLM by combining them with prompting.</p>
+<h3 id="prompting">Prompting<a hidden class="anchor" aria-hidden="true" href="#prompting">#</a></h3>
+<p>Prompting has been the most important step in getting the desired output. For me, this has turned out to be harder than doing research, writing code, and debugging combined. Writing quality prompts is hard. I experimented with a couple of prompting techniques in this project.</p>
+<p>Few-shot prompting, few-shot combined with Chain of Thought (CoT) prompting, but I couldn&rsquo;t achieve the desired output. I noticed some problems with these techniques for my use case. These prompting techniques caused too many logic jumps, and the desired logic was never analyzed by the LLM. What worked for me was the map-reduce method and double prompting (which involves calling LLM twice, with 2 prompts, where the latter prompt is combined with the former LLM output). Both methods worked fine, with map-reduce being more expensive. I opted for double prompting and was able to generate the desired output. So, prompting has been challenging for me. Just a thought: maybe we should do some reverse engineering someday and train the prompts with the desired output as context, as described in the <a href="https://arxiv.org/abs/2010.15980">AUTOPROMPT</a> paper 😅.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2023 <a href="https://cohlem.github.io">CohleM</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

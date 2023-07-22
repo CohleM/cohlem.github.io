@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>CohleM</title>
+    <link>https://cohlem.github.io/</link>
+    <description>Recent content on CohleM</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 22 Jul 2023 20:40:19 +0545</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Fine-tuning LLM vs In-context learning</title>
+      <link>https://cohlem.github.io/posts/llmvsincontext/</link>
+      <pubDate>Sat, 22 Jul 2023 20:40:19 +0545</pubDate>
+      
+      <guid>https://cohlem.github.io/posts/llmvsincontext/</guid>
+      <description>This is my experience and experimentation that I did while building a product for the use case of using LLMs for our own data for question answering. If you&amp;rsquo;re doing something similar, this could be of some help.
+The most commonly used methods while using LLMs with our own data were typically
+Fine-tuning the model with your own data Using Retrieval Augmented Generation (RAG) techniques Fine-tuning the model with your own data This is the initial method and follows the general structure of training a model</description>
+    </item>
+    
+    
+    
+  </channel>
+</rss>
