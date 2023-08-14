@@ -6,7 +6,16 @@
     <description>Recent content on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 22 Jul 2023 20:40:19 +0545</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 12 Aug 2023 21:57:23 +0545</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Using Genetic Algorithm for Weights Optimization</title>
+      <link>https://cohlem.github.io/posts/using-genetic-algorithm-for-weights-optimization/</link>
+      <pubDate>Sat, 12 Aug 2023 21:57:23 +0545</pubDate>
+      
+      <guid>https://cohlem.github.io/posts/using-genetic-algorithm-for-weights-optimization/</guid>
+      <description>BackStory This is a simple fun little project that I did almost a year ago, At that time I used to see a lot of CodeBullet&amp;rsquo;s videos and wanted to learn the gist behind these evolutionary algorithms, and I can&amp;rsquo;t get into my head if I don&amp;rsquo;t do it from scratch so I wanted to implement this project from scratch. At that time, I wanted to document the learning and the implementation process, I even thought of making a youtube video about this topic but could not complete it, at that time, I had made some video animations about this process but could not complete it because I started doing something else and when I can back it was already too much mess and could not complete the video animations, but I&amp;rsquo;ll include the video animations that I had made earlier.</description>
+    </item>
+    
     <item>
       <title>Fine-tuning LLM vs In-context learning</title>
       <link>https://cohlem.github.io/posts/llmvsincontext/</link>
