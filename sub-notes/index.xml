@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Sub-notes on CohleM</title>
+    <link>https://cohlem.github.io/sub-notes/</link>
+    <description>Recent content in Sub-notes on CohleM</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 12 Aug 2023 21:57:23 +0545</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Backpropagation from scratch</title>
+      <link>https://cohlem.github.io/sub-notes/backpropagation-from-scratch/</link>
+      <pubDate>Sat, 12 Aug 2023 21:57:23 +0545</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/backpropagation-from-scratch/</guid>
+      <description>Source: The spelled-out intro to neural networks and backpropagation: building micrograd
+Backpropagation on paper It implements backpropagation for two arithmetic operation (multiplication and addition) which are quite straightforward .
+It implements backprop for this equation.
+a = Value(2.0, label=&amp;#39;a&amp;#39;) b = Value(-3.0, label=&amp;#39;b&amp;#39;) c = Value(10.0, label=&amp;#39;c&amp;#39;) e = a*b; e.label = &amp;#39;e&amp;#39; d = e + c; d.label = &amp;#39;d&amp;#39; f = Value(-2.0, label=&amp;#39;f&amp;#39;) L = d * f; L.</description>
+    </item>
+    
+  </channel>
+</rss>
