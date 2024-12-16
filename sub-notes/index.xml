@@ -30,5 +30,27 @@ Now when we do the backprop and gradient descent.
 The gradient of loss w.r.t some weights become ![[Screenshot 2024-12-14 at 12.14.52 PM.png]] ![[Screenshot 2024-12-14 at 12.15.33 PM.png]]as we can see it penalizes the weight by reducing the weights&amp;rsquo;s value by some higher amount compared to the some minimial weight update when we only used loss function.</description>
     </item>
     
+    <item>
+      <title>Maximum likelihood estimate as loss function</title>
+      <link>https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/maximum-likelihood-estimate-as-loss-function/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/maximum-likelihood-estimate-as-loss-function/</guid>
+      <description>![[IMG_20241216_201957.jpg]]
+![[IMG_20241216_202029.jpg]]
+![[IMG_20241216_202056.jpg]]
+![[IMG_20241216_202121.jpg]]
+]]</description>
+    </item>
+    
+    <item>
+      <title>TITLE</title>
+      <link>https://cohlem.github.io/sub-notes/template/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/template/</guid>
+      <description></description>
+    </item>
+    
   </channel>
 </rss>
