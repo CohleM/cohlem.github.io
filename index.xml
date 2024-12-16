@@ -34,9 +34,9 @@ a = Value(2.0, label=&amp;#39;a&amp;#39;) b = Value(-3.0, label=&amp;#39;b&amp;#
       <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
       
       <guid>https://cohlem.github.io/sub-notes/why-we-need-regularization/</guid>
-      <description>it penalizes the weights, and prioritizes uniformity in weights. How does it penalize the weights? ![[Screenshot 2024-12-14 at 12.14.03 PM.png]]
-Now when we do the backprop and gradient descent.
-The gradient of loss w.r.t some weights become ![[Screenshot 2024-12-14 at 12.14.52 PM.png]] ![[Screenshot 2024-12-14 at 12.15.33 PM.png]]as we can see it penalizes the weight by reducing the weights&amp;rsquo;s value by some higher amount compared to the some minimial weight update when we only used loss function.</description>
+      <description>it penalizes the weights, and prioritizes uniformity in weights. How does it penalize the weights? Now when we do the backprop and gradient descent.
+The gradient of loss w.r.t some weights become as we can see it penalizes the weight by reducing the weights&amp;rsquo;s value by some higher amount compared to the some minimial weight update when we only used loss function.
+So overall, the model tries to balance the Loss (L) as well as keep the weights small.</description>
     </item>
     
     <item>
@@ -75,11 +75,7 @@ Fine-tuning the model with your own data Using Retrieval Augmented Generation (R
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/maximum-likelihood-estimate-as-loss-function/</guid>
-      <description>![[IMG_20241216_201957.jpg]]
-![[IMG_20241216_202029.jpg]]
-![[IMG_20241216_202056.jpg]]
-![[IMG_20241216_202121.jpg]]
-]]</description>
+      <description>]]</description>
     </item>
     
     
