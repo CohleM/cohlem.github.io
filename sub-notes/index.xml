@@ -40,6 +40,16 @@ So overall, the model tries to balance the Loss (L) as well as keep the weights 
     </item>
     
     <item>
+      <title>optimizing-loss-with-weight-initialization</title>
+      <link>https://cohlem.github.io/sub-notes/optimizing-loss/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/optimizing-loss/</guid>
+      <description>Problem Consider a simple MLP that takes in combined 3 character embeddings as an input and we predicts a new character.
+# A simple MLP n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 200 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) b1 = torch.</description>
+    </item>
+    
+    <item>
       <title>TITLE</title>
       <link>https://cohlem.github.io/sub-notes/template/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
