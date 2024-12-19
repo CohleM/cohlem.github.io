@@ -25,7 +25,7 @@ a = Value(2.0, label=&amp;#39;a&amp;#39;) b = Value(-3.0, label=&amp;#39;b&amp;#
       <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
       
       <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
-      <description>Backpropagation Backpropagationfrom scratch Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ </description>
+      <description>Backpropagation Backpropagationfrom scratch Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimizing loss with weight initialization BatchNormalization </description>
     </item>
     
     <item>
@@ -68,6 +68,18 @@ The most commonly used methods while using LLMs with our own data were typically
 Fine-tuning the model with your own data Using Retrieval Augmented Generation (RAG) techniques Fine-tuning the model with your own data This is the initial method and follows the general structure of training a model</description>
     </item>
     
+    
+    <item>
+      <title>BatchNormalization</title>
+      <link>https://cohlem.github.io/sub-notes/batchnormalization/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/batchnormalization/</guid>
+      <description>As we saw in our previous note how important it is to have the pre-activation values to be roughly gaussian (0 mean, and unit std). We saw how we can initialize our weights that make our pre-activation roughly gaussian by using Kaiming init. But, how do we always maintain our pre-activations to be roughly gaussian?
+Answer: BatchNormalization
+Benefits
+stable training preserves vanishing gradients BatchNormalization As the name suggests, batches are normalized (across batches), by normalizing across batches we preserve the gaussian property of our pre-activations.</description>
+    </item>
     
     <item>
       <title>Maximum likelihood estimate as loss function</title>

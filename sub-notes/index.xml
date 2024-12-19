@@ -31,6 +31,18 @@ So overall, the model tries to balance the Loss (L) as well as keep the weights 
     </item>
     
     <item>
+      <title>BatchNormalization</title>
+      <link>https://cohlem.github.io/sub-notes/batchnormalization/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/batchnormalization/</guid>
+      <description>As we saw in our previous note how important it is to have the pre-activation values to be roughly gaussian (0 mean, and unit std). We saw how we can initialize our weights that make our pre-activation roughly gaussian by using Kaiming init. But, how do we always maintain our pre-activations to be roughly gaussian?
+Answer: BatchNormalization
+Benefits
+stable training preserves vanishing gradients BatchNormalization As the name suggests, batches are normalized (across batches), by normalizing across batches we preserve the gaussian property of our pre-activations.</description>
+    </item>
+    
+    <item>
       <title>Maximum likelihood estimate as loss function</title>
       <link>https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
