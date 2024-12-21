@@ -196,6 +196,21 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Diagnostic-tool-while-training-nn
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>source: Building makemore Part 3: Activations &amp; Gradients, BatchNorm
+Things to look out for while training NN Take a look at previous notes to understand this note better
+consider we have this simple 6 layer NN
+# Linear Layer g = torch.Generator().manual_seed(2147483647) # for reproducibility class Layer: def __init__(self,fan_in, fan_out, bias=False): self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying kaiming init self.bias = bias if bias: self.b = torch....</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-12-20 00:00:00 +0000 UTC'>December 20, 2024</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Diagnostic-tool-while-training-nn" href="https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>Backpropagation from scratch
     </h2>
   </header>
@@ -248,19 +263,6 @@ stable training preserves vanishing gradients BatchNormalization As the name sug
   </div>
   <footer class="entry-footer">0 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Maximum likelihood estimate as loss function" href="https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>optimizing-loss-with-weight-initialization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Problem Consider a simple MLP that takes in combined 3 character embeddings as an input and we predicts a new character.
-# A simple MLP n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 200 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) b1 = torch....</p>
-  </div>
-  <footer class="entry-footer">6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to optimizing-loss-with-weight-initialization" href="https://cohlem.github.io/sub-notes/optimizing-loss/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

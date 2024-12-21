@@ -6,7 +6,19 @@
     <description>Recent content in Sub-notes on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 08 Dec 2024 21:57:23 +0545</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 20 Dec 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Diagnostic-tool-while-training-nn</title>
+      <link>https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/</link>
+      <pubDate>Fri, 20 Dec 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/</guid>
+      <description>source: Building makemore Part 3: Activations &amp;amp; Gradients, BatchNorm
+Things to look out for while training NN Take a look at previous notes to understand this note better
+consider we have this simple 6 layer NN
+# Linear Layer g = torch.Generator().manual_seed(2147483647) # for reproducibility class Layer: def __init__(self,fan_in, fan_out, bias=False): self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying kaiming init self.bias = bias if bias: self.b = torch.</description>
+    </item>
+    
     <item>
       <title>Backpropagation from scratch</title>
       <link>https://cohlem.github.io/sub-notes/backpropagation-from-scratch/</link>

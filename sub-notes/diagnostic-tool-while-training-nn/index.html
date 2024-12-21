@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Diagnostic-tool-while-training-nn | CohleM</title>
+<meta name="keywords" content="">
+<meta name="description" content="source: Building makemore Part 3: Activations &amp; Gradients, BatchNorm
+Things to look out for while training NN Take a look at previous notes to understand this note better
+consider we have this simple 6 layer NN
+# Linear Layer g = torch.Generator().manual_seed(2147483647) # for reproducibility class Layer: def __init__(self,fan_in, fan_out, bias=False): self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying kaiming init self.bias = bias if bias: self.b = torch.">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://cohlem.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://cohlem.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X6LV4QY2G2"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
+}
+</script>
+<meta property="og:title" content="Diagnostic-tool-while-training-nn" />
+<meta property="og:description" content="source: Building makemore Part 3: Activations &amp; Gradients, BatchNorm
+Things to look out for while training NN Take a look at previous notes to understand this note better
+consider we have this simple 6 layer NN
+# Linear Layer g = torch.Generator().manual_seed(2147483647) # for reproducibility class Layer: def __init__(self,fan_in, fan_out, bias=False): self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying kaiming init self.bias = bias if bias: self.b = torch." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2024-12-20T00:00:00+00:00" />
+<meta property="article:modified_time" content="2024-12-20T00:00:00+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Diagnostic-tool-while-training-nn"/>
+<meta name="twitter:description" content="source: Building makemore Part 3: Activations &amp; Gradients, BatchNorm
+Things to look out for while training NN Take a look at previous notes to understand this note better
+consider we have this simple 6 layer NN
+# Linear Layer g = torch.Generator().manual_seed(2147483647) # for reproducibility class Layer: def __init__(self,fan_in, fan_out, bias=False): self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying kaiming init self.bias = bias if bias: self.b = torch."/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Sub-notes",
+      "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "Diagnostic-tool-while-training-nn",
+      "item": "https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Diagnostic-tool-while-training-nn",
+  "name": "Diagnostic-tool-while-training-nn",
+  "description": "source: Building makemore Part 3: Activations \u0026amp; Gradients, BatchNorm\nThings to look out for while training NN Take a look at previous notes to understand this note better\nconsider we have this simple 6 layer NN\n# Linear Layer g = torch.Generator().manual_seed(2147483647) # for reproducibility class Layer: def __init__(self,fan_in, fan_out, bias=False): self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying kaiming init self.bias = bias if bias: self.b = torch.",
+  "keywords": [
+    
+  ],
+  "articleBody": "source: Building makemore Part 3: Activations \u0026 Gradients, BatchNorm\nThings to look out for while training NN Take a look at previous notes to understand this note better\nconsider we have this simple 6 layer NN\n# Linear Layer g = torch.Generator().manual_seed(2147483647) # for reproducibility class Layer: def __init__(self,fan_in, fan_out, bias=False): self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying kaiming init self.bias = bias if bias: self.b = torch.zeros(fan_out) def __call__(self, x): y = x @ self.w self.out = y + self.b if self.bias else y return self.out def parameters(self): return [self.w] + [self.b] if self.bias else [self.w] class Tanh: def __call__(self, x): self.out = torch.tanh(x) return self.out def parameters(self): return [] class BatchNormalization1: def __init__(self,nf, eps= 1e-5, mom=0.1): self.bngain = torch.ones(nf) self.bnbias = torch.zeros(nf) self.out = None self.mom = mom self.training = True self.running_mean = torch.ones(nf) self.running_var = torch.zeros(nf) self.eps = eps def __call__(self,x): if self.training: meani = x.mean(0, keepdim = True) vari = x.var(0, keepdim = True) else: meani = self.running_mean vari = self.running_var if self.training: with torch.no_grad(): self.running_mean = (1-self.mom)*self.running_mean + self.mom*meani self.running_var = (1-self.mom)*self.running_var + self.mom*vari self.out = self.bngain *((x - meani)/ torch.sqrt(vari + self.eps)) + self.bnbias return self.out def parameters(self): return [self.bngain, self.bnbias] Structure\nimport torch.nn.functional as F x = torch.randn(32, 30, generator = g) y = torch.tensor([random.randint(0,26) for _ in range(32)] ) # Embedding layer, n_embd = 10 n_vocab = 27 n_dim = 100 batch_size = 32 C = torch.randn((n_vocab,n_embd)) st = [ # x shape = 32, 30 Layer(n_embd*block_size,n_dim), Tanh(), Layer(n_dim, n_dim), Tanh(), Layer(n_dim, n_dim) , Tanh(), Layer(n_dim, n_dim), Tanh(), Layer(n_dim, n_dim), Tanh(), Layer(n_dim, n_vocab),BatchNormalization1(n_vocab) ] with torch.no_grad(): st[-1].bngain *= 0.1 for layer in st[:-1]: if isinstance(layer, Layer): layer.w *= 5/3 parameters = [C] + [p for l in st for p in l.parameters()] for p in parameters: p.requires_grad = True Training Loop\nfor iteration in range(200000): # for iteration in range(2000): idx = torch.randint(0,Xtr.shape[0], (batch_size,)) x_emb = C[Xtr[idx]].view(-1, block_size * n_embd) x = x_emb for idx,item in enumerate(st): # print(idx) x = item(x) loss = F.cross_entropy(x,y) for layer in st: layer.out.retain_grad() for p in parameters: p.grad = None loss.backward() lr = 0.1 if iteration \u003c 150000 else 0.01 for p in parameters: p.data += -lr*p.grad if iteration % 10000 ==0: print(loss.data) # if iteration \u003e= 1000: # break let’s look at our activations before initializing weights using kaiming init.\n# these are just part of modified code from the code that's given above. class Layer: def __init__(self,fan_in, fan_out, bias=False): self.w = torch.randn((fan_in, fan_out),generator = g) # / (fan_in)**(0.5) # commenting our the kaiming init # part of code with torch.no_grad(): st[-1].bngain *= 0.1 for layer in st[:-1]: if isinstance(layer, Layer): layer.w *= 1.0 # setting gains to 1.0 (no gain) Activation plot As you can see almost all the pre activations are saturated, this is because our weight is initialized in such a way that after applying tanh, most of our output values lie in -1 and 1, which will stop gradient propagation.\nNow applying kaiming init with with no gain.\n# these are just part of modified code from the code that's given above. class Layer: def __init__(self,fan_in, fan_out, bias=False): self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying the kaiming init # part of code with torch.no_grad(): st[-1].bngain *= 0.1 for layer in st[:-1]: if isinstance(layer, Layer): layer.w *= 1.0 # setting gains to 1.0 (no gain) The plot is starting to look nicer, because there is less saturation, because now values don’t lie in the extreme values of tanh, and gradient will be propagated. But we still have issue, as we can see the standard deviation is decreasing this is because of the property of tanh, i.e it squashes the values, initially (blue plot) the output was decent but in later layers, the distribution is being shrinked that because of the property of tanh.\nnow let’s apply kaiming init with gain too, for tanh the gain is 5/3.\nNow the values are being evenly distributed, and the standard deviation is stable (doesn’t decrease with iteration).\nWe have to precisely measure the gains to have a stable training. But the introduction of batch normalization changes the case, and we don’t have to be that much aware for precisely initializing weights.\nLet’s now apply the batch normalization but without kaiming init and see the same plot.\nst = [ # x shape = 32, 30 Layer(n_embd*block_size,n_dim), BatchNormalization1(n_dim), Tanh(), Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(), Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(), Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(), Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(), Layer(n_dim, n_vocab),BatchNormalization1(n_vocab) ] The output values are properly distributed, with very less saturation and a constant standard deviation.\nGradient plot The gradient distribution at each layers would look like this when the pre activations are batch normalized. Gradient to data ratio plot This is what the ratio of gradient (calculated after backprop) to data plot looks like. x-axis represent iterations, y represent the exponents. Ideally, 1e-3 is suitable and that ratio should lie around that line. If the ratio is below that line it means, we need to step up our learning rate, and if it is higher than that line we need to lower our learning rate.\nThe gain that we add during kaiming init has direct correlation with this plot.\nwith torch.no_grad(): # last layer: make less confident layers[-1].gamma *= 0.1 #layers[-1].weight *= 0.1 # all other layers: apply gain for layer in layers[:-1]: if isinstance(layer, Linear): layer.weight *= 0.3 as you can see, when I make gain to 0.3 the ratio significantly varies, i.e ratio for later layers are around 1e-1.5, which mean we would have to lower our learning rate because of this gain change.\nSo the gain significantly affects our learning rate, but it doesn’t affect other plots that we plot above, because it’s controlled by batch normalization.\nSo we don’t get a free pass to assign these gains arbitrarily, because it affects our gradients (as seen from the ratio plot). If we don’t worry about these gains, we have to tune these learning rates properly (by increasing or decreasing the learning rate).\nThese data is analyzed throughout the training of NN\n",
+  "wordCount" : "1013",
+  "inLanguage": "en",
+  "datePublished": "2024-12-20T00:00:00Z",
+  "dateModified": "2024-12-20T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://cohlem.github.io" accesskey="h" title="CohleM (Alt + H)">CohleM</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://cohlem.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/archives/" title="Archive">
+                    <span>Archive</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/notes/" title="Notes">
+                    <span>Notes</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      Diagnostic-tool-while-training-nn
+    </h1>
+    <div class="post-meta"><span title='2024-12-20 00:00:00 +0000 UTC'>December 20, 2024</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;CohleM
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#things-to-look-out-for-while-training-nn" aria-label="Things to look out for while training NN">Things to look out for while training NN</a><ul>
+                        
+                <li>
+                    <a href="#activation-plot" aria-label="Activation plot">Activation plot</a></li>
+                <li>
+                    <a href="#gradient-plot" aria-label="Gradient plot">Gradient plot</a></li>
+                <li>
+                    <a href="#gradient-to-data-ratio-plot" aria-label="Gradient to data ratio plot">Gradient to data ratio plot</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>source: <a href="https://www.youtube.com/watch?v=P6sfmUTpUmc&amp;t=3677s"> Building makemore Part 3: Activations &amp; Gradients, BatchNorm</a></p>
+<h2 id="things-to-look-out-for-while-training-nn">Things to look out for while training NN<a hidden class="anchor" aria-hidden="true" href="#things-to-look-out-for-while-training-nn">#</a></h2>
+<p>Take a look at <a href="http://cohlem.github.io/sub-notes/batchnormalization/">previous notes</a> to understand this note better</p>
+<p>consider we have this simple 6 layer NN</p>
+<pre tabindex="0"><code># Linear Layer
+g = torch.Generator().manual_seed(2147483647) # for reproducibility
+
+
+class Layer:
+    def __init__(self,fan_in, fan_out, bias=False):
+        self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying kaiming init
+        self.bias = bias
+        if bias:
+            self.b = torch.zeros(fan_out)
+            
+    def __call__(self, x):
+        y = x @ self.w
+        self.out = y + self.b if self.bias else y
+        return self.out
+    
+
+    def parameters(self):
+        
+        return [self.w] + [self.b] if self.bias else [self.w]
+    
+class Tanh:
+
+    def __call__(self, x):
+        self.out = torch.tanh(x)
+        return self.out
+    
+    def parameters(self):
+        return []
+    
+
+
+class BatchNormalization1:
+    def __init__(self,nf, eps= 1e-5, mom=0.1):
+        self.bngain = torch.ones(nf)
+        self.bnbias = torch.zeros(nf)
+        self.out = None
+        self.mom = mom
+        self.training = True
+        self.running_mean = torch.ones(nf)
+        self.running_var = torch.zeros(nf)
+        self.eps = eps
+    
+    def __call__(self,x):
+        
+        if self.training:
+            meani = x.mean(0, keepdim = True)
+            vari = x.var(0, keepdim = True)
+            
+        else:
+            meani = self.running_mean
+            vari = self.running_var
+            
+        if self.training:
+            with torch.no_grad():
+                self.running_mean = (1-self.mom)*self.running_mean + self.mom*meani
+                self.running_var = (1-self.mom)*self.running_var + self.mom*vari
+
+        self.out = self.bngain *((x - meani)/ torch.sqrt(vari + self.eps)) + self.bnbias
+
+        return self.out
+    
+    def parameters(self):
+        return [self.bngain, self.bnbias]
+</code></pre><p><strong>Structure</strong></p>
+<pre tabindex="0"><code>import torch.nn.functional as F
+
+
+x = torch.randn(32, 30, generator = g)
+y = torch.tensor([random.randint(0,26) for _ in range(32)] )
+
+# Embedding layer,
+n_embd = 10
+n_vocab = 27
+n_dim = 100
+batch_size = 32
+C = torch.randn((n_vocab,n_embd))
+
+
+st = [
+    # x shape = 32, 30
+    Layer(n_embd*block_size,n_dim), Tanh(), 
+    Layer(n_dim, n_dim), Tanh(),
+    Layer(n_dim, n_dim) , Tanh(),
+    Layer(n_dim, n_dim), Tanh(),
+    Layer(n_dim, n_dim), Tanh(),
+    Layer(n_dim, n_vocab),BatchNormalization1(n_vocab)
+]
+
+
+with torch.no_grad():
+    st[-1].bngain *= 0.1
+    
+    for layer in st[:-1]:
+        if isinstance(layer, Layer):
+            layer.w *= 5/3
+
+
+
+parameters = [C] + [p for l in st for p in l.parameters()]
+for p in parameters:
+    p.requires_grad = True
+</code></pre><p><strong>Training Loop</strong></p>
+<pre tabindex="0"><code>
+for iteration in range(200000):
+    
+    # for iteration in range(2000):
+    idx = torch.randint(0,Xtr.shape[0], (batch_size,))
+    x_emb = C[Xtr[idx]].view(-1, block_size * n_embd)
+    x = x_emb
+    for idx,item in enumerate(st):
+#         print(idx)
+        x = item(x)
+
+    loss = F.cross_entropy(x,y)
+    
+    for layer in st:
+        layer.out.retain_grad() 
+        
+    for p in parameters:
+        p.grad = None
+
+    loss.backward()
+    
+    lr = 0.1 if iteration &lt; 150000 else 0.01
+    for p in parameters:
+
+        p.data += -lr*p.grad
+    
+    if iteration % 10000 ==0:
+        print(loss.data)
+
+#     if iteration &gt;= 1000:
+#         break
+</code></pre><p>let&rsquo;s look at our activations before initializing weights using kaiming init.</p>
+<pre tabindex="0"><code># these are just part of modified code from the code that&#39;s given above.
+class Layer:
+    def __init__(self,fan_in, fan_out, bias=False):
+        self.w = torch.randn((fan_in, fan_out),generator = g) # / (fan_in)**(0.5) # commenting our the kaiming init
+
+# part of code
+with torch.no_grad():
+    st[-1].bngain *= 0.1
+    
+    for layer in st[:-1]:
+        if isinstance(layer, Layer):
+            layer.w *= 1.0 # setting gains to 1.0 (no gain)
+</code></pre><h3 id="activation-plot">Activation plot<a hidden class="anchor" aria-hidden="true" href="#activation-plot">#</a></h3>
+<p><img loading="lazy" src="fig1.png" alt="fig1"  />
+</p>
+<p>As you can see almost all the pre activations are saturated, this is because our weight is initialized in such a way that after applying tanh, most of our output values lie in -1 and 1, which will stop gradient propagation.</p>
+<p>Now applying kaiming init with with no gain.</p>
+<pre tabindex="0"><code># these are just part of modified code from the code that&#39;s given above.
+class Layer:
+    def __init__(self,fan_in, fan_out, bias=False):
+        self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying the kaiming init
+
+# part of code
+with torch.no_grad():
+    st[-1].bngain *= 0.1
+    
+    for layer in st[:-1]:
+        if isinstance(layer, Layer):
+            layer.w *= 1.0 # setting gains to 1.0 (no gain)
+</code></pre><p><img loading="lazy" src="fig2.png" alt="fig2"  />
+</p>
+<p>The plot is starting to look nicer, because there is less saturation, because now values don&rsquo;t lie in the extreme values of tanh, and gradient will be propagated. But we still have issue, as we can see the standard deviation is decreasing this is because of the property of tanh, i.e it squashes the values, initially (blue plot) the output was decent but in later layers, the distribution is being shrinked that because of the property of tanh.</p>
+<p>now let&rsquo;s apply kaiming init with gain too, for tanh  the gain is 5/3.</p>
+<p><img loading="lazy" src="fig3.png" alt="fig3"  />
+
+Now the values are being evenly distributed, and the standard deviation is stable (doesn&rsquo;t decrease with iteration).</p>
+<p>We have to precisely measure the gains to have a stable training. But the introduction of batch normalization changes the case, and we don&rsquo;t have to be that much aware for precisely initializing weights.</p>
+<p>Let&rsquo;s now apply the batch normalization but without kaiming init and see the same plot.</p>
+<pre tabindex="0"><code>st = [
+    # x shape = 32, 30
+    Layer(n_embd*block_size,n_dim), BatchNormalization1(n_dim), Tanh(), 
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_vocab),BatchNormalization1(n_vocab)
+]
+</code></pre><p><img loading="lazy" src="fig4.png" alt="fig4"  />
+
+The output values are properly distributed, with very less saturation and a constant standard deviation.</p>
+<h3 id="gradient-plot">Gradient plot<a hidden class="anchor" aria-hidden="true" href="#gradient-plot">#</a></h3>
+<p>The gradient distribution at each layers would look like this when the pre activations are batch normalized.
+<img loading="lazy" src="fig5.png" alt="fig5"  />
+</p>
+<h3 id="gradient-to-data-ratio-plot">Gradient to data ratio plot<a hidden class="anchor" aria-hidden="true" href="#gradient-to-data-ratio-plot">#</a></h3>
+<p><img loading="lazy" src="fig6.png" alt="fig6"  />
+
+This is what the ratio of gradient (calculated after backprop) to data plot looks like.
+x-axis represent iterations, y represent the exponents. Ideally, 1e-3 is suitable and that ratio should lie around that line. If the ratio is below that line it means, we need to step up our learning rate, and if it is higher than that line we need to lower our learning rate.</p>
+<p>The gain that we add during kaiming init has direct correlation with this plot.</p>
+<pre tabindex="0"><code>with torch.no_grad():
+  # last layer: make less confident
+  layers[-1].gamma *= 0.1
+  #layers[-1].weight *= 0.1
+  # all other layers: apply gain
+  for layer in layers[:-1]:
+    if isinstance(layer, Linear):
+      layer.weight *= 0.3 
+</code></pre><p><img loading="lazy" src="fig7.png" alt="fig7"  />
+
+as you can see, when I make gain to 0.3 the ratio significantly varies, i.e ratio for later layers are around 1e-1.5, which mean we would have to lower our learning rate because of this gain change.</p>
+<p>So the gain significantly affects our learning rate, but it doesn&rsquo;t affect other plots that we plot above, because it&rsquo;s controlled by batch normalization.</p>
+<p>So we don&rsquo;t get a free pass to assign these gains arbitrarily, because it affects our gradients (as seen from the ratio plot). If we don&rsquo;t worry about these gains, we have to tune these learning rates properly (by increasing or decreasing the learning rate).</p>
+<p>These data is analyzed throughout the training of NN</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="next" href="https://cohlem.github.io/sub-notes/backpropagation-from-scratch/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Backpropagation from scratch</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2024 <a href="https://cohlem.github.io">CohleM</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>
