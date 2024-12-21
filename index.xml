@@ -58,7 +58,7 @@ a = Value(2.0, label=&amp;#39;a&amp;#39;) b = Value(-3.0, label=&amp;#39;b&amp;#
       <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
       
       <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
-      <description>Backpropagation Backpropagationfrom scratch Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimizing loss with weight initialization BatchNormalization </description>
+      <description>Backpropagation Backpropagationfrom scratch Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimizing loss with weight initialization BatchNormalization Diagnostic tool to look out for while training NN </description>
     </item>
     
     <item>
