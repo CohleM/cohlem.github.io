@@ -211,6 +211,33 @@ consider we have this simple 6 layer NN
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>BatchNormalization
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>As we saw in our previous note how important it is to have the pre-activation values to be roughly gaussian (0 mean, and unit std). We saw how we can initialize our weights that make our pre-activation roughly gaussian by using Kaiming init. But, how do we always maintain our pre-activations to be roughly gaussian?
+Answer: BatchNormalization
+Benefits
+stable training preserves vanishing gradients BatchNormalization As the name suggests, batches are normalized (across batches), by normalizing across batches we preserve the gaussian property of our pre-activations....</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-12-19 00:00:00 +0000 UTC'>December 19, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to BatchNormalization" href="https://cohlem.github.io/sub-notes/batchnormalization/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>Maximum likelihood estimate as loss function
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> </p>
+  </div>
+  <footer class="entry-footer"><span title='2024-12-16 00:00:00 +0000 UTC'>December 16, 2024</span>&nbsp;·&nbsp;0 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Maximum likelihood estimate as loss function" href="https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>Backpropagation from scratch
     </h2>
   </header>
@@ -236,33 +263,6 @@ So overall, the model tries to balance the Loss (L) as well as keep the weights 
   </div>
   <footer class="entry-footer"><span title='2024-12-08 21:57:23 +0545 +0545'>December 8, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Why we add regularization in loss function" href="https://cohlem.github.io/sub-notes/why-we-need-regularization/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>BatchNormalization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>As we saw in our previous note how important it is to have the pre-activation values to be roughly gaussian (0 mean, and unit std). We saw how we can initialize our weights that make our pre-activation roughly gaussian by using Kaiming init. But, how do we always maintain our pre-activations to be roughly gaussian?
-Answer: BatchNormalization
-Benefits
-stable training preserves vanishing gradients BatchNormalization As the name suggests, batches are normalized (across batches), by normalizing across batches we preserve the gaussian property of our pre-activations....</p>
-  </div>
-  <footer class="entry-footer">4 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to BatchNormalization" href="https://cohlem.github.io/sub-notes/batchnormalization/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Maximum likelihood estimate as loss function
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> </p>
-  </div>
-  <footer class="entry-footer">0 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Maximum likelihood estimate as loss function" href="https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

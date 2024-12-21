@@ -77,8 +77,8 @@ Benefits
 stable training preserves vanishing gradients BatchNormalization As the name suggests, batches are normalized (across batches), by normalizing across batches we preserve the gaussian property of our pre-activations." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://cohlem.github.io/sub-notes/batchnormalization/" /><meta property="article:section" content="sub-notes" />
-
-
+<meta property="article:published_time" content="2024-12-19T00:00:00+00:00" />
+<meta property="article:modified_time" content="2024-12-19T00:00:00+00:00" />
 
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="BatchNormalization"/>
@@ -121,8 +121,8 @@ stable training preserves vanishing gradients BatchNormalization As the name sug
   "articleBody": "As we saw in our previous note how important it is to have the pre-activation values to be roughly gaussian (0 mean, and unit std). We saw how we can initialize our weights that make our pre-activation roughly gaussian by using Kaiming init. But, how do we always maintain our pre-activations to be roughly gaussian?\nAnswer: BatchNormalization\nBenefits\nstable training preserves vanishing gradients BatchNormalization As the name suggests, batches are normalized (across batches), by normalizing across batches we preserve the gaussian property of our pre-activations.\nThis is our initial code\n# same optimization as last time max_steps = 200000 batch_size = 32 lossi = [] for i in range(max_steps): # minibatch construct ix = torch.randint(0, Xtr.shape[0], (batch_size,), generator=g) Xb, Yb = Xtr[ix], Ytr[ix] # batch X,Y # forward pass emb = C[Xb] # embed the characters into vectors embcat = emb.view(emb.shape[0], -1) # concatenate the vectors # Linear layer hpreact = (embcat @ W1 + b1) # hidden layer pre-activation # Non-linearity h = torch.tanh(hpreact) # hidden layer logits = h @ W2 + b2 # output layer loss = F.cross_entropy(logits, Yb) # loss function # backward pass for p in parameters: p.grad = None hpreact.retain_grad() logits.retain_grad() loss.backward() # update lr = 0.1 if i \u003c 100000 else 0.01 # step learning rate decay for p in parameters: p.data += -lr * p.grad # track stats if i % 10000 == 0: # print every once in a while print(f'{i:7d}/{max_steps:7d}: {loss.item():.4f}') lossi.append(loss.log10().item()) We add batch normalization just before the all activation layers. Right now, we only have one linear layer so only one tanh activation is applied, in a big NN, we have to add those batch normalization before applying activations.\nApplying batch normalization is quite simple.\nhpreact = (hpreact - hpreact.mean(0, keepdim = True)) / hpreact.std(0, keepdim =True) but by doing this we are forcing it to lie is a particular space. To add a little bit of entropy (randomness) and let to model learn itself (by backpropagating) where it wants to go, we introduce scaling and shifting. The model will learn itself the direction it wants to go, by back propagating because these scaling and shifting are differentiable.\n# BatchNorm parameters bngain = torch.ones((1, n_hidden)) bnbias = torch.zeros((1, n_hidden)) hpreact = bngain*(hpreact - hpreact.mean(0, keepdim = True)) / hpreact.std(0, keepdim =True) + bnbias by introducing batchNormalization, we are making our pre-activation of one input depend on all the other input, this is because we are subtracting the mean from it and this mean is the depended on all the other inputs.\nNow that we have introduced BatchNormalization, inorder to do inference, we would need the mean and std of the whole dataset, which we can keep track of in running manner, and it is used while doing inference.\n# same optimization as last time max_steps = 200000 batch_size = 32 lossi = [] for i in range(max_steps): # minibatch construct ix = torch.randint(0, Xtr.shape[0], (batch_size,), generator=g) Xb, Yb = Xtr[ix], Ytr[ix] # batch X,Y # forward pass emb = C[Xb] # embed the characters into vectors embcat = emb.view(emb.shape[0], -1) # concatenate the vectors # Linear layer hpreact = (embcat @ W1 + b1) # hidden layer pre-activation bnmeani = hpreact.mean(0, keepdim = True) bnstdi = hpreact.std(0, keepdim =True) hpreact = bngain*((hpreact - bnmeani) / bnstdi) + bnbias ## --------------------- keeping track of whole mean and std ------------ with torch.no_grad(): bnmean_running = 0.999*bnmean_running + 0.001*bnmeani bnstd_running = 0.999*bnstd_running + 0.001*bnstdi # ------------------------------------------------------------------------ # Non-linearity h = torch.tanh(hpreact) # hidden layer logits = h @ W2 + b2 # output layer loss = F.cross_entropy(logits, Yb) # loss function # backward pass for p in parameters: p.grad = None hpreact.retain_grad() logits.retain_grad() loss.backward() # update lr = 0.1 if i \u003c 100000 else 0.01 # step learning rate decay for p in parameters: p.data += -lr * p.grad # track stats if i % 10000 == 0: # print every once in a while print(f'{i:7d}/{max_steps:7d}: {loss.item():.4f}') lossi.append(loss.log10().item()) ",
   "wordCount" : "656",
   "inLanguage": "en",
-  "datePublished": "0001-01-01T00:00:00Z",
-  "dateModified": "0001-01-01T00:00:00Z",
+  "datePublished": "2024-12-19T00:00:00Z",
+  "dateModified": "2024-12-19T00:00:00Z",
   "author":[{
     "@type": "Person",
     "name": "CohleM"
@@ -214,7 +214,7 @@ stable training preserves vanishing gradients BatchNormalization As the name sug
     <h1 class="post-title">
       BatchNormalization
     </h1>
-    <div class="post-meta">4 min&nbsp;·&nbsp;CohleM
+    <div class="post-meta"><span title='2024-12-19 00:00:00 +0000 UTC'>December 19, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;CohleM
 
 </div>
   </header> <div class="toc">
@@ -347,10 +347,10 @@ for i in range(max_steps):
     <ul class="post-tags">
     </ul>
 <nav class="paginav">
-  <a class="prev" href="https://cohlem.github.io/sub-notes/why-we-need-regularization/">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/">
     <span class="title">« Prev</span>
     <br>
-    <span>Why we add regularization in loss function</span>
+    <span>Diagnostic-tool-while-training-nn</span>
   </a>
   <a class="next" href="https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/">
     <span class="title">Next »</span>
