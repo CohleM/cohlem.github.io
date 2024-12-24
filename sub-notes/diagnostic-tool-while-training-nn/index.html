@@ -393,7 +393,7 @@ with torch.no_grad():
         if isinstance(layer, Layer):
             layer.w *= 1.0 # setting gains to 1.0 (no gain)
 </code></pre><h3 id="activation-plot">Activation plot<a hidden class="anchor" aria-hidden="true" href="#activation-plot">#</a></h3>
-<p><img loading="lazy" src="fig1.png" alt="fig1"  />
+<p><img loading="lazy" src="sub-notes/Diagnostic-tool-while-training-nn/fig1.png" alt="fig1"  />
 </p>
 <p>As you can see almost all the pre activations are saturated, this is because our weight is initialized in such a way that after applying tanh, most of our output values lie in -1 and 1, which will stop gradient propagation.</p>
 <p>Now applying kaiming init with with no gain.</p>
@@ -409,7 +409,7 @@ with torch.no_grad():
     for layer in st[:-1]:
         if isinstance(layer, Layer):
             layer.w *= 1.0 # setting gains to 1.0 (no gain)
-</code></pre><p><img loading="lazy" src="fig2.png" alt="fig2"  />
+</code></pre><p><img loading="lazy" src="sub-notes/Diagnostic-tool-while-training-nn/fig2.png" alt="fig2"  />
 </p>
 <p>The plot is starting to look nicer, because there is less saturation, because now values don&rsquo;t lie in the extreme values of tanh, and gradient will be propagated. But we still have issue, as we can see the standard deviation is decreasing this is because of the property of tanh, i.e it squashes the values, initially (blue plot) the output was decent but in later layers, the distribution is being shrinked that because of the property of tanh.</p>
 <p>now let&rsquo;s apply kaiming init with gain too, for tanh  the gain is 5/3.</p>
@@ -462,10 +462,10 @@ as you can see, when I make gain to 0.3 the ratio significantly varies, i.e rati
     <ul class="post-tags">
     </ul>
 <nav class="paginav">
-  <a class="prev" href="https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/matrix-visualization/">
     <span class="title">« Prev</span>
     <br>
-    <span>manual-backpropagation-on-tensors</span>
+    <span>Matrix Visualization</span>
   </a>
   <a class="next" href="https://cohlem.github.io/sub-notes/batchnormalization/">
     <span class="title">Next »</span>

@@ -8,12 +8,32 @@
     <language>en</language>
     <lastBuildDate>Tue, 24 Dec 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>AlexNet</title>
+      <link>https://cohlem.github.io/sub-notes/alexnet/index.md/</link>
+      <pubDate>Tue, 24 Dec 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/alexnet/index.md/</guid>
+      <description>Visualize arrays https://array-3d-viz.vercel.app</description>
+    </item>
+    
+    <item>
       <title>manual-backpropagation-on-tensors</title>
       <link>https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/</link>
       <pubDate>Tue, 24 Dec 2024 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/</guid>
       <description>Main code n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 64 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) # Layer 1 W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5) b1 = torch.randn(n_hidden, generator=g) * 0.1 # using b1 just for fun, it&amp;#39;s useless because of BN # Layer 2 W2 = torch.</description>
+    </item>
+    
+    <item>
+      <title>Matrix Visualization</title>
+      <link>https://cohlem.github.io/sub-notes/matrix-visualization/</link>
+      <pubDate>Tue, 24 Dec 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/matrix-visualization/</guid>
+      <description>In deep learning, it&amp;rsquo;s important to visualize a matrix and how it is represented in a dimension space because the operations that we perform on those matrix becomes very much intuitive afterwards.
+Visualizing two dimensional matrix. This has to be the most intuitive visualization.
+[ [12, 63, 10, 42, 70, 31, 34, 8, 34, 5], [10, 97, 100, 39, 64, 25, 86, 22, 31, 25], [28, 44, 82, 61, 70, 94, 22, 88, 89, 56] ] We can simply imagine rows are some examples and columns as those examples&amp;rsquo; features.</description>
     </item>
     
     <item>
