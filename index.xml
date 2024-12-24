@@ -6,7 +6,16 @@
     <description>Recent content on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Fri, 20 Dec 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 24 Dec 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>manual-backpropagation-on-tensors</title>
+      <link>https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/</link>
+      <pubDate>Tue, 24 Dec 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/</guid>
+      <description>Main code n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 64 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) # Layer 1 W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5) b1 = torch.randn(n_hidden, generator=g) * 0.1 # using b1 just for fun, it&amp;#39;s useless because of BN # Layer 2 W2 = torch.</description>
+    </item>
+    
     <item>
       <title>Diagnostic-tool-while-training-nn</title>
       <link>https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/</link>
@@ -58,7 +67,7 @@ a = Value(2.0, label=&amp;#39;a&amp;#39;) b = Value(-3.0, label=&amp;#39;b&amp;#
       <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
       
       <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
-      <description>Backpropagation Backpropagationfrom scratch Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimizing loss with weight initialization BatchNormalization Diagnostic tool to look out for while training NN </description>
+      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimizing loss with weight initialization BatchNormalization Diagnostic tool to look out for while training NN </description>
     </item>
     
     <item>

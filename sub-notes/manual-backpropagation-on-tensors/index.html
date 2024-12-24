@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>manual-backpropagation-on-tensors | CohleM</title>
+<meta name="keywords" content="">
+<meta name="description" content="Main code n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 64 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) # Layer 1 W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5) b1 = torch.randn(n_hidden, generator=g) * 0.1 # using b1 just for fun, it&#39;s useless because of BN # Layer 2 W2 = torch.">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://cohlem.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://cohlem.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X6LV4QY2G2"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
+}
+</script>
+<meta property="og:title" content="manual-backpropagation-on-tensors" />
+<meta property="og:description" content="Main code n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 64 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) # Layer 1 W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5) b1 = torch.randn(n_hidden, generator=g) * 0.1 # using b1 just for fun, it&#39;s useless because of BN # Layer 2 W2 = torch." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2024-12-24T00:00:00+00:00" />
+<meta property="article:modified_time" content="2024-12-24T00:00:00+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="manual-backpropagation-on-tensors"/>
+<meta name="twitter:description" content="Main code n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 64 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) # Layer 1 W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5) b1 = torch.randn(n_hidden, generator=g) * 0.1 # using b1 just for fun, it&#39;s useless because of BN # Layer 2 W2 = torch."/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Sub-notes",
+      "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "manual-backpropagation-on-tensors",
+      "item": "https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "manual-backpropagation-on-tensors",
+  "name": "manual-backpropagation-on-tensors",
+  "description": "Main code n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 64 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) # Layer 1 W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5) b1 = torch.randn(n_hidden, generator=g) * 0.1 # using b1 just for fun, it\u0026#39;s useless because of BN # Layer 2 W2 = torch.",
+  "keywords": [
+    
+  ],
+  "articleBody": "Main code n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 64 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) # Layer 1 W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5) b1 = torch.randn(n_hidden, generator=g) * 0.1 # using b1 just for fun, it's useless because of BN # Layer 2 W2 = torch.randn((n_hidden, vocab_size), generator=g) * 0.1 b2 = torch.randn(vocab_size, generator=g) * 0.1 # BatchNorm parameters bngain = torch.randn((1, n_hidden))*0.1 + 1.0 bnbias = torch.randn((1, n_hidden))*0.1 # Note: I am initializating many of these parameters in non-standard ways # because sometimes initializating with e.g. all zeros could mask an incorrect # implementation of the backward pass. parameters = [C, W1, b1, W2, b2, bngain, bnbias] print(sum(p.nelement() for p in parameters)) # number of parameters in total for p in parameters: p.requires_grad = True batch_size = 32 n = batch_size # a shorter variable also, for convenience # construct a minibatch ix = torch.randint(0, Xtr.shape[0], (batch_size,), generator=g) Xb, Yb = Xtr[ix], Ytr[ix] # batch X,Y # forward pass, \"chunkated\" into smaller steps that are possible to backward one at a time emb = C[Xb] # embed the characters into vectors embcat = emb.view(emb.shape[0], -1) # concatenate the vectors # Linear layer 1 hprebn = embcat @ W1 + b1 # hidden layer pre-activation # BatchNorm layer bnmeani = 1/n*hprebn.sum(0, keepdim=True) bndiff = hprebn - bnmeani bndiff2 = bndiff**2 bnvar = 1/(n-1)*(bndiff2).sum(0, keepdim=True) # note: Bessel's correction (dividing by n-1, not n) bnvar_inv = (bnvar + 1e-5)**-0.5 bnraw = bndiff * bnvar_inv hpreact = bngain * bnraw + bnbias # Non-linearity h = torch.tanh(hpreact) # hidden layer # Linear layer 2 logits = h @ W2 + b2 # output layer # cross entropy loss (same as F.cross_entropy(logits, Yb)) logit_maxes = logits.max(1, keepdim=True).values norm_logits = logits - logit_maxes # subtract max for numerical stability counts = norm_logits.exp() counts_sum = counts.sum(1, keepdims=True) counts_sum_inv = counts_sum**-1 # if I use (1.0 / counts_sum) instead then I can't get backprop to be bit exact... probs = counts * counts_sum_inv logprobs = probs.log() loss = -logprobs[range(n), Yb].mean() # PyTorch backward pass for p in parameters: p.grad = None for t in [logprobs, probs, counts, counts_sum, counts_sum_inv, # afaik there is no cleaner way norm_logits, logit_maxes, logits, h, hpreact, bnraw, bnvar_inv, bnvar, bndiff2, bndiff, hprebn, bnmeani, embcat, emb]: t.retain_grad() loss.backward() loss Initially we have this forward pass of a NN, how do we backpropagate through this? We simply call loss.backward() which is an abstraction of pytorch’s autograd engine, it’ll construct computation graph and calculate gradients for all the nodes under the hood.\nHow can we do it manually?\nhere’s how\nManual Backprop # Exercise 1: backprop through the whole thing manually, # backpropagating through exactly all of the variables # as they are defined in the forward pass above, one by one # ----------------- # YOUR CODE HERE :) dlogprobs = torch.zeros_like(logprobs) dlogprobs[range(n), Yb] = -1.0*(1/logprobs.shape[0]) # 1 dprobs = (1/probs)*dlogprobs # 2 dcounts_sum_inv = (dprobs*counts).sum(1, keepdim = True) dcounts = dprobs * counts_sum_inv dcounts_sum = -1.0*((counts_sum)**(-2.0))*dcounts_sum_inv dcounts += torch.ones_like(counts_sum)*dcounts_sum dnorm_logits = norm_logits.exp()*dcounts dlogit_maxes = (-1.0*dnorm_logits).sum(1,keepdim=True) dlogits = (1.0*dnorm_logits) dlogits += F.one_hot(logits.max(1).indices, num_classes=logits.shape[1])*dlogit_maxes db2 = (dlogits*torch.ones_like(logits)).sum(0) dh = dlogits @ W2.T dW2 = h.T @ dlogits dhpreact = dh*(1-h**(2)) dbnbias = (dhpreact*torch.ones_like(bnraw)).sum(0, keepdim= True) dbngain = (dhpreact*bnraw*torch.ones_like(bnraw)).sum(0, keepdim=True) dbnraw = dhpreact*bngain*torch.ones_like(bnraw) dbnvar_inv = (dbnraw* (torch.ones_like(bndiff) * bndiff)).sum(0, keepdim=True) dbndiff = (dbnraw* (torch.ones_like(bndiff) * bnvar_inv)) dbnvar = dbnvar_inv* (-0.5)*(((bnvar + 1e-5))**(-1.5)) dbndiff2 = (1.0/(n-1) )*torch.ones_like(bndiff2) * dbnvar dbndiff += dbndiff2*2*(bndiff) dhprebn = dbndiff*1.0 dbnmeani = (torch.ones_like(hprebn)*-1.0*dbndiff).sum(0, keepdim = True) dhprebn += torch.ones_like(hprebn)*(1/n)*dbnmeani db1 = (torch.ones_like(dhprebn)*dhprebn).sum(0) dembcat = dhprebn @ W1.T dW1 = embcat.T @ dhprebn demb = dembcat.view(emb.shape[0],emb.shape[1],emb.shape[2]) dC = torch.zeros_like(C) for i in range(Xb.shape[0]): for j in range(Xb.shape[1]): dC[Xb[i,j]] += demb[i,j] # print(demb[i,j].shape) # ----------------- cmp('logprobs', dlogprobs, logprobs) cmp('probs', dprobs, probs) cmp('counts_sum_inv', dcounts_sum_inv, counts_sum_inv) cmp('counts_sum', dcounts_sum, counts_sum) cmp('counts', dcounts, counts) cmp('norm_logits', dnorm_logits, norm_logits) cmp('logit_maxes', dlogit_maxes, logit_maxes) cmp('logits', dlogits, logits) cmp('h', dh, h) cmp('W2', dW2, W2) cmp('b2', db2, b2) cmp('hpreact', dhpreact, hpreact) cmp('bngain', dbngain, bngain) cmp('bnbias', dbnbias, bnbias) cmp('bnraw', dbnraw, bnraw) cmp('bnvar_inv', dbnvar_inv, bnvar_inv) cmp('bnvar', dbnvar, bnvar) cmp('bndiff2', dbndiff2, bndiff2) cmp('bndiff', dbndiff, bndiff) cmp('bnmeani', dbnmeani, bnmeani) cmp('hprebn', dhprebn, hprebn) cmp('embcat', dembcat, embcat) cmp('W1', dW1, W1) cmp('b1', db1, b1) cmp('emb', demb, emb) cmp('C', dC, C) Results logprobs | exact: True | approximate: True | maxdiff: 0.0 probs | exact: True | approximate: True | maxdiff: 0.0 counts_sum_inv | exact: True | approximate: True | maxdiff: 0.0 counts_sum | exact: True | approximate: True | maxdiff: 0.0 counts | exact: True | approximate: True | maxdiff: 0.0 norm_logits | exact: True | approximate: True | maxdiff: 0.0 logit_maxes | exact: True | approximate: True | maxdiff: 0.0 logits | exact: True | approximate: True | maxdiff: 0.0 h | exact: True | approximate: True | maxdiff: 0.0 W2 | exact: True | approximate: True | maxdiff: 0.0 b2 | exact: True | approximate: True | maxdiff: 0.0 hpreact | exact: True | approximate: True | maxdiff: 0.0 bngain | exact: True | approximate: True | maxdiff: 0.0 bnbias | exact: True | approximate: True | maxdiff: 0.0 bnraw | exact: True | approximate: True | maxdiff: 0.0 bnvar_inv | exact: True | approximate: True | maxdiff: 0.0 bnvar | exact: True | approximate: True | maxdiff: 0.0 bndiff2 | exact: True | approximate: True | maxdiff: 0.0 bndiff | exact: True | approximate: True | maxdiff: 0.0 bnmeani | exact: True | approximate: True | maxdiff: 0.0 hprebn | exact: True | approximate: True | maxdiff: 0.0 embcat | exact: True | approximate: True | maxdiff: 0.0 W1 | exact: True | approximate: True | maxdiff: 0.0 b1 | exact: True | approximate: True | maxdiff: 0.0 emb | exact: True | approximate: True | maxdiff: 0.0 C | exact: True | approximate: True | maxdiff: 0.0 The result verifies that our gradients matches pytorch’s.\nStep-by-step calculation Backpropagating on scalars is pretty straightforward as we did in our first note but when it comes to tensors, we need to make sure every element’s gradient in a tensor is calculated precisely.\nlet’s understand it line by line.\nloss = -logprobs[range(n), Yb].mean() now we calculate the derivative of loss (L) w.r.t logprobs, (NOTE: d(loss)/d(loss) is 1). here\nwe have: d(L)/dL to find: d(L)/dlogprobs\nd(L)/dlogprobs = d(L)/dL x d(L)/dlogprobs # d(L)/dlogprobs is local gradient d(L)/dlogprobs = 1.0 * d(L)/dlogprobs Now what could be the d(L)/dlogprobs? let’s break it down by representing it into a simple matrix. let’s say logprobs is a matrix and using indexing [range(n), Yb] we pluck out it’s corresponding values and then we average it. let’s consider the plucked out values are\na1 , b1 , c1 it’s mean would be\n1/3 x a1 + 1/3 x b1 + 1/3 x c1 the derivative of d(L)/da1 = 1/3 , d(L)/db1 = 1/3 , d(L)/dc1 = 1/3 we see a pattern here, derivate of every element is 1/total_no_of_elements.\nso\ndlogprobs = torch.zeros_like(logprobs) # because all the other elements will have 0 gradient as they'll be considered constant dlogprobs[range(n), Yb] = 1.0 * 1/(-logprobs).shape[0] logprobs = probs.log() to find : dprobs\nwe know d(logx)/dx = 1/x, so its fairly simple.\ndprobs = 1/probs * dlogprobs # don't forget to add the dlogprobs because its the gradient's that propagated probs = counts * counts_sum_inv let’s find dcounts_sum_inv we need to make sure that the gradient of any tensor should have the same size as that tensor. the shape of counts_sum_inv is (32,1)\ndcounts_sum_inv = (dprobs *torch.ones_like(count) * counts).sum(1, keepdim = True) why do we sum it across rows? this is because in probs = counts * counts_sum_inv,\ncounts has shape (32,27) and counts_sum_inv has (32,1), so first the counts_sum_inv is broadcasted and is made into shape (32,27) by copying the column and then finally is multiplied with counts. There are two operations that take place in order (broadcasting and addition). So, when we backpropagate through this equation the order should be addition and broadcasting. so the dcounts_sum_inv is (dprobs * torch.ones_like(count) * counts), but this is of shape (32,27), as we have seen the columns in counts_sum_inv are broadcasted, which mean one column is used 27 times, so we know that from our first note that when a variable is used more than once it’s derivate is added up, so we sum across the rows (sum it 27 times).\ndcounts_sum_inv = (dprobs* torch.ones_like(count) * counts).sum(1, keepdim = True) Similarly, we can now calculate the gradients for tensors that were broadcasted in our forward pass. All the other gradient calculation is relatively straightforward except this equation\nlogits = h @ W2 + b2 # output layer why? because if we go deep into matrix multiplication, we see there are two operations involved i.e multiplication and addition. The formula for calculating gradient for the equation above is derived in the picture below.\nWe come up with a simple equation.\ndh = dlogits @ W2.T dW2 = h.T @ dlogits I believe these were the main gradient calculation steps and gradients for other nodes can be calculated in a similar manner.\n",
+  "wordCount" : "1518",
+  "inLanguage": "en",
+  "datePublished": "2024-12-24T00:00:00Z",
+  "dateModified": "2024-12-24T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://cohlem.github.io" accesskey="h" title="CohleM (Alt + H)">CohleM</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://cohlem.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/archives/" title="Archive">
+                    <span>Archive</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/notes/" title="Notes">
+                    <span>Notes</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      manual-backpropagation-on-tensors
+    </h1>
+    <div class="post-meta"><span title='2024-12-24 00:00:00 +0000 UTC'>December 24, 2024</span>&nbsp;·&nbsp;8 min&nbsp;·&nbsp;CohleM
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#main-code" aria-label="Main code">Main code</a></li>
+                <li>
+                    <a href="#manual-backprop" aria-label="Manual Backprop">Manual Backprop</a></li>
+                <li>
+                    <a href="#results" aria-label="Results">Results</a></li>
+                <li>
+                    <a href="#step-by-step-calculation" aria-label="Step-by-step calculation">Step-by-step calculation</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h3 id="main-code">Main code<a hidden class="anchor" aria-hidden="true" href="#main-code">#</a></h3>
+<pre tabindex="0"><code>n_embd = 10 # the dimensionality of the character embedding vectors
+n_hidden = 64 # the number of neurons in the hidden layer of the MLP
+
+g = torch.Generator().manual_seed(2147483647) # for reproducibility
+C  = torch.randn((vocab_size, n_embd),            generator=g)
+# Layer 1
+W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5)
+b1 = torch.randn(n_hidden,                        generator=g) * 0.1 # using b1 just for fun, it&#39;s useless because of BN
+# Layer 2
+W2 = torch.randn((n_hidden, vocab_size),          generator=g) * 0.1
+b2 = torch.randn(vocab_size,                      generator=g) * 0.1
+# BatchNorm parameters
+bngain = torch.randn((1, n_hidden))*0.1 + 1.0
+bnbias = torch.randn((1, n_hidden))*0.1
+
+# Note: I am initializating many of these parameters in non-standard ways
+# because sometimes initializating with e.g. all zeros could mask an incorrect
+# implementation of the backward pass.
+
+parameters = [C, W1, b1, W2, b2, bngain, bnbias]
+print(sum(p.nelement() for p in parameters)) # number of parameters in total
+for p in parameters:
+  p.requires_grad = True
+
+
+
+batch_size = 32
+n = batch_size # a shorter variable also, for convenience
+# construct a minibatch
+ix = torch.randint(0, Xtr.shape[0], (batch_size,), generator=g)
+Xb, Yb = Xtr[ix], Ytr[ix] # batch X,Y
+
+
+# forward pass, &#34;chunkated&#34; into smaller steps that are possible to backward one at a time
+
+emb = C[Xb] # embed the characters into vectors
+embcat = emb.view(emb.shape[0], -1) # concatenate the vectors
+# Linear layer 1
+hprebn = embcat @ W1 + b1 # hidden layer pre-activation
+# BatchNorm layer
+bnmeani = 1/n*hprebn.sum(0, keepdim=True)
+bndiff = hprebn - bnmeani
+bndiff2 = bndiff**2
+bnvar = 1/(n-1)*(bndiff2).sum(0, keepdim=True) # note: Bessel&#39;s correction (dividing by n-1, not n)
+bnvar_inv = (bnvar + 1e-5)**-0.5
+bnraw = bndiff * bnvar_inv
+hpreact = bngain * bnraw + bnbias
+# Non-linearity
+h = torch.tanh(hpreact) # hidden layer
+# Linear layer 2
+logits = h @ W2 + b2 # output layer
+# cross entropy loss (same as F.cross_entropy(logits, Yb))
+logit_maxes = logits.max(1, keepdim=True).values
+norm_logits = logits - logit_maxes # subtract max for numerical stability
+counts = norm_logits.exp()
+counts_sum = counts.sum(1, keepdims=True)
+counts_sum_inv = counts_sum**-1 # if I use (1.0 / counts_sum) instead then I can&#39;t get backprop to be bit exact...
+probs = counts * counts_sum_inv
+logprobs = probs.log()
+loss = -logprobs[range(n), Yb].mean()
+
+# PyTorch backward pass
+for p in parameters:
+  p.grad = None
+for t in [logprobs, probs, counts, counts_sum, counts_sum_inv, # afaik there is no cleaner way
+          norm_logits, logit_maxes, logits, h, hpreact, bnraw,
+         bnvar_inv, bnvar, bndiff2, bndiff, hprebn, bnmeani,
+         embcat, emb]:
+  t.retain_grad()
+loss.backward()
+loss
+</code></pre><p>Initially we have this forward pass of a NN, how do we backpropagate through this?
+We simply call loss.backward() which is an abstraction of pytorch&rsquo;s autograd engine, it&rsquo;ll construct computation graph and calculate gradients for all the nodes under the hood.</p>
+<p>How can we do it manually?</p>
+<p>here&rsquo;s how</p>
+<h3 id="manual-backprop">Manual Backprop<a hidden class="anchor" aria-hidden="true" href="#manual-backprop">#</a></h3>
+<pre tabindex="0"><code># Exercise 1: backprop through the whole thing manually,
+# backpropagating through exactly all of the variables
+# as they are defined in the forward pass above, one by one
+
+# -----------------
+# YOUR CODE HERE :)
+dlogprobs = torch.zeros_like(logprobs)
+dlogprobs[range(n), Yb] = -1.0*(1/logprobs.shape[0]) # 1
+
+dprobs = (1/probs)*dlogprobs # 2
+dcounts_sum_inv = (dprobs*counts).sum(1, keepdim = True)
+dcounts = dprobs * counts_sum_inv
+dcounts_sum = -1.0*((counts_sum)**(-2.0))*dcounts_sum_inv
+dcounts += torch.ones_like(counts_sum)*dcounts_sum
+dnorm_logits = norm_logits.exp()*dcounts
+dlogit_maxes = (-1.0*dnorm_logits).sum(1,keepdim=True)
+dlogits = (1.0*dnorm_logits)
+
+dlogits += F.one_hot(logits.max(1).indices, num_classes=logits.shape[1])*dlogit_maxes
+db2 = (dlogits*torch.ones_like(logits)).sum(0)
+dh = dlogits @ W2.T
+dW2 = h.T @ dlogits
+dhpreact = dh*(1-h**(2))
+dbnbias = (dhpreact*torch.ones_like(bnraw)).sum(0, keepdim= True)
+dbngain = (dhpreact*bnraw*torch.ones_like(bnraw)).sum(0, keepdim=True)
+dbnraw = dhpreact*bngain*torch.ones_like(bnraw)
+dbnvar_inv = (dbnraw* (torch.ones_like(bndiff) * bndiff)).sum(0, keepdim=True)
+dbndiff = (dbnraw* (torch.ones_like(bndiff) * bnvar_inv))
+dbnvar = dbnvar_inv* (-0.5)*(((bnvar + 1e-5))**(-1.5))
+dbndiff2 = (1.0/(n-1) )*torch.ones_like(bndiff2) * dbnvar
+dbndiff += dbndiff2*2*(bndiff)
+dhprebn = dbndiff*1.0
+dbnmeani = (torch.ones_like(hprebn)*-1.0*dbndiff).sum(0, keepdim = True)
+dhprebn += torch.ones_like(hprebn)*(1/n)*dbnmeani
+db1 = (torch.ones_like(dhprebn)*dhprebn).sum(0)
+dembcat = dhprebn @ W1.T
+dW1 = embcat.T @ dhprebn
+demb = dembcat.view(emb.shape[0],emb.shape[1],emb.shape[2])
+dC = torch.zeros_like(C)
+for i in range(Xb.shape[0]):
+    for j in range(Xb.shape[1]):
+        dC[Xb[i,j]] += demb[i,j]
+#         print(demb[i,j].shape)
+# -----------------
+
+cmp(&#39;logprobs&#39;, dlogprobs, logprobs)
+cmp(&#39;probs&#39;, dprobs, probs)
+cmp(&#39;counts_sum_inv&#39;, dcounts_sum_inv, counts_sum_inv)
+cmp(&#39;counts_sum&#39;, dcounts_sum, counts_sum)
+
+cmp(&#39;counts&#39;, dcounts, counts)
+cmp(&#39;norm_logits&#39;, dnorm_logits, norm_logits)
+cmp(&#39;logit_maxes&#39;, dlogit_maxes, logit_maxes)
+cmp(&#39;logits&#39;, dlogits, logits)
+cmp(&#39;h&#39;, dh, h)
+cmp(&#39;W2&#39;, dW2, W2)
+cmp(&#39;b2&#39;, db2, b2)
+cmp(&#39;hpreact&#39;, dhpreact, hpreact)
+cmp(&#39;bngain&#39;, dbngain, bngain)
+cmp(&#39;bnbias&#39;, dbnbias, bnbias)
+cmp(&#39;bnraw&#39;, dbnraw, bnraw)
+cmp(&#39;bnvar_inv&#39;, dbnvar_inv, bnvar_inv)
+cmp(&#39;bnvar&#39;, dbnvar, bnvar)
+cmp(&#39;bndiff2&#39;, dbndiff2, bndiff2)
+cmp(&#39;bndiff&#39;, dbndiff, bndiff)
+cmp(&#39;bnmeani&#39;, dbnmeani, bnmeani)
+cmp(&#39;hprebn&#39;, dhprebn, hprebn)
+cmp(&#39;embcat&#39;, dembcat, embcat)
+cmp(&#39;W1&#39;, dW1, W1)
+cmp(&#39;b1&#39;, db1, b1)
+cmp(&#39;emb&#39;, demb, emb)
+cmp(&#39;C&#39;, dC, C)
+</code></pre><h3 id="results">Results<a hidden class="anchor" aria-hidden="true" href="#results">#</a></h3>
+<pre tabindex="0"><code>logprobs        | exact: True  | approximate: True  | maxdiff: 0.0
+probs           | exact: True  | approximate: True  | maxdiff: 0.0
+counts_sum_inv  | exact: True  | approximate: True  | maxdiff: 0.0
+counts_sum      | exact: True  | approximate: True  | maxdiff: 0.0
+counts          | exact: True  | approximate: True  | maxdiff: 0.0
+norm_logits     | exact: True  | approximate: True  | maxdiff: 0.0
+logit_maxes     | exact: True  | approximate: True  | maxdiff: 0.0
+logits          | exact: True  | approximate: True  | maxdiff: 0.0
+h               | exact: True  | approximate: True  | maxdiff: 0.0
+W2              | exact: True  | approximate: True  | maxdiff: 0.0
+b2              | exact: True  | approximate: True  | maxdiff: 0.0
+hpreact         | exact: True  | approximate: True  | maxdiff: 0.0
+bngain          | exact: True  | approximate: True  | maxdiff: 0.0
+bnbias          | exact: True  | approximate: True  | maxdiff: 0.0
+bnraw           | exact: True  | approximate: True  | maxdiff: 0.0
+bnvar_inv       | exact: True  | approximate: True  | maxdiff: 0.0
+bnvar           | exact: True  | approximate: True  | maxdiff: 0.0
+bndiff2         | exact: True  | approximate: True  | maxdiff: 0.0
+bndiff          | exact: True  | approximate: True  | maxdiff: 0.0
+bnmeani         | exact: True  | approximate: True  | maxdiff: 0.0
+hprebn          | exact: True  | approximate: True  | maxdiff: 0.0
+embcat          | exact: True  | approximate: True  | maxdiff: 0.0
+W1              | exact: True  | approximate: True  | maxdiff: 0.0
+b1              | exact: True  | approximate: True  | maxdiff: 0.0
+emb             | exact: True  | approximate: True  | maxdiff: 0.0
+C               | exact: True  | approximate: True  | maxdiff: 0.0
+</code></pre><p>The result verifies that our gradients matches pytorch&rsquo;s.</p>
+<h3 id="step-by-step-calculation">Step-by-step calculation<a hidden class="anchor" aria-hidden="true" href="#step-by-step-calculation">#</a></h3>
+<p>Backpropagating on scalars is pretty straightforward as we did in our <a href="https://cohlem.github.io/sub-notes/backpropagation-from-scratch/">first note</a> but when it comes to tensors, we need to make sure every element&rsquo;s gradient in a tensor is calculated precisely.</p>
+<p>let&rsquo;s understand it line by line.</p>
+<pre tabindex="0"><code>loss = -logprobs[range(n), Yb].mean()
+</code></pre><p>now we calculate the derivative of loss (L) w.r.t logprobs, (NOTE: d(loss)/d(loss) is 1).
+here</p>
+<p>we have: d(L)/dL
+to find: d(L)/dlogprobs</p>
+<pre tabindex="0"><code>d(L)/dlogprobs = d(L)/dL x d(L)/dlogprobs # d(L)/dlogprobs is local gradient
+d(L)/dlogprobs  = 1.0 * d(L)/dlogprobs
+</code></pre><p>Now what could be the d(L)/dlogprobs?
+let&rsquo;s break it down by representing it into a simple matrix.
+let&rsquo;s say logprobs is a matrix and using indexing [range(n), Yb] we pluck out it&rsquo;s corresponding values and then we average it. let&rsquo;s consider the plucked out values are</p>
+<pre tabindex="0"><code>a1 , b1 , c1 
+</code></pre><p>it&rsquo;s mean would be</p>
+<pre tabindex="0"><code>1/3 x a1 + 1/3 x b1 + 1/3 x c1
+</code></pre><p>the derivative of d(L)/da1 = 1/3 , d(L)/db1 = 1/3 ,  d(L)/dc1 = 1/3
+we see a pattern here, derivate of every element is 1/total_no_of_elements.</p>
+<p>so</p>
+<pre tabindex="0"><code>dlogprobs = torch.zeros_like(logprobs) # because all the other elements will have 0 gradient as they&#39;ll be considered constant
+dlogprobs[range(n), Yb]  = 1.0 * 1/(-logprobs).shape[0]
+</code></pre><pre tabindex="0"><code>logprobs = probs.log()
+</code></pre><p>to find : dprobs</p>
+<p>we know d(logx)/dx = 1/x, so its fairly simple.</p>
+<pre tabindex="0"><code>dprobs = 1/probs * dlogprobs # don&#39;t forget to add the dlogprobs because its the gradient&#39;s that propagated
+</code></pre><pre tabindex="0"><code>probs = counts * counts_sum_inv
+</code></pre><p>let&rsquo;s find dcounts_sum_inv
+we need to make sure that the gradient of any tensor should have the same size as that tensor.
+the shape of counts_sum_inv is (32,1)</p>
+<pre tabindex="0"><code>dcounts_sum_inv
+ = (dprobs *torch.ones_like(count) * counts).sum(1, keepdim = True)
+</code></pre><p>why do we sum it across rows?
+this is because in probs = counts * counts_sum_inv,</p>
+<p>counts has shape (32,27) and counts_sum_inv has (32,1), so first the counts_sum_inv is broadcasted and is made into shape (32,27) by copying the column and then finally is multiplied with counts. There are two operations that take place in order (broadcasting and addition). So, when we backpropagate through this equation the order should be addition and broadcasting.
+so the dcounts_sum_inv is (dprobs  * torch.ones_like(count) * counts), but this is of shape (32,27), as we have seen the columns in counts_sum_inv are broadcasted, which mean one column is used 27 times, so we know that from our <a href="https://cohlem.github.io/sub-notes/backpropagation-from-scratch/">first note</a> that when a variable is used more than once it&rsquo;s derivate is added up, so we sum across the rows (sum it 27 times).</p>
+<pre tabindex="0"><code>dcounts_sum_inv = (dprobs*  torch.ones_like(count) * counts).sum(1, keepdim = True)
+</code></pre><p>Similarly, we can now calculate the gradients for tensors that were broadcasted in our forward pass. All the other gradient calculation is relatively straightforward except this equation</p>
+<pre tabindex="0"><code>logits = h @ W2 + b2 # output layer
+</code></pre><p>why? because if we go deep into matrix multiplication, we see there are two operations involved i.e multiplication and addition. The formula for calculating gradient for the equation above is derived in the picture below.</p>
+<p><img loading="lazy" src="one.jpg" alt="one"  />
+</p>
+<p><img loading="lazy" src="two.jpg" alt="two"  />
+
+We come up with a simple equation.</p>
+<pre tabindex="0"><code>dh = dlogits @ W2.T
+dW2 = h.T @ dlogits
+</code></pre><p>I believe these were the main gradient calculation steps and gradients for other nodes can be calculated in a similar manner.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="next" href="https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Diagnostic-tool-while-training-nn</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2024 <a href="https://cohlem.github.io">CohleM</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>
