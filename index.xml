@@ -6,14 +6,14 @@
     <description>Recent content on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 24 Dec 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 27 Dec 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>AlexNet</title>
-      <link>https://cohlem.github.io/sub-notes/alexnet/index.md/</link>
-      <pubDate>Tue, 24 Dec 2024 00:00:00 +0000</pubDate>
+      <title>Optimization Algorithms (SGD with momentum, RMSProp, Adam)</title>
+      <link>https://cohlem.github.io/sub-notes/optimization-algorithms/</link>
+      <pubDate>Fri, 27 Dec 2024 00:00:00 +0000</pubDate>
       
-      <guid>https://cohlem.github.io/sub-notes/alexnet/index.md/</guid>
-      <description>Visualize arrays https://array-3d-viz.vercel.app</description>
+      <guid>https://cohlem.github.io/sub-notes/optimization-algorithms/</guid>
+      <description>The simplest algorithm is the gradient descent in which we simply calculate loss over all the training data and then update our parameters, but it would be too slow and would consume too much resources. A faster approach is to use SGD where we calculate loss over every single training data and then do the parameter update, but the gradient update could be fuzzy. A more robust approach is to do mini batch SGD.</description>
     </item>
     
     <item>
@@ -87,7 +87,7 @@ a = Value(2.0, label=&amp;#39;a&amp;#39;) b = Value(-3.0, label=&amp;#39;b&amp;#
       <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
       
       <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
-      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimizing loss with weight initialization BatchNormalization Diagnostic tool to look out for while training NN Misc Matrix Visualization </description>
+      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization Diagnostic tool to look out for while training NN Misc Matrix Visualization </description>
     </item>
     
     <item>
