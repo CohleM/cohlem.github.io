@@ -328,13 +328,13 @@ for i in range(max_steps):
 </code></pre><p>let&rsquo;s take a look at the distribution of our weights, at this point (just before calculating loss).</p>
 <pre tabindex="0"><code>plt.hist(W2.flatten().detach(), bins= 50)
 plt.show()
-</code></pre><p><img loading="lazy" src="sub-notes/optimizing-loss/fig1.png" alt="fig1"  />
+</code></pre><p><img loading="lazy" src="fig1.png" alt="fig1"  />
 </p>
 <p>as you can see the weights are distrubuted from -3 to 3 which is causing the problem, because we want the probability to be around 0, not largely distributed like it is right now.</p>
 <p>let&rsquo;s initialize the weight2 around 0 and see how our loss improves.</p>
 <pre tabindex="0"><code>W2 = torch.randn((n_hidden, vocab_size),          generator=g) * 0.01
 </code></pre><p>the distribution becomes
-<img loading="lazy" src="sub-notes/optimizing-loss/fig2.png" alt="fig2"  />
+<img loading="lazy" src="fig2.png" alt="fig2"  />
 </p>
 <p>Now most of the values are around 0, and let see our loss.</p>
 <pre tabindex="0"><code>    0/ 200000: 3.8073
@@ -360,19 +360,19 @@ plt.show()
 </code></pre><p>you can see how our initial loss improves, this is because now our weights are normally distributed around 0, and not distributed around extreme values i.e (-3 and 3) which caused our initial loss to explode.</p>
 <p>Similarly,</p>
 <p>let&rsquo;s look at the output of our tanh activation.
-<img loading="lazy" src="sub-notes/optimizing-loss/fig3.png" alt="fig3"  />
+<img loading="lazy" src="fig3.png" alt="fig3"  />
 </p>
 <p>as you can see most of our values lie in -1 and -1, why is that ???</p>
 <p>as you might remember our tanh works like this, if the x values lie near 0, we get some expressive non linear values, but when the x values lie in the extreme values, say abs(x)&gt; 1 or 2, the output values will be squashed and will be between -1 and 1.</p>
-<p><img loading="lazy" src="sub-notes/optimizing-loss/fig4.png" alt="fig4"  />
+<p><img loading="lazy" src="fig4.png" alt="fig4"  />
 </p>
 <p>let&rsquo;s see what our input values are for tanh that is resulting in most values to be -1 and 1.
-<img loading="lazy" src="sub-notes/optimizing-loss/fig5.png" alt="fig5"  />
+<img loading="lazy" src="fig5.png" alt="fig5"  />
 
 as you can see the histogram of input values to our tanh function i.e <strong>hpreact</strong> lie in extreme values (i.e not around 0, but is normally distributed between -15 and 15) which is causing the output of tanh function to be -1 and 1. This behaviour holds true for most of the activation functions i.e if input to the activation function is not around 0 and is more extremely distributed, then it will will squashed( i.e most of them will the at extreme ).</p>
 <h3 id="so-why-having-activations--1-and-1-a-problem-here">So why having activations -1 and 1 a problem here?<a hidden class="anchor" aria-hidden="true" href="#so-why-having-activations--1-and-1-a-problem-here">#</a></h3>
 <p>let&rsquo;s look at how gradient is calculated for tanh function.
-<img loading="lazy" src="sub-notes/optimizing-loss/fig6.png" alt="fig6"  />
+<img loading="lazy" src="fig6.png" alt="fig6"  />
 </p>
 <p>as you can see t is the tanh activation, the gradient is dependent on t,</p>
 <p>So if, our activations are -1 and 1, you can clearly see self.grad will be 0, and the gradient at this point will stop and not propagate further.</p>
@@ -384,7 +384,7 @@ as you can see the histogram of input values to our tanh function i.e <strong>hp
 <h3 id="solution-">Solution ?<a hidden class="anchor" aria-hidden="true" href="#solution-">#</a></h3>
 <p>The solution is to initialize our initial weights in such a way that the property of our distribution is maintained. i.e having 0 mean and unit std. We want weights that are not 0, and not too extreme.
 If it&rsquo;s 0 then applying activation doesn&rsquo;t make any sense.
-<img loading="lazy" src="sub-notes/optimizing-loss/fig7.png" alt="fig7"  />
+<img loading="lazy" src="fig7.png" alt="fig7"  />
 </p>
 <p>as you can see how the x has 0 mean and unit std, but for y it isn&rsquo;t the same. y takes on more extreme values which will result in vanishing gradients later on, as shown in the previous steps.
 so we want to preserve that distribution the same for our y value.</p>
