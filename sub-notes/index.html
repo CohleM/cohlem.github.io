@@ -164,6 +164,19 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>skip-connections
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Skip connections are simply skipping the layers by adding the identity of input to it’s output as shown in the figure below.
+Why add the identity of input x to the output ? We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks....</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-12-30 00:00:00 +0000 UTC'>December 30, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to skip-connections" href="https://cohlem.github.io/sub-notes/skip-connections/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>Optimization Algorithms (SGD with momentum, RMSProp, Adam)
     </h2>
   </header>
@@ -213,21 +226,6 @@ consider we have this simple 6 layer NN
   </div>
   <footer class="entry-footer"><span title='2024-12-20 00:00:00 +0000 UTC'>December 20, 2024</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Diagnostic-tool-while-training-nn" href="https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>BatchNormalization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>As we saw in our previous note how important it is to have the pre-activation values to be roughly gaussian (0 mean, and unit std). We saw how we can initialize our weights that make our pre-activation roughly gaussian by using Kaiming init. But, how do we always maintain our pre-activations to be roughly gaussian?
-Answer: BatchNormalization
-Benefits
-stable training preserves vanishing gradients BatchNormalization As the name suggests, batches are normalized (across batches), by normalizing across batches we preserve the gaussian property of our pre-activations....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-19 00:00:00 +0000 UTC'>December 19, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to BatchNormalization" href="https://cohlem.github.io/sub-notes/batchnormalization/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

@@ -5,12 +5,15 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="index, follow">
-<title>Sub-notes | CohleM</title>
+<title>skip-connections | CohleM</title>
 <meta name="keywords" content="">
-<meta name="description" content="Sub-notes - CohleM">
-<meta name="author" content="">
-<link rel="canonical" href="https://cohlem.github.io/sub-notes/">
+<meta name="description" content="Skip connections are simply skipping the layers by adding the identity of input to it&rsquo;s output as shown in the figure below.
+Why add the identity of input x to the output ? We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks.">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/skip-connections/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
 <link rel="icon" href="https://cohlem.github.io/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
@@ -18,7 +21,6 @@
 <link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="https://cohlem.github.io/sub-notes/index.xml">
 <noscript>
     <style>
         #theme-toggle,
@@ -66,14 +68,18 @@ if (!doNotTrack) {
 	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
 }
 </script>
-<meta property="og:title" content="Sub-notes" />
-<meta property="og:description" content="" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://cohlem.github.io/sub-notes/" />
+<meta property="og:title" content="skip-connections" />
+<meta property="og:description" content="Skip connections are simply skipping the layers by adding the identity of input to it&rsquo;s output as shown in the figure below.
+Why add the identity of input x to the output ? We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/skip-connections/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2024-12-30T00:00:00+00:00" />
+<meta property="article:modified_time" content="2024-12-30T00:00:00+00:00" />
 
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Sub-notes"/>
-<meta name="twitter:description" content=""/>
+<meta name="twitter:title" content="skip-connections"/>
+<meta name="twitter:description" content="Skip connections are simply skipping the layers by adding the identity of input to it&rsquo;s output as shown in the figure below.
+Why add the identity of input x to the output ? We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks."/>
 
 
 <script type="application/ld+json">
@@ -86,13 +92,52 @@ if (!doNotTrack) {
       "position":  2 ,
       "name": "Sub-notes",
       "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "skip-connections",
+      "item": "https://cohlem.github.io/sub-notes/skip-connections/"
     }
   ]
 }
 </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "skip-connections",
+  "name": "skip-connections",
+  "description": "Skip connections are simply skipping the layers by adding the identity of input to it\u0026rsquo;s output as shown in the figure below.\nWhy add the identity of input x to the output ? We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks.",
+  "keywords": [
+    
+  ],
+  "articleBody": "Skip connections are simply skipping the layers by adding the identity of input to it’s output as shown in the figure below.\nWhy add the identity of input x to the output ? We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks.\nWhen we add the identity of input to it’s output like this hl+1​=F(hl​)+hl​\nand when we backpropagate, we get this type of equation. So even when d(F(h1))/dh1 becomes close to 0 the previous gradient dL/dhl+1 is propagated as it is multiplied with 1 which is the outcome of adding the identity of input to its output.\nEventually, skip connections stop vanishing gradient problem, and the other thing they help with is that, when going to a residual block(could be attention block or feedforward block) neural network may loose previous information when going through that transformation, so adding identity of input to its output will take into consideration the new learned features + the previous features.\n",
+  "wordCount" : "189",
+  "inLanguage": "en",
+  "datePublished": "2024-12-30T00:00:00Z",
+  "dateModified": "2024-12-30T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/skip-connections/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
 </head>
 
-<body class="list" id="top">
+<body class="" id="top">
 <script>
     if (localStorage.getItem("pref-theme") === "dark") {
         document.body.classList.add('dark');
@@ -155,90 +200,50 @@ if (!doNotTrack) {
         </ul>
     </nav>
 </header>
-<main class="main"> 
-<header class="page-header"><div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a></div>
-  <h1>
-    Sub-notes
-  </h1>
-</header>
+<main class="main">
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>BatchNormalization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>As we saw in our previous note how important it is to have the pre-activation values to be roughly gaussian (0 mean, and unit std). We saw how we can initialize our weights that make our pre-activation roughly gaussian by using Kaiming init. But, how do we always maintain our pre-activations to be roughly gaussian?
-Answer: BatchNormalization
-Benefits
-stable training preserves vanishing gradients BatchNormalization As the name suggests, batches are normalized (across batches), by normalizing across batches we preserve the gaussian property of our pre-activations....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-19 00:00:00 +0000 UTC'>December 19, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to BatchNormalization" href="https://cohlem.github.io/sub-notes/batchnormalization/"></a>
-</article>
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      skip-connections
+    </h1>
+    <div class="post-meta"><span title='2024-12-30 00:00:00 +0000 UTC'>December 30, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Maximum likelihood estimate as loss function
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> </p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-16 00:00:00 +0000 UTC'>December 16, 2024</span>&nbsp;·&nbsp;0 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Maximum likelihood estimate as loss function" href="https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/"></a>
-</article>
+</div>
+  </header> 
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Backpropagation from scratch
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Source: The spelled-out intro to neural networks and backpropagation: building micrograd
-Backpropagation on paper It implements backpropagation for two arithmetic operation (multiplication and addition) which are quite straightforward.
-Implementation is for this equation.
-a = Value(2.0, label=&#39;a&#39;) b = Value(-3.0, label=&#39;b&#39;) c = Value(10.0, label=&#39;c&#39;) e = a*b; e.label = &#39;e&#39; d = e &#43; c; d.label = &#39;d&#39; f = Value(-2.0, label=&#39;f&#39;) L = d * f; L.label = &#39;L&#39; L The most important thing to note here is the gradient accumulation step (shown at the bottom-left)....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-08 21:57:23 +0545 +0545'>December 8, 2024</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Backpropagation from scratch" href="https://cohlem.github.io/sub-notes/backpropagation-from-scratch/"></a>
-</article>
+  <div class="post-content"><p>Skip connections are simply skipping the layers by adding the identity of input to it&rsquo;s output as shown in the figure below.</p>
+<p><img loading="lazy" src="fig1.png" alt="fig1"  />
+</p>
+<p>Why add the identity of input x to the output ?
+<img loading="lazy" src="fig2.png" alt="fig2"  />
+</p>
+<p>We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks.</p>
+<p>When we add the identity of input to it&rsquo;s output like this
+hl+1​=F(hl​)+hl​</p>
+<p>and when we backpropagate, we get this type of equation.
+<img loading="lazy" src="fig3.png" alt="fig3"  />
+</p>
+<p>So even when d(F(h1))/dh1 becomes close to 0 the previous gradient dL/dhl+1 is propagated as it is multiplied with 1 which is the outcome of adding the identity of input to its output.</p>
+<p>Eventually, skip connections stop vanishing gradient problem, and the other thing they help with is that, when going to a residual block(could be attention block or feedforward block) neural network may loose previous information when going through that transformation, so adding identity of input to its output will take into consideration the new learned features + the previous features.</p>
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Why we add regularization in loss function
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>it penalizes the weights, and prioritizes uniformity in weights. How does it penalize the weights? Now when we do the backprop and gradient descent.
-The gradient of loss w.r.t some weights become as we can see it penalizes the weight by reducing the weights’s value by some higher amount compared to the some minimial weight update when we only used loss function.
-So overall, the model tries to balance the Loss (L) as well as keep the weights small....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-08 21:57:23 +0545 +0545'>December 8, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Why we add regularization in loss function" href="https://cohlem.github.io/sub-notes/why-we-need-regularization/"></a>
-</article>
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>optimizing-loss-with-weight-initialization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Problem Consider a simple MLP that takes in combined 3 character embeddings as an input and we predicts a new character.
-# A simple MLP n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 200 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) b1 = torch....</p>
   </div>
-  <footer class="entry-footer">6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to optimizing-loss-with-weight-initialization" href="https://cohlem.github.io/sub-notes/optimizing-loss/"></a>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="next" href="https://cohlem.github.io/sub-notes/optimization-algorithms/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Optimization Algorithms (SGD with momentum, RMSProp, Adam)</span>
+  </a>
+</nav>
+
+  </footer>
 </article>
-<footer class="page-footer">
-  <nav class="pagination">
-    <a class="prev" href="https://cohlem.github.io/sub-notes/">
-      «&nbsp;Prev&nbsp;
-    </a>
-    <a class="next" href="https://cohlem.github.io/sub-notes/page/3/">Next&nbsp;&nbsp;»
-    </a>
-  </nav>
-</footer>
     </main>
     
 <footer class="footer">

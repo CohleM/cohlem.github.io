@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" dir="auto">
 
-<head><meta charset="utf-8">
+<head>
+	<meta name="generator" content="Hugo 0.115.4"><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="index, follow">
-<title>Sub-notes | CohleM</title>
-<meta name="keywords" content="">
-<meta name="description" content="Sub-notes - CohleM">
+<title>CohleM</title>
+
+<meta name="description" content="">
 <meta name="author" content="">
-<link rel="canonical" href="https://cohlem.github.io/sub-notes/">
+<link rel="canonical" href="https://cohlem.github.io/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://cohlem.github.io/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
@@ -18,7 +19,8 @@
 <link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="https://cohlem.github.io/sub-notes/index.xml">
+<link rel="alternate" type="application/rss+xml" href="https://cohlem.github.io/index.xml">
+<link rel="alternate" type="application/json" href="https://cohlem.github.io/index.json">
 <noscript>
     <style>
         #theme-toggle,
@@ -66,27 +68,25 @@ if (!doNotTrack) {
 	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
 }
 </script>
-<meta property="og:title" content="Sub-notes" />
+<meta property="og:title" content="CohleM" />
 <meta property="og:description" content="" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://cohlem.github.io/sub-notes/" />
+<meta property="og:url" content="https://cohlem.github.io/" />
 
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Sub-notes"/>
+<meta name="twitter:title" content="CohleM"/>
 <meta name="twitter:description" content=""/>
-
 
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [, 
-    {
-      "@type": "ListItem",
-      "position":  2 ,
-      "name": "Sub-notes",
-      "item": "https://cohlem.github.io/sub-notes/"
-    }
+  "@type": "Organization",
+  "name": "CohleM",
+  "url": "https://cohlem.github.io",
+  "description": "",
+  "thumbnailUrl": "https://cohlem.github.io/favicon.ico",
+  "sameAs": [
+      "https://github.com/CohleM", "https://twitter.com/Cohle_M", "https://www.linkedin.com/in/manish-bhatta-030a61189//"
   ]
 }
 </script>
@@ -156,86 +156,22 @@ if (!doNotTrack) {
     </nav>
 </header>
 <main class="main"> 
-<header class="page-header"><div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a></div>
-  <h1>
-    Sub-notes
-  </h1>
-</header>
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2>BatchNormalization
+    <h2>TITLE
     </h2>
   </header>
   <div class="entry-content">
-    <p>As we saw in our previous note how important it is to have the pre-activation values to be roughly gaussian (0 mean, and unit std). We saw how we can initialize our weights that make our pre-activation roughly gaussian by using Kaiming init. But, how do we always maintain our pre-activations to be roughly gaussian?
-Answer: BatchNormalization
-Benefits
-stable training preserves vanishing gradients BatchNormalization As the name suggests, batches are normalized (across batches), by normalizing across batches we preserve the gaussian property of our pre-activations....</p>
+    <p></p>
   </div>
-  <footer class="entry-footer"><span title='2024-12-19 00:00:00 +0000 UTC'>December 19, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to BatchNormalization" href="https://cohlem.github.io/sub-notes/batchnormalization/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Maximum likelihood estimate as loss function
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> </p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-16 00:00:00 +0000 UTC'>December 16, 2024</span>&nbsp;·&nbsp;0 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Maximum likelihood estimate as loss function" href="https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Backpropagation from scratch
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Source: The spelled-out intro to neural networks and backpropagation: building micrograd
-Backpropagation on paper It implements backpropagation for two arithmetic operation (multiplication and addition) which are quite straightforward.
-Implementation is for this equation.
-a = Value(2.0, label=&#39;a&#39;) b = Value(-3.0, label=&#39;b&#39;) c = Value(10.0, label=&#39;c&#39;) e = a*b; e.label = &#39;e&#39; d = e &#43; c; d.label = &#39;d&#39; f = Value(-2.0, label=&#39;f&#39;) L = d * f; L.label = &#39;L&#39; L The most important thing to note here is the gradient accumulation step (shown at the bottom-left)....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-08 21:57:23 +0545 +0545'>December 8, 2024</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Backpropagation from scratch" href="https://cohlem.github.io/sub-notes/backpropagation-from-scratch/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Why we add regularization in loss function
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>it penalizes the weights, and prioritizes uniformity in weights. How does it penalize the weights? Now when we do the backprop and gradient descent.
-The gradient of loss w.r.t some weights become as we can see it penalizes the weight by reducing the weights’s value by some higher amount compared to the some minimial weight update when we only used loss function.
-So overall, the model tries to balance the Loss (L) as well as keep the weights small....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-08 21:57:23 +0545 +0545'>December 8, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Why we add regularization in loss function" href="https://cohlem.github.io/sub-notes/why-we-need-regularization/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>optimizing-loss-with-weight-initialization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Problem Consider a simple MLP that takes in combined 3 character embeddings as an input and we predicts a new character.
-# A simple MLP n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 200 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) b1 = torch....</p>
-  </div>
-  <footer class="entry-footer">6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to optimizing-loss-with-weight-initialization" href="https://cohlem.github.io/sub-notes/optimizing-loss/"></a>
+  <footer class="entry-footer">0 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to TITLE" href="https://cohlem.github.io/sub-notes/template/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
-    <a class="prev" href="https://cohlem.github.io/sub-notes/">
+    <a class="prev" href="https://cohlem.github.io/page/2/">
       «&nbsp;Prev&nbsp;
-    </a>
-    <a class="next" href="https://cohlem.github.io/sub-notes/page/3/">Next&nbsp;&nbsp;»
     </a>
   </nav>
 </footer>

@@ -413,7 +413,7 @@ with torch.no_grad():
 </p>
 <p>The plot is starting to look nicer, because there is less saturation, because now values don&rsquo;t lie in the extreme values of tanh, and gradient will be propagated. But we still have issue, as we can see the standard deviation is decreasing this is because of the property of tanh, i.e it squashes the values, initially (blue plot) the output was decent but in later layers, the distribution is being shrinked that because of the property of tanh.</p>
 <p>now let&rsquo;s apply kaiming init with gain too, for tanh  the gain is 5/3.</p>
-<p><img loading="lazy" src="fig3.png" alt="fig3"  />
+<p><img loading="lazy" src="sub-notes/Diagnostic-tool-while-training-nn/fig3.png" alt="fig3"  />
 
 Now the values are being evenly distributed, and the standard deviation is stable (doesn&rsquo;t decrease with iteration).</p>
 <p>We have to precisely measure the gains to have a stable training. But the introduction of batch normalization changes the case, and we don&rsquo;t have to be that much aware for precisely initializing weights.</p>

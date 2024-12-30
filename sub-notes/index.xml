@@ -6,7 +6,17 @@
     <description>Recent content in Sub-notes on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Fri, 27 Dec 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 30 Dec 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>skip-connections</title>
+      <link>https://cohlem.github.io/sub-notes/skip-connections/</link>
+      <pubDate>Mon, 30 Dec 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/skip-connections/</guid>
+      <description>Skip connections are simply skipping the layers by adding the identity of input to it&amp;rsquo;s output as shown in the figure below.
+Why add the identity of input x to the output ? We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks.</description>
+    </item>
+    
     <item>
       <title>Optimization Algorithms (SGD with momentum, RMSProp, Adam)</title>
       <link>https://cohlem.github.io/sub-notes/optimization-algorithms/</link>
