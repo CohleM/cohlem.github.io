@@ -97,7 +97,7 @@ a = Value(2.0, label=&amp;#39;a&amp;#39;) b = Value(-3.0, label=&amp;#39;b&amp;#
       <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
       
       <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
-      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization Diagnostic tool to look out for while training NN Skip Connections Misc Matrix Visualization </description>
+      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization Diagnostic tool to look out for while training NN Skip Connections Misc Matrix Visualization Architecture Implementation GPT implementation </description>
     </item>
     
     <item>
@@ -138,6 +138,15 @@ So overall, the model tries to balance the Loss (L) as well as keep the weights 
       <description>This is my experience and experimentation that I did while building a product for the use case of using LLMs for our own data for question answering. If you&amp;rsquo;re doing something similar, this could be of some help.
 The most commonly used methods while using LLMs with our own data were typically
 Fine-tuning the model with your own data Using Retrieval Augmented Generation (RAG) techniques Fine-tuning the model with your own data This is the initial method and follows the general structure of training a model</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://cohlem.github.io/sub-notes/gpt-implementation/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/gpt-implementation/</guid>
+      <description># We always start with a dataset to train on. Let&amp;#39;s download the tiny shakespeare dataset !wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt with open(&amp;#39;input.txt&amp;#39;, &amp;#39;r&amp;#39;, encoding=&amp;#39;utf-8&amp;#39;) as f: data = f.read() from torch import nn import torch vocab = sorted(list(set(data))) len(data) stoi = {s:i for i,s in enumerate(vocab)} itos = {i:s for s,i in stoi.items()} encode = lambda x: [stoi[i] for i in x] decode = lambda x: &amp;#39;&amp;#39;.join([itos[i] for i in x]) type(data) str Xtr = data[:int(0.</description>
     </item>
     
     
