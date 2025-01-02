@@ -6,7 +6,19 @@
     <description>Recent content on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Mon, 30 Dec 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 02 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Training Speed Optimization</title>
+      <link>https://cohlem.github.io/sub-notes/training-speed-optimization/</link>
+      <pubDate>Thu, 02 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/training-speed-optimization/</guid>
+      <description>Precision The more the precision point the less operation (TFLOPS) is performed.
+FP64 used for scientific research purposes, where precision is a must. TF32 and BFLOAT16 are mostly used in NN training. INT8 is used for inference. Picture below shows specifications of A100 GPU.
+Using these precision points may have some difference in code. See pytorch&amp;rsquo;s docs
+torch.compile It works in a similar fashion like the GCC compiler. It works by reducing overheads introduced by the python interpreter and optimizing the GPU read and writes.</description>
+    </item>
+    
     <item>
       <title>skip-connections</title>
       <link>https://cohlem.github.io/sub-notes/skip-connections/</link>

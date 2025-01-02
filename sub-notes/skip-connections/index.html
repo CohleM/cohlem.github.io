@@ -214,10 +214,10 @@ Why add the identity of input x to the output ? We calculate the gradients of pa
   </header> 
 
   <div class="post-content"><p>Skip connections are simply skipping the layers by adding the identity of input to it&rsquo;s output as shown in the figure below.</p>
-<p><img loading="lazy" src="fig1.png" alt="fig1"  />
+<p><img loading="lazy" src="sub-notes/skip-connections/fig1.png" alt="fig1"  />
 </p>
 <p>Why add the identity of input x to the output ?
-<img loading="lazy" src="fig2.png" alt="fig2"  />
+<img loading="lazy" src="sub-notes/skip-connections/fig2.png" alt="fig2"  />
 </p>
 <p>We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks.</p>
 <p>When we add the identity of input to it&rsquo;s output like this
@@ -235,6 +235,11 @@ hl+1​=F(hl​)+hl​</p>
     <ul class="post-tags">
     </ul>
 <nav class="paginav">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/training-speed-optimization/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Training Speed Optimization</span>
+  </a>
   <a class="next" href="https://cohlem.github.io/sub-notes/optimization-algorithms/">
     <span class="title">Next »</span>
     <br>
