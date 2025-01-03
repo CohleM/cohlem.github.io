@@ -6,7 +6,27 @@
     <description>Recent content in Sub-notes on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Thu, 02 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 03 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>DDP and gradient sync</title>
+      <link>https://cohlem.github.io/sub-notes/ddp/</link>
+      <pubDate>Fri, 03 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/ddp/</guid>
+      <description>When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.
+The way to do this in pytorch is to use DDP (take a look into their docs)</description>
+    </item>
+    
+    <item>
+      <title>Gradient Accumulation</title>
+      <link>https://cohlem.github.io/sub-notes/gradient-accumulation/</link>
+      <pubDate>Fri, 03 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/gradient-accumulation/</guid>
+      <description>Gradient Accumulation When we want to train a neural network with some predefined set of tokens, but don&amp;rsquo;t have enough GPU resources, what do we do?
+Gradient Accumulation We simply accumulate the gradients. For instance, in order to reproduce GPT-2 124B, we need to train the model with 0.5 Million tokens in a single run with 1024 context length, we would need 0.5e6/ 1024 = 488 batches i.e B,T = (488,1024) to calculate the gradients and update them.</description>
+    </item>
+    
     <item>
       <title>Training Speed Optimization</title>
       <link>https://cohlem.github.io/sub-notes/training-speed-optimization/</link>

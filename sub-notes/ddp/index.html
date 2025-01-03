@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>DDP and gradient sync | CohleM</title>
+<meta name="keywords" content="">
+<meta name="description" content="When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.
+The way to do this in pytorch is to use DDP (take a look into their docs)">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/ddp/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://cohlem.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://cohlem.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X6LV4QY2G2"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
+}
+</script>
+<meta property="og:title" content="DDP and gradient sync" />
+<meta property="og:description" content="When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.
+The way to do this in pytorch is to use DDP (take a look into their docs)" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/ddp/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2025-01-03T00:00:00+00:00" />
+<meta property="article:modified_time" content="2025-01-03T00:00:00+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="DDP and gradient sync"/>
+<meta name="twitter:description" content="When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.
+The way to do this in pytorch is to use DDP (take a look into their docs)"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Sub-notes",
+      "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "DDP and gradient sync",
+      "item": "https://cohlem.github.io/sub-notes/ddp/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "DDP and gradient sync",
+  "name": "DDP and gradient sync",
+  "description": "When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.\nThe way to do this in pytorch is to use DDP (take a look into their docs)",
+  "keywords": [
+    
+  ],
+  "articleBody": "When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.\nThe way to do this in pytorch is to use DDP (take a look into their docs)\nThe important thing to be careful about is that when we train our NN in different GPUs, each GPU calculates gradient and that gradient is averaged among all the all the gradients calculated from each GPUs and then deposited on each of the gpu and then we do the descent step.\nWhy do we do this ?\nSo that our weights become consistent and mathematically equivalent to when we train on 8x the batch size but on same GPU.\nAt first I was confused how would this be equivalent to the gradients when we trained it on single GPU but with 8x the batch size.\nHere’s a simple mathematical formula.\nFIGURE1 But lets look at our manual backprogpagation which will help us understand better.\nForward pass n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 64 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) # Layer 1 W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5) b1 = torch.randn(n_hidden, generator=g) * 0.1 # using b1 just for fun, it's useless because of BN # Layer 2 W2 = torch.randn((n_hidden, vocab_size), generator=g) * 0.1 b2 = torch.randn(vocab_size, generator=g) * 0.1 # BatchNorm parameters bngain = torch.randn((1, n_hidden))*0.1 + 1.0 bnbias = torch.randn((1, n_hidden))*0.1 # Note: I am initializating many of these parameters in non-standard ways # because sometimes initializating with e.g. all zeros could mask an incorrect # implementation of the backward pass. parameters = [C, W1, b1, W2, b2, bngain, bnbias] print(sum(p.nelement() for p in parameters)) # number of parameters in total for p in parameters: p.requires_grad = True batch_size = 32 n = batch_size # a shorter variable also, for convenience # construct a minibatch ix = torch.randint(0, Xtr.shape[0], (batch_size,), generator=g) Xb, Yb = Xtr[ix], Ytr[ix] # batch X,Y # forward pass, \"chunkated\" into smaller steps that are possible to backward one at a time emb = C[Xb] # embed the characters into vectors embcat = emb.view(emb.shape[0], -1) # concatenate the vectors # Linear layer 1 hprebn = embcat @ W1 + b1 # hidden layer pre-activation # BatchNorm layer bnmeani = 1/n*hprebn.sum(0, keepdim=True) bndiff = hprebn - bnmeani bndiff2 = bndiff**2 bnvar = 1/(n-1)*(bndiff2).sum(0, keepdim=True) # note: Bessel's correction (dividing by n-1, not n) bnvar_inv = (bnvar + 1e-5)**-0.5 bnraw = bndiff * bnvar_inv hpreact = bngain * bnraw + bnbias # Non-linearity h = torch.tanh(hpreact) # hidden layer # Linear layer 2 logits = h @ W2 + b2 # output layer # cross entropy loss (same as F.cross_entropy(logits, Yb)) logit_maxes = logits.max(1, keepdim=True).values norm_logits = logits - logit_maxes # subtract max for numerical stability counts = norm_logits.exp() counts_sum = counts.sum(1, keepdims=True) counts_sum_inv = counts_sum**-1 # if I use (1.0 / counts_sum) instead then I can't get backprop to be bit exact... probs = counts * counts_sum_inv logprobs = probs.log() loss = -logprobs[range(n), Yb].mean() # PyTorch backward pass for p in parameters: p.grad = None for t in [logprobs, probs, counts, counts_sum, counts_sum_inv, # afaik there is no cleaner way norm_logits, logit_maxes, logits, h, hpreact, bnraw, bnvar_inv, bnvar, bndiff2, bndiff, hprebn, bnmeani, embcat, emb]: t.retain_grad() loss.backward() loss Backprop # Exercise 1: backprop through the whole thing manually, # backpropagating through exactly all of the variables # as they are defined in the forward pass above, one by one # ----------------- # YOUR CODE HERE :) dlogprobs = torch.zeros_like(logprobs) dlogprobs[range(n), Yb] = -1.0*(1/logprobs.shape[0]) # 1 \u003c=== look here dprobs = (1/probs)*dlogprobs # 2 dcounts_sum_inv = (dprobs*counts).sum(1, keepdim = True) dcounts = dprobs * counts_sum_inv dcounts_sum = -1.0*((counts_sum)**(-2.0))*dcounts_sum_inv dcounts += torch.ones_like(counts_sum)*dcounts_sum dnorm_logits = norm_logits.exp()*dcounts dlogit_maxes = (-1.0*dnorm_logits).sum(1,keepdim=True) dlogits = (1.0*dnorm_logits) dlogits += F.one_hot(logits.max(1).indices, num_classes=logits.shape[1])*dlogit_maxes db2 = (dlogits*torch.ones_like(logits)).sum(0) dh = dlogits @ W2.T dW2 = h.T @ dlogits dhpreact = dh*(1-h**(2)) dbnbias = (dhpreact*torch.ones_like(bnraw)).sum(0, keepdim= True) dbngain = (dhpreact*bnraw*torch.ones_like(bnraw)).sum(0, keepdim=True) dbnraw = dhpreact*bngain*torch.ones_like(bnraw) dbnvar_inv = (dbnraw* (torch.ones_like(bndiff) * bndiff)).sum(0, keepdim=True) dbndiff = (dbnraw* (torch.ones_like(bndiff) * bnvar_inv)) dbnvar = dbnvar_inv* (-0.5)*(((bnvar + 1e-5))**(-1.5)) dbndiff2 = (1.0/(n-1) )*torch.ones_like(bndiff2) * dbnvar dbndiff += dbndiff2*2*(bndiff) dhprebn = dbndiff*1.0 dbnmeani = (torch.ones_like(hprebn)*-1.0*dbndiff).sum(0, keepdim = True) dhprebn += torch.ones_like(hprebn)*(1/n)*dbnmeani db1 = (torch.ones_like(dhprebn)*dhprebn).sum(0) dembcat = dhprebn @ W1.T dW1 = embcat.T @ dhprebn demb = dembcat.view(emb.shape[0],emb.shape[1],emb.shape[2]) dC = torch.zeros_like(C) for i in range(Xb.shape[0]): for j in range(Xb.shape[1]): dC[Xb[i,j]] += demb[i,j] # print(demb[i,j].shape) # ----------------- cmp('logprobs', dlogprobs, logprobs) cmp('probs', dprobs, probs) cmp('counts_sum_inv', dcounts_sum_inv, counts_sum_inv) cmp('counts_sum', dcounts_sum, counts_sum) cmp('counts', dcounts, counts) cmp('norm_logits', dnorm_logits, norm_logits) cmp('logit_maxes', dlogit_maxes, logit_maxes) cmp('logits', dlogits, logits) cmp('h', dh, h) cmp('W2', dW2, W2) cmp('b2', db2, b2) cmp('hpreact', dhpreact, hpreact) cmp('bngain', dbngain, bngain) cmp('bnbias', dbnbias, bnbias) cmp('bnraw', dbnraw, bnraw) cmp('bnvar_inv', dbnvar_inv, bnvar_inv) cmp('bnvar', dbnvar, bnvar) cmp('bndiff2', dbndiff2, bndiff2) cmp('bndiff', dbndiff, bndiff) cmp('bnmeani', dbnmeani, bnmeani) cmp('hprebn', dhprebn, hprebn) cmp('embcat', dembcat, embcat) cmp('W1', dW1, W1) cmp('b1', db1, b1) cmp('emb', demb, emb) cmp('C', dC, C) lets look at our last line of code in forward pass\nloss = -logprobs[range(n), Yb].mean() what we do is simply the cross entropy i.e normalize using softmax function and pluck out the log probability from the output token’s index.\nand calculate it’s derivative here in second line of code in the backward pass like this.\ndlogprobs[range(n), Yb] = -1.0*(1/logprobs.shape[0]) # 1 \u003c=== look here what we’re doing is simply calculating the average over all the batches and that average is deposited in each element in [range(n), Yb] .\nWhy do we do the average? dL/dlogprobs = 1 (which comes from dL/dL) x d(dlogprobs[range(n), Yb])/dlogprobs\nsince the elements in this range [range(n), Yb]) is averaged, each element will get (1/total_number) x itself\nso the local derivative of (1/total_number) x iteself w.r.t itself is 1/total_number which will be now deposited into the elements of dlogprobs[range(n), Yb]\nlet’s stop right here and this matches our first equation in FIGURE1, and if we do this operation for 8 times more batches on single GPU we get the second equation in FIGURE1. If we look at this code, we can see that we are only increasing the n value here.\ndlogprobs[range(8*n), Yb] = -1.0*(1/logprobs.shape[0]) # 1 \u003c=== look here So from this it’s safe to say that training on multiple GPUs and averaging their gradients is same as training on single GPU with 8 times more batches.\n",
+  "wordCount" : "1100",
+  "inLanguage": "en",
+  "datePublished": "2025-01-03T00:00:00Z",
+  "dateModified": "2025-01-03T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/ddp/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://cohlem.github.io" accesskey="h" title="CohleM (Alt + H)">CohleM</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://cohlem.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/archives/" title="Archive">
+                    <span>Archive</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/notes/" title="Notes">
+                    <span>Notes</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      DDP and gradient sync
+    </h1>
+    <div class="post-meta"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#forward-pass" aria-label="Forward pass">Forward pass</a></li>
+                <li>
+                    <a href="#backprop" aria-label="Backprop">Backprop</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.</p>
+<p>The way to do this in pytorch is to use DDP (take a look into their docs)</p>
+<p>The important thing to be careful about is that when we train our NN in different GPUs, each GPU calculates gradient and that gradient is averaged among all the all the gradients calculated from each GPUs and then deposited on each of the gpu and then we do the descent step.</p>
+<p>Why do we do this ?</p>
+<p>So that our weights become consistent and mathematically equivalent to when we train on 8x the batch size but on same GPU.</p>
+<p>At first I was confused how would this be equivalent to the gradients when we trained it on single GPU but with 8x the batch size.</p>
+<p>Here&rsquo;s a simple mathematical formula.</p>
+<p>FIGURE1
+<img loading="lazy" src="fig1.png" alt="DDP"  />
+</p>
+<p>But lets look at our manual backprogpagation which will help us understand better.</p>
+<h3 id="forward-pass">Forward pass<a hidden class="anchor" aria-hidden="true" href="#forward-pass">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>n_embd <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span> <span style="color:#75715e"># the dimensionality of the character embedding vectors</span>
+</span></span><span style="display:flex;"><span>n_hidden <span style="color:#f92672">=</span> <span style="color:#ae81ff">64</span> <span style="color:#75715e"># the number of neurons in the hidden layer of the MLP</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>g <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>Generator()<span style="color:#f92672">.</span>manual_seed(<span style="color:#ae81ff">2147483647</span>) <span style="color:#75715e"># for reproducibility</span>
+</span></span><span style="display:flex;"><span>C  <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn((vocab_size, n_embd),            generator<span style="color:#f92672">=</span>g)
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Layer 1</span>
+</span></span><span style="display:flex;"><span>W1 <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn((n_embd <span style="color:#f92672">*</span> block_size, n_hidden), generator<span style="color:#f92672">=</span>g) <span style="color:#f92672">*</span> (<span style="color:#ae81ff">5</span><span style="color:#f92672">/</span><span style="color:#ae81ff">3</span>)<span style="color:#f92672">/</span>((n_embd <span style="color:#f92672">*</span> block_size)<span style="color:#f92672">**</span><span style="color:#ae81ff">0.5</span>)
+</span></span><span style="display:flex;"><span>b1 <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn(n_hidden,                        generator<span style="color:#f92672">=</span>g) <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.1</span> <span style="color:#75715e"># using b1 just for fun, it&#39;s useless because of BN</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Layer 2</span>
+</span></span><span style="display:flex;"><span>W2 <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn((n_hidden, vocab_size),          generator<span style="color:#f92672">=</span>g) <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.1</span>
+</span></span><span style="display:flex;"><span>b2 <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn(vocab_size,                      generator<span style="color:#f92672">=</span>g) <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># BatchNorm parameters</span>
+</span></span><span style="display:flex;"><span>bngain <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn((<span style="color:#ae81ff">1</span>, n_hidden))<span style="color:#f92672">*</span><span style="color:#ae81ff">0.1</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1.0</span>
+</span></span><span style="display:flex;"><span>bnbias <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn((<span style="color:#ae81ff">1</span>, n_hidden))<span style="color:#f92672">*</span><span style="color:#ae81ff">0.1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Note: I am initializating many of these parameters in non-standard ways</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># because sometimes initializating with e.g. all zeros could mask an incorrect</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># implementation of the backward pass.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>parameters <span style="color:#f92672">=</span> [C, W1, b1, W2, b2, bngain, bnbias]
+</span></span><span style="display:flex;"><span>print(sum(p<span style="color:#f92672">.</span>nelement() <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> parameters)) <span style="color:#75715e"># number of parameters in total</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> parameters:
+</span></span><span style="display:flex;"><span>  p<span style="color:#f92672">.</span>requires_grad <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>batch_size <span style="color:#f92672">=</span> <span style="color:#ae81ff">32</span>
+</span></span><span style="display:flex;"><span>n <span style="color:#f92672">=</span> batch_size <span style="color:#75715e"># a shorter variable also, for convenience</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># construct a minibatch</span>
+</span></span><span style="display:flex;"><span>ix <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randint(<span style="color:#ae81ff">0</span>, Xtr<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>], (batch_size,), generator<span style="color:#f92672">=</span>g)
+</span></span><span style="display:flex;"><span>Xb, Yb <span style="color:#f92672">=</span> Xtr[ix], Ytr[ix] <span style="color:#75715e"># batch X,Y</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># forward pass, &#34;chunkated&#34; into smaller steps that are possible to backward one at a time</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>emb <span style="color:#f92672">=</span> C[Xb] <span style="color:#75715e"># embed the characters into vectors</span>
+</span></span><span style="display:flex;"><span>embcat <span style="color:#f92672">=</span> emb<span style="color:#f92672">.</span>view(emb<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>], <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#75715e"># concatenate the vectors</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Linear layer 1</span>
+</span></span><span style="display:flex;"><span>hprebn <span style="color:#f92672">=</span> embcat <span style="color:#f92672">@</span> W1 <span style="color:#f92672">+</span> b1 <span style="color:#75715e"># hidden layer pre-activation</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># BatchNorm layer</span>
+</span></span><span style="display:flex;"><span>bnmeani <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>n<span style="color:#f92672">*</span>hprebn<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">0</span>, keepdim<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>bndiff <span style="color:#f92672">=</span> hprebn <span style="color:#f92672">-</span> bnmeani
+</span></span><span style="display:flex;"><span>bndiff2 <span style="color:#f92672">=</span> bndiff<span style="color:#f92672">**</span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>bnvar <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>(n<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">*</span>(bndiff2)<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">0</span>, keepdim<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>) <span style="color:#75715e"># note: Bessel&#39;s correction (dividing by n-1, not n)</span>
+</span></span><span style="display:flex;"><span>bnvar_inv <span style="color:#f92672">=</span> (bnvar <span style="color:#f92672">+</span> <span style="color:#ae81ff">1e-5</span>)<span style="color:#f92672">**-</span><span style="color:#ae81ff">0.5</span>
+</span></span><span style="display:flex;"><span>bnraw <span style="color:#f92672">=</span> bndiff <span style="color:#f92672">*</span> bnvar_inv
+</span></span><span style="display:flex;"><span>hpreact <span style="color:#f92672">=</span> bngain <span style="color:#f92672">*</span> bnraw <span style="color:#f92672">+</span> bnbias
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Non-linearity</span>
+</span></span><span style="display:flex;"><span>h <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>tanh(hpreact) <span style="color:#75715e"># hidden layer</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Linear layer 2</span>
+</span></span><span style="display:flex;"><span>logits <span style="color:#f92672">=</span> h <span style="color:#f92672">@</span> W2 <span style="color:#f92672">+</span> b2 <span style="color:#75715e"># output layer</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cross entropy loss (same as F.cross_entropy(logits, Yb))</span>
+</span></span><span style="display:flex;"><span>logit_maxes <span style="color:#f92672">=</span> logits<span style="color:#f92672">.</span>max(<span style="color:#ae81ff">1</span>, keepdim<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)<span style="color:#f92672">.</span>values
+</span></span><span style="display:flex;"><span>norm_logits <span style="color:#f92672">=</span> logits <span style="color:#f92672">-</span> logit_maxes <span style="color:#75715e"># subtract max for numerical stability</span>
+</span></span><span style="display:flex;"><span>counts <span style="color:#f92672">=</span> norm_logits<span style="color:#f92672">.</span>exp()
+</span></span><span style="display:flex;"><span>counts_sum <span style="color:#f92672">=</span> counts<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">1</span>, keepdims<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>counts_sum_inv <span style="color:#f92672">=</span> counts_sum<span style="color:#f92672">**-</span><span style="color:#ae81ff">1</span> <span style="color:#75715e"># if I use (1.0 / counts_sum) instead then I can&#39;t get backprop to be bit exact...</span>
+</span></span><span style="display:flex;"><span>probs <span style="color:#f92672">=</span> counts <span style="color:#f92672">*</span> counts_sum_inv
+</span></span><span style="display:flex;"><span>logprobs <span style="color:#f92672">=</span> probs<span style="color:#f92672">.</span>log()
+</span></span><span style="display:flex;"><span>loss <span style="color:#f92672">=</span> <span style="color:#f92672">-</span>logprobs[range(n), Yb]<span style="color:#f92672">.</span>mean()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># PyTorch backward pass</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> parameters:
+</span></span><span style="display:flex;"><span>  p<span style="color:#f92672">.</span>grad <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> t <span style="color:#f92672">in</span> [logprobs, probs, counts, counts_sum, counts_sum_inv, <span style="color:#75715e"># afaik there is no cleaner way</span>
+</span></span><span style="display:flex;"><span>          norm_logits, logit_maxes, logits, h, hpreact, bnraw,
+</span></span><span style="display:flex;"><span>         bnvar_inv, bnvar, bndiff2, bndiff, hprebn, bnmeani,
+</span></span><span style="display:flex;"><span>         embcat, emb]:
+</span></span><span style="display:flex;"><span>  t<span style="color:#f92672">.</span>retain_grad()
+</span></span><span style="display:flex;"><span>loss<span style="color:#f92672">.</span>backward()
+</span></span><span style="display:flex;"><span>loss
+</span></span></code></pre></div><h3 id="backprop">Backprop<a hidden class="anchor" aria-hidden="true" href="#backprop">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># Exercise 1: backprop through the whole thing manually,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># backpropagating through exactly all of the variables</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># as they are defined in the forward pass above, one by one</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -----------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># YOUR CODE HERE :)</span>
+</span></span><span style="display:flex;"><span>dlogprobs <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>zeros_like(logprobs)
+</span></span><span style="display:flex;"><span>dlogprobs[range(n), Yb] <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1.0</span><span style="color:#f92672">*</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>logprobs<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>]) <span style="color:#75715e"># 1 &lt;=== look here</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>dprobs <span style="color:#f92672">=</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>probs)<span style="color:#f92672">*</span>dlogprobs <span style="color:#75715e"># 2</span>
+</span></span><span style="display:flex;"><span>dcounts_sum_inv <span style="color:#f92672">=</span> (dprobs<span style="color:#f92672">*</span>counts)<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">1</span>, keepdim <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>dcounts <span style="color:#f92672">=</span> dprobs <span style="color:#f92672">*</span> counts_sum_inv
+</span></span><span style="display:flex;"><span>dcounts_sum <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1.0</span><span style="color:#f92672">*</span>((counts_sum)<span style="color:#f92672">**</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">2.0</span>))<span style="color:#f92672">*</span>dcounts_sum_inv
+</span></span><span style="display:flex;"><span>dcounts <span style="color:#f92672">+=</span> torch<span style="color:#f92672">.</span>ones_like(counts_sum)<span style="color:#f92672">*</span>dcounts_sum
+</span></span><span style="display:flex;"><span>dnorm_logits <span style="color:#f92672">=</span> norm_logits<span style="color:#f92672">.</span>exp()<span style="color:#f92672">*</span>dcounts
+</span></span><span style="display:flex;"><span>dlogit_maxes <span style="color:#f92672">=</span> (<span style="color:#f92672">-</span><span style="color:#ae81ff">1.0</span><span style="color:#f92672">*</span>dnorm_logits)<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">1</span>,keepdim<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>dlogits <span style="color:#f92672">=</span> (<span style="color:#ae81ff">1.0</span><span style="color:#f92672">*</span>dnorm_logits)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>dlogits <span style="color:#f92672">+=</span> F<span style="color:#f92672">.</span>one_hot(logits<span style="color:#f92672">.</span>max(<span style="color:#ae81ff">1</span>)<span style="color:#f92672">.</span>indices, num_classes<span style="color:#f92672">=</span>logits<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">1</span>])<span style="color:#f92672">*</span>dlogit_maxes
+</span></span><span style="display:flex;"><span>db2 <span style="color:#f92672">=</span> (dlogits<span style="color:#f92672">*</span>torch<span style="color:#f92672">.</span>ones_like(logits))<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>dh <span style="color:#f92672">=</span> dlogits <span style="color:#f92672">@</span> W2<span style="color:#f92672">.</span>T
+</span></span><span style="display:flex;"><span>dW2 <span style="color:#f92672">=</span> h<span style="color:#f92672">.</span>T <span style="color:#f92672">@</span> dlogits
+</span></span><span style="display:flex;"><span>dhpreact <span style="color:#f92672">=</span> dh<span style="color:#f92672">*</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">-</span>h<span style="color:#f92672">**</span>(<span style="color:#ae81ff">2</span>))
+</span></span><span style="display:flex;"><span>dbnbias <span style="color:#f92672">=</span> (dhpreact<span style="color:#f92672">*</span>torch<span style="color:#f92672">.</span>ones_like(bnraw))<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">0</span>, keepdim<span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>dbngain <span style="color:#f92672">=</span> (dhpreact<span style="color:#f92672">*</span>bnraw<span style="color:#f92672">*</span>torch<span style="color:#f92672">.</span>ones_like(bnraw))<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">0</span>, keepdim<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>dbnraw <span style="color:#f92672">=</span> dhpreact<span style="color:#f92672">*</span>bngain<span style="color:#f92672">*</span>torch<span style="color:#f92672">.</span>ones_like(bnraw)
+</span></span><span style="display:flex;"><span>dbnvar_inv <span style="color:#f92672">=</span> (dbnraw<span style="color:#f92672">*</span> (torch<span style="color:#f92672">.</span>ones_like(bndiff) <span style="color:#f92672">*</span> bndiff))<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">0</span>, keepdim<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>dbndiff <span style="color:#f92672">=</span> (dbnraw<span style="color:#f92672">*</span> (torch<span style="color:#f92672">.</span>ones_like(bndiff) <span style="color:#f92672">*</span> bnvar_inv))
+</span></span><span style="display:flex;"><span>dbnvar <span style="color:#f92672">=</span> dbnvar_inv<span style="color:#f92672">*</span> (<span style="color:#f92672">-</span><span style="color:#ae81ff">0.5</span>)<span style="color:#f92672">*</span>(((bnvar <span style="color:#f92672">+</span> <span style="color:#ae81ff">1e-5</span>))<span style="color:#f92672">**</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1.5</span>))
+</span></span><span style="display:flex;"><span>dbndiff2 <span style="color:#f92672">=</span> (<span style="color:#ae81ff">1.0</span><span style="color:#f92672">/</span>(n<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) )<span style="color:#f92672">*</span>torch<span style="color:#f92672">.</span>ones_like(bndiff2) <span style="color:#f92672">*</span> dbnvar
+</span></span><span style="display:flex;"><span>dbndiff <span style="color:#f92672">+=</span> dbndiff2<span style="color:#f92672">*</span><span style="color:#ae81ff">2</span><span style="color:#f92672">*</span>(bndiff)
+</span></span><span style="display:flex;"><span>dhprebn <span style="color:#f92672">=</span> dbndiff<span style="color:#f92672">*</span><span style="color:#ae81ff">1.0</span>
+</span></span><span style="display:flex;"><span>dbnmeani <span style="color:#f92672">=</span> (torch<span style="color:#f92672">.</span>ones_like(hprebn)<span style="color:#f92672">*-</span><span style="color:#ae81ff">1.0</span><span style="color:#f92672">*</span>dbndiff)<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">0</span>, keepdim <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>dhprebn <span style="color:#f92672">+=</span> torch<span style="color:#f92672">.</span>ones_like(hprebn)<span style="color:#f92672">*</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>n)<span style="color:#f92672">*</span>dbnmeani
+</span></span><span style="display:flex;"><span>db1 <span style="color:#f92672">=</span> (torch<span style="color:#f92672">.</span>ones_like(dhprebn)<span style="color:#f92672">*</span>dhprebn)<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>dembcat <span style="color:#f92672">=</span> dhprebn <span style="color:#f92672">@</span> W1<span style="color:#f92672">.</span>T
+</span></span><span style="display:flex;"><span>dW1 <span style="color:#f92672">=</span> embcat<span style="color:#f92672">.</span>T <span style="color:#f92672">@</span> dhprebn
+</span></span><span style="display:flex;"><span>demb <span style="color:#f92672">=</span> dembcat<span style="color:#f92672">.</span>view(emb<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>],emb<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">1</span>],emb<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">2</span>])
+</span></span><span style="display:flex;"><span>dC <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>zeros_like(C)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(Xb<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>]):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(Xb<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">1</span>]):
+</span></span><span style="display:flex;"><span>        dC[Xb[i,j]] <span style="color:#f92672">+=</span> demb[i,j]
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         print(demb[i,j].shape)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -----------------</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;logprobs&#39;</span>, dlogprobs, logprobs)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;probs&#39;</span>, dprobs, probs)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;counts_sum_inv&#39;</span>, dcounts_sum_inv, counts_sum_inv)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;counts_sum&#39;</span>, dcounts_sum, counts_sum)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;counts&#39;</span>, dcounts, counts)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;norm_logits&#39;</span>, dnorm_logits, norm_logits)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;logit_maxes&#39;</span>, dlogit_maxes, logit_maxes)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;logits&#39;</span>, dlogits, logits)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;h&#39;</span>, dh, h)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;W2&#39;</span>, dW2, W2)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;b2&#39;</span>, db2, b2)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;hpreact&#39;</span>, dhpreact, hpreact)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;bngain&#39;</span>, dbngain, bngain)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;bnbias&#39;</span>, dbnbias, bnbias)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;bnraw&#39;</span>, dbnraw, bnraw)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;bnvar_inv&#39;</span>, dbnvar_inv, bnvar_inv)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;bnvar&#39;</span>, dbnvar, bnvar)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;bndiff2&#39;</span>, dbndiff2, bndiff2)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;bndiff&#39;</span>, dbndiff, bndiff)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;bnmeani&#39;</span>, dbnmeani, bnmeani)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;hprebn&#39;</span>, dhprebn, hprebn)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;embcat&#39;</span>, dembcat, embcat)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;W1&#39;</span>, dW1, W1)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;b1&#39;</span>, db1, b1)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;emb&#39;</span>, demb, emb)
+</span></span><span style="display:flex;"><span>cmp(<span style="color:#e6db74">&#39;C&#39;</span>, dC, C)
+</span></span></code></pre></div><p>lets look at our last line of code in forward pass</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>loss <span style="color:#f92672">=</span> <span style="color:#f92672">-</span>logprobs[range(n), Yb]<span style="color:#f92672">.</span>mean()
+</span></span></code></pre></div><p>what we do is simply the cross entropy i.e normalize using softmax function and pluck out the log probability from the output token&rsquo;s index.</p>
+<p>and calculate it&rsquo;s derivative here in second line of code in the backward pass like this.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>dlogprobs[range(n), Yb] <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1.0</span><span style="color:#f92672">*</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>logprobs<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>]) <span style="color:#75715e"># 1 &lt;=== look here</span>
+</span></span></code></pre></div><p>what we&rsquo;re doing is simply calculating the average over all the batches and that average is deposited in each element in [range(n), Yb] .</p>
+<p>Why do we do the average?
+dL/dlogprobs = 1 (which comes from dL/dL) x d(dlogprobs[range(n), Yb])/dlogprobs</p>
+<p>since the elements in this range [range(n), Yb]) is averaged, each element will get (1/total_number) x itself</p>
+<p>so the local derivative of (1/total_number) x iteself w.r.t itself is 1/total_number which will be now deposited into the elements of dlogprobs[range(n), Yb]</p>
+<p>let&rsquo;s stop right here and this matches our first equation in FIGURE1, and if we do this operation for 8 times more batches on single GPU we get the second equation in FIGURE1. If we look at this code, we can see that we are only increasing the n value here.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>dlogprobs[range(<span style="color:#ae81ff">8</span><span style="color:#f92672">*</span>n), Yb] <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1.0</span><span style="color:#f92672">*</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>logprobs<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>]) <span style="color:#75715e"># 1 &lt;=== look here</span>
+</span></span></code></pre></div><p>So from this it&rsquo;s safe to say that training on multiple GPUs and averaging their gradients is same as training on single GPU with 8 times more batches.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="next" href="https://cohlem.github.io/sub-notes/gradient-accumulation/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Gradient Accumulation</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2025 <a href="https://cohlem.github.io">CohleM</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>
