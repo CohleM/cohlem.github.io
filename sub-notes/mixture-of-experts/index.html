@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Mixture of Experts | CohleM</title>
+<meta name="keywords" content="">
+<meta name="description" content="Summaries taken from: https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts
+Basic structure Experts are FFNN themselves Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
+Down the line it could use multiple experts but at different blocks i.e (layers)
+A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected.">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/mixture-of-experts/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://cohlem.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://cohlem.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X6LV4QY2G2"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
+}
+</script>
+<meta property="og:title" content="Mixture of Experts" />
+<meta property="og:description" content="Summaries taken from: https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts
+Basic structure Experts are FFNN themselves Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
+Down the line it could use multiple experts but at different blocks i.e (layers)
+A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/mixture-of-experts/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2025-01-05T00:00:00+00:00" />
+<meta property="article:modified_time" content="2025-01-05T00:00:00+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Mixture of Experts"/>
+<meta name="twitter:description" content="Summaries taken from: https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts
+Basic structure Experts are FFNN themselves Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
+Down the line it could use multiple experts but at different blocks i.e (layers)
+A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected."/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Sub-notes",
+      "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "Mixture of Experts",
+      "item": "https://cohlem.github.io/sub-notes/mixture-of-experts/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Mixture of Experts",
+  "name": "Mixture of Experts",
+  "description": "Summaries taken from: https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts\nBasic structure Experts are FFNN themselves Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.\nDown the line it could use multiple experts but at different blocks i.e (layers)\nA routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected.",
+  "keywords": [
+    
+  ],
+  "articleBody": "Summaries taken from: https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts\nBasic structure Experts are FFNN themselves Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.\nDown the line it could use multiple experts but at different blocks i.e (layers)\nA routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected.\nNot only will there be an uneven distribution of experts chosen, but some experts will hardly be trained at all. This results in issues during both training and inference.\nInstead, we want equal importance among experts during training and inference, which we call load balancing. In a way, it’s to prevent overfitting on the same experts.\nLoad Balancing To balance the importance of experts, we will need to look at the router as it is the main component to decide which experts to choose at a given time.\nKeepTopK By introducing trainable (gaussian) noise, we can prevent the same experts from always being picked. It’ll help router to distribute experts and not restrict to some specific experts.\nCapacity Factor Distributing experts is not enough because distribution of expert happens close to no.of.steps times but there are a lot of batch of tokens that are processed in a single step. An expert could be assigned more than the others but it can also be assigned less tokens as compared to others. The solution is to equally divide the number of tokens to all the expert using capacity factor given by this formula. Implementation Now that we know what MoE is, let’s implement it from scratch.\nImplementation of Adaptive Mixture of Local Experts The MoE was defined as a set of independent experts (feed-forward networks) alongside a gating network (also a feed-forward network, ). All the experts and the gating network receive the same input . The gating network outputs the distribution of each expert relevance/importance for the given input and is defined as by Softmax(x@Wg) in its simplest form, where Wg is a (optional) learnable transformation. Finally, the output of the system is the sum of the outputs of all experts weighted by the output of the gating network.\nfrom dataclasses import dataclass torch.manual_seed(42) @dataclass class Config(): n_embd:int = 10 block_size:int = 5 expert_size:int = 2 vocab_size:int = 65 class Router(nn.Module): def __init__(self,config): super().__init__() self.config = config self.router = nn.Sequential(nn.Linear(self.config.n_embd,self.config.expert_size)) def forward(self,x): return self.router(x) class FFN(nn.Module): def __init__(self,config): super().__init__() self.config = config self.ffn = nn.Sequential(nn.Linear(self.config.n_embd, self.config.vocab_size)) def forward(self,x): return self.ffn(x) class MoE(nn.Module): def __init__(self, config): super().__init__() self.config = config self.router = Router(config) self.experts = nn.ModuleList([FFN(config) for _ in range(config.expert_size)]) def forward(self, x): # we = self.we(x) # batch's embeddings (B,T,C) ep = self.router(x).softmax(dim=-1) # expert probability (B,T,E) ep = ep.unsqueeze(-1) # adding one dim to each of our experts, (B,T,E,1) exp_out = torch.stack([out(x) for out in self.experts], dim=-2) # (B,T,E,C) out = exp_out * ep # (B,T,E,C) x (B,T,E,1) out = out.sum(-2) # (B,T,C) return out Implementation of OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER Using all the experts for inputs will be computationally expensive. A way to reduce that is to implement noise_gating + topK method specified in the paper OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER\nlet’s understand these equation with reference to the code\nclean_logits = self.router(x) # corresponds to (x.W) in the equation 4 This is simply using the gating function to calculate the probability of experts for each input tokens. (this self.router(x) is an object of a class Router defined above)\nnoise = torch.randn_like(clean_logits)*F.softplus(self.wnoise(x)) here torch.randn_like(clean_logits) resembles StandardNormal(), where we choose a random gaussian noise (mean = 0, std=1) to be added as a noise. Adding this will introduce some noise which encourages model to choose other experts.\nself.wnoise is a noise but it’s input dependent learnable parameter, because we don’t want to choose experts completely randomly, instead it has to be input dependent, and it is learned during backprop.\nand by adding F.softplus we are capping the output of noise to be greater than 0. it’s approximately similar to relu.\nh = clean_logits + noise we add the clean logits. and the noise, so we now encourage models to explore other experts too.\nNow, let’s make our MoE compute efficient i.e by choosing only the topK models for specific tokens.\ntopk_val, topk_ind = torch.topk(h,self.config.top_k, dim = -1) it will choose the topK experts for each token. topK is taken along the last dimension i.e -1 because experts probability is along the last axis. i.e h shape is (B,T,expert_size)\nout = torch.full_like(h, fill_value=float('-inf')) out = out.scatter(dim=-1,index=topk_ind, src=topk_val) out = torch.softmax(out, dim=-1) we are now creating a new tensor with all the values with negative infinity and setting the topK values with their original values and for other there will be negative infinity. Now normalizing using softmax we get normalized probabilities and 0 in place of negative infinity.\nnow that we have our expert’s probability for each input. Let’s now pass the input through expert and take the weighted sum because we have topk probability assigned to a token input.\ncalculating weighted sum for the input tokens can be a difficult in terms of implementation.\nThe general idea is to iterate over all the experts to first create a mask from our router’s output probabilities for each expert. (i.e creating a mask of True if this input probability in within topk for that specific expert) and flatten that mask, and pluck out the inputs from the flattened input using that mask (mask will help us pluck out input tokens with specific index where mask value is true) and pass that plucked out input to the expert layer and then multiply the expert layer’s output with the router’s probability for that specific expert and then keep adding these values for all the experts because we are doing the weighted sum.\nThe code to do that is given below (it can take some time to understand, but it’s relative easy if you understand this explanation)\ndef forward(self, x): # we = self.we(x) # batch's embeddings (B,T,C) out,topk_val,topk_ind = self.router(x) # out is size (B,T,experts) experts (B,T,top_k) flat_x = x.view(-1, x.shape[-1]) #(B*T,C) final_output = torch.zeros_like(flat_x) # for i,expert in enumerate(self.experts): expert_mask = (out[:,:,i] != 0) # (B,T) expert_mask = expert_mask.view(-1) # (B*T) if expert_mask.any(): # pass through expert layer only if flattened expert has any one true value select_x = flat_x[expert_mask] expert_x = expert(select_x) * (out[:,:,i]).view(-1)[expert_mask].unsqueeze(-1) #unsqueeze for broadcasting across columns final_output[expert_mask] += expert_x # add because our inp is combination of experts, i.e one token can take can top2 prob final_output = final_output.view(x.shape) return final_output Full code til here class Router(nn.Module): def __init__(self,config): super().__init__() self.config = config self.router = nn.Sequential(nn.Linear(self.config.n_embd,self.config.expert_size)) self.wnoise = nn.Linear(self.config.n_embd, self.config.expert_size) def forward(self,x): clean_logits = self.router(x) noise = torch.randn_like(clean_logits)*nn.Softplus(self.wnoise(x)) h = clean_logits + noise topk_val, topk_ind = torch.topk(h,self.config.top_k, dim = -1) out = torch.full_like(h, fill_value=float('-inf')) out = out.scatter(dim=-1,index=topk_ind, src=topk_val) out = torch.softmax(out, dim=-1) return out,topk_val, topk_ind class MoE(nn.Module): def __init__(self, config): super().__init__() self.config = config self.router = Router(config) self.experts = nn.ModuleList([FFN(config) for _ in range(config.expert_size)]) def forward(self, x): # we = self.we(x) # batch's embeddings (B,T,C) out,topk_val,topk_ind = self.router(x) # out is size (B,T,experts) experts (B,T,top_k) flat_x = x.view(-1, x.shape[-1]) #(B*T,C) final_output = torch.zeros_like(flat_x) for i,expert in enumerate(self.experts): expert_mask = (out[:,:,i] != 0) # (B,T) expert_mask = expert_mask.view(-1) # (B*T) print(em_new == expert_mask) if expert_mask.any(): select_x = flat_x[expert_mask] expert_x = expert(select_x) * (out[:,:,i]).view(-1)[expert_mask].unsqueeze(-1) #unsqueeze for broadcasting across columns final_output[expert_mask] += expert_x # add because our inp is combination of experts, i.e one token can take can top2 prob final_output = final_output.view(x.shape) return final_output This implementation assigns expert for each no.of.steps in our training step, here even if the experts are assigned equally, the total number of tokens assigned to those expert could be different, for that reason we would want to distribute input tokens equally to all the experts. We can do that using expert capacity explained above in the Load Balancing section above.\nExpert Capacity implementation we define expert capacity as total number of tokens in a batch divided by number of experts times the capacity factor (which controls the scale).\nexp_cap = int(B*T*self.config.top_k / self.config.expert_size * self.config.capacity_factor) select the indices of input where this specific expert is applied and limit the inputs to be processed to be within the expert capacity if it is greater than expert capacity and truncate other tokens.\nselected_indices = torch.nonzero(expert_mask).squeeze(-1) limited_indices = selected_indices[:exp_cap] if selected_indices.numel() \u003e exp_cap else selected_indices Full implementation class Router(nn.Module): def __init__(self,config): super().__init__() self.config = config self.router = nn.Sequential(nn.Linear(self.config.n_embd,self.config.expert_size)) self.wnoise = nn.Linear(self.config.n_embd, self.config.expert_size) def forward(self,x): clean_logits = self.router(x) noise = torch.randn_like(clean_logits)*F.softplus(self.wnoise(x)) h = clean_logits + noise topk_val, topk_ind = torch.topk(h,self.config.top_k, dim = -1) out = torch.full_like(h, fill_value=float('-inf')) out = out.scatter(dim=-1,index=topk_ind, src=topk_val) out = torch.softmax(out, dim=-1) return out,topk_val, topk_ind class MoE(nn.Module): def __init__(self, config): super().__init__() self.config = config self.router = Router(config) self.experts = nn.ModuleList([FFN(config) for _ in range(config.expert_size)]) self.wimportance = 1.0 def forward(self, x): # we = self.we(x) # batch's embeddings (B,T,C) B,T,C = x.shape out,topk_val,topk_ind = self.router(x) # out is size (B,T,experts) experts (B,T,top_k) flat_x = x.view(-1, x.shape[-1]) #(B*T,C) final_output = torch.zeros_like(flat_x) exp_cap = int(B*T*self.config.top_k / self.config.expert_size * self.config.capacity_factor) for i,expert in enumerate(self.experts): expert_mask = (out[:,:,i] != 0) # (B,T) expert_mask = expert_mask.view(-1) # (B*T) selected_indices = torch.nonzero(expert_mask).squeeze(-1) limited_indices = selected_indices[:exp_cap] if selected_indices.numel() \u003e exp_cap else selected_indices if expert_mask.any(): select_x = flat_x[limited_indices] expert_x = expert(select_x) * (out[:,:,i]).view(-1)[limited_indices].unsqueeze(-1) #unsqueeze for broadcasting across columns final_output[limited_indices] += expert_x # add because our inp is combination of experts, i.e one token can take can top2 prob final_output = final_output.view(x.shape) # Importance scores for experts i.e batchwise sum of the router's output importance = out.sum(dim=0) # loss that needs to be added to encourage model to choose diverse experts imp_std,imp_mean = importance.std(), importance.mean() loss_moe = ((imp_std/imp_mean)**2)*self.wimportance return final_output,loss_moe Auxiliary Loss To encourage models to make expert’s probability uniform (choosing all the experts and not restricting to some experts) We add to our main loss another loss term that we get from our MoE layer. It is calculated by first calculating the importance which is simply calculating the batch sum over the inputs for the router’s output and calculating the square of the coefficient of variation from the importance and then multiplying with a hand tuned scaling factor called Wimportance.\nThe implementation from this auxiliary loss is already implemented in the code above.\n",
+  "wordCount" : "1726",
+  "inLanguage": "en",
+  "datePublished": "2025-01-05T00:00:00Z",
+  "dateModified": "2025-01-05T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/mixture-of-experts/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://cohlem.github.io" accesskey="h" title="CohleM (Alt + H)">CohleM</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://cohlem.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/archives/" title="Archive">
+                    <span>Archive</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/notes/" title="Notes">
+                    <span>Notes</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      Mixture of Experts
+    </h1>
+    <div class="post-meta"><span title='2025-01-05 00:00:00 +0000 UTC'>January 5, 2025</span>&nbsp;·&nbsp;9 min&nbsp;·&nbsp;CohleM
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#basic-structure" aria-label="Basic structure">Basic structure</a></li>
+                <li>
+                    <a href="#load-balancing" aria-label="Load Balancing">Load Balancing</a><ul>
+                        <ul>
+                        
+                <li>
+                    <a href="#keeptopk" aria-label="KeepTopK">KeepTopK</a></li></ul>
+                    
+                <li>
+                    <a href="#capacity-factor" aria-label="Capacity Factor">Capacity Factor</a></li></ul>
+                </li>
+                <li>
+                    <a href="#implementation" aria-label="Implementation">Implementation</a><ul>
+                        
+                <li>
+                    <a href="#implementation-of-adaptive-mixture-of-local-expertshttpswwwcstorontoeduhintonabspsjjnh91pdf" aria-label="Implementation of Adaptive Mixture of Local Experts">Implementation of <a href="https://www.cs.toronto.edu/~hinton/absps/jjnh91.pdf">Adaptive Mixture of Local Experts</a></a></li>
+                <li>
+                    <a href="#implementation-of-outrageously-large-neural-networks--the-sparsely-gated-mixture-of-experts-layerhttpsarxivorgpdf170106538" aria-label="Implementation of OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER">Implementation of <a href="https://arxiv.org/pdf/1701.06538">OUTRAGEOUSLY LARGE NEURAL NETWORKS:  THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER</a></a><ul>
+                        
+                <li>
+                    <a href="#full-code-til-here" aria-label="Full code til here">Full code til here</a></li>
+                <li>
+                    <a href="#expert-capacity-implementation" aria-label="Expert Capacity implementation">Expert Capacity implementation</a></li></ul>
+                </li>
+                <li>
+                    <a href="#full-implementation" aria-label="Full implementation">Full implementation</a><ul>
+                        
+                <li>
+                    <a href="#auxiliary-loss" aria-label="Auxiliary Loss">Auxiliary Loss</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>Summaries taken from:
+<a href="https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts">https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts</a></p>
+<h2 id="basic-structure">Basic structure<a hidden class="anchor" aria-hidden="true" href="#basic-structure">#</a></h2>
+<ul>
+<li>Experts are FFNN themselves
+<img loading="lazy" src="fig1.png" alt="fig1"  />
+</li>
+</ul>
+<p>Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.</p>
+<p><img loading="lazy" src="fig2.png" alt="fig2"  />
+
+Down the line it could use multiple experts but at different blocks i.e (layers)</p>
+<p>A routing layer is set to choose experts
+<img loading="lazy" src="fig3.png" alt="fig3"  />
+</p>
+<p>depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected.</p>
+<p>Not only will there be an uneven distribution of experts chosen, but some experts will hardly be trained at all. This results in issues during both training and inference.</p>
+<p>Instead, we want equal importance among experts during training and inference, which we call <strong>load balancing</strong>. In a way, it’s to prevent overfitting on the same experts.</p>
+<h2 id="load-balancing">Load Balancing<a hidden class="anchor" aria-hidden="true" href="#load-balancing">#</a></h2>
+<p>To balance the importance of experts, we will need to look at the router as it is the main component to decide which experts to choose at a given time.</p>
+<h4 id="keeptopk">KeepTopK<a hidden class="anchor" aria-hidden="true" href="#keeptopk">#</a></h4>
+<p>By introducing trainable (gaussian) noise, we can prevent the same experts from always being picked. It&rsquo;ll help router to distribute experts and not restrict to some specific experts.</p>
+<p><img loading="lazy" src="fig4.png" alt="fig4"  />
+</p>
+<h3 id="capacity-factor">Capacity Factor<a hidden class="anchor" aria-hidden="true" href="#capacity-factor">#</a></h3>
+<p>Distributing experts is not enough because distribution of expert happens close to no.of.steps times but there are a lot of batch of tokens that are processed in a single step. An expert could be assigned more than the others but it can also be assigned less tokens as compared to others.
+The solution is to equally divide the number of tokens to all the expert using capacity factor given by this formula.
+<img loading="lazy" src="fig5.png" alt="fig5"  />
+</p>
+<h2 id="implementation">Implementation<a hidden class="anchor" aria-hidden="true" href="#implementation">#</a></h2>
+<p>Now that we know what MoE is, let&rsquo;s implement it from scratch.</p>
+<h3 id="implementation-of-adaptive-mixture-of-local-expertshttpswwwcstorontoeduhintonabspsjjnh91pdf">Implementation of <a href="https://www.cs.toronto.edu/~hinton/absps/jjnh91.pdf">Adaptive Mixture of Local Experts</a><a hidden class="anchor" aria-hidden="true" href="#implementation-of-adaptive-mixture-of-local-expertshttpswwwcstorontoeduhintonabspsjjnh91pdf">#</a></h3>
+<p>The MoE was defined as a set of independent <strong>experts</strong> (feed-forward networks) alongside a <strong>gating network</strong> (also a feed-forward network, ). All the experts and the gating network receive the same input . The gating network outputs the distribution of each expert relevance/importance for the given input and is defined as by Softmax(x@Wg) in its simplest form, where Wg  is a (optional) learnable transformation. Finally, the output of the system is the sum of the outputs of all experts weighted by the output of the gating network.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> dataclasses <span style="color:#f92672">import</span> dataclass
+</span></span><span style="display:flex;"><span>torch<span style="color:#f92672">.</span>manual_seed(<span style="color:#ae81ff">42</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@dataclass</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Config</span>():
+</span></span><span style="display:flex;"><span>    n_embd:int <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>    block_size:int <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>    expert_size:int <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    vocab_size:int <span style="color:#f92672">=</span> <span style="color:#ae81ff">65</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Router</span>(nn<span style="color:#f92672">.</span>Module):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self,config):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__()
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>config <span style="color:#f92672">=</span> config
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>router <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Sequential(nn<span style="color:#f92672">.</span>Linear(self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>n_embd,self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>expert_size))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">forward</span>(self,x):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>router(x)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">FFN</span>(nn<span style="color:#f92672">.</span>Module):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self,config):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__()
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>config <span style="color:#f92672">=</span> config
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>ffn <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Sequential(nn<span style="color:#f92672">.</span>Linear(self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>n_embd, self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>vocab_size))
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">forward</span>(self,x):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>ffn(x)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MoE</span>(nn<span style="color:#f92672">.</span>Module):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self, config):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__()
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>config <span style="color:#f92672">=</span> config
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>router <span style="color:#f92672">=</span> Router(config)
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>experts <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>ModuleList([FFN(config) <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(config<span style="color:#f92672">.</span>expert_size)])
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">forward</span>(self, x):
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         we = self.we(x) # batch&#39;s embeddings (B,T,C)</span>
+</span></span><span style="display:flex;"><span>        ep <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>router(x)<span style="color:#f92672">.</span>softmax(dim<span style="color:#f92672">=-</span><span style="color:#ae81ff">1</span>) <span style="color:#75715e"># expert probability (B,T,E) </span>
+</span></span><span style="display:flex;"><span>        ep <span style="color:#f92672">=</span> ep<span style="color:#f92672">.</span>unsqueeze(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#75715e"># adding one dim to each of our experts, (B,T,E,1)</span>
+</span></span><span style="display:flex;"><span>        exp_out <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>stack([out(x) <span style="color:#66d9ef">for</span> out <span style="color:#f92672">in</span> self<span style="color:#f92672">.</span>experts], dim<span style="color:#f92672">=-</span><span style="color:#ae81ff">2</span>) <span style="color:#75715e"># (B,T,E,C)</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        out <span style="color:#f92672">=</span> exp_out <span style="color:#f92672">*</span> ep <span style="color:#75715e"># (B,T,E,C) x (B,T,E,1)</span>
+</span></span><span style="display:flex;"><span>        out <span style="color:#f92672">=</span> out<span style="color:#f92672">.</span>sum(<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>) <span style="color:#75715e"># (B,T,C)</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> out
+</span></span><span style="display:flex;"><span>        
+</span></span></code></pre></div><h3 id="implementation-of-outrageously-large-neural-networks--the-sparsely-gated-mixture-of-experts-layerhttpsarxivorgpdf170106538">Implementation of <a href="https://arxiv.org/pdf/1701.06538">OUTRAGEOUSLY LARGE NEURAL NETWORKS:  THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER</a><a hidden class="anchor" aria-hidden="true" href="#implementation-of-outrageously-large-neural-networks--the-sparsely-gated-mixture-of-experts-layerhttpsarxivorgpdf170106538">#</a></h3>
+<p>Using all the experts for inputs will be computationally expensive. A way to reduce that is to implement noise_gating + topK method specified in the paper <a href="https://arxiv.org/pdf/1701.06538">OUTRAGEOUSLY LARGE NEURAL NETWORKS:  THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER</a></p>
+<p><img loading="lazy" src="fig6.png" alt="fig6"  />
+</p>
+<p>let&rsquo;s understand these equation with reference to the code</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>clean_logits <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>router(x) <span style="color:#75715e"># corresponds to (x.W) in the equation 4</span>
+</span></span></code></pre></div><p>This is simply using the gating function to calculate the probability of experts for each input tokens. (this self.router(x) is an object of a class Router defined above)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>noise <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn_like(clean_logits)<span style="color:#f92672">*</span>F<span style="color:#f92672">.</span>softplus(self<span style="color:#f92672">.</span>wnoise(x))
+</span></span></code></pre></div><p>here torch.randn_like(clean_logits) resembles StandardNormal(), where we choose a random gaussian noise (mean = 0, std=1) to be added as a noise. Adding this will introduce some noise which encourages model to choose other experts.</p>
+<p>self.wnoise is a noise but it&rsquo;s input dependent learnable parameter, because we don&rsquo;t want to choose experts completely randomly, instead it has to be input dependent, and it is learned during backprop.</p>
+<p>and by adding F.softplus we are capping the output of noise to be greater than 0. it&rsquo;s approximately similar to relu.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>h <span style="color:#f92672">=</span> clean_logits <span style="color:#f92672">+</span> noise
+</span></span></code></pre></div><p>we add the clean logits. and the noise, so we now encourage models to explore other experts too.</p>
+<p>Now, let&rsquo;s make our MoE compute efficient i.e by choosing only the topK models for specific tokens.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>topk_val, topk_ind <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>topk(h,self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>top_k, dim <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</span></span></code></pre></div><p>it will choose the topK experts for each token. topK is taken along the last dimension i.e -1 because experts probability is along the last axis. i.e h shape is (B,T,expert_size)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>out <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>full_like(h, fill_value<span style="color:#f92672">=</span>float(<span style="color:#e6db74">&#39;-inf&#39;</span>))
+</span></span><span style="display:flex;"><span>out <span style="color:#f92672">=</span> out<span style="color:#f92672">.</span>scatter(dim<span style="color:#f92672">=-</span><span style="color:#ae81ff">1</span>,index<span style="color:#f92672">=</span>topk_ind, src<span style="color:#f92672">=</span>topk_val)
+</span></span><span style="display:flex;"><span>out <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>softmax(out, dim<span style="color:#f92672">=-</span><span style="color:#ae81ff">1</span>)
+</span></span></code></pre></div><p>we are now creating a new tensor with all the values with negative infinity and setting the topK values with their original values and for other there will be negative infinity. Now normalizing using softmax we get normalized probabilities and 0 in place of negative infinity.</p>
+<p>now that we have our expert&rsquo;s probability for each input. Let&rsquo;s now pass the input through expert and take the weighted sum because we have topk probability assigned to a token input.</p>
+<p>calculating weighted sum for the input tokens can be a difficult in terms of implementation.</p>
+<p>The general idea is to iterate over all the experts to first create a mask from our router&rsquo;s output probabilities for each expert. (i.e creating a mask of True if this input probability in within topk for that specific expert) and flatten that mask, and pluck out the inputs from the flattened input
+using that mask (mask will help us pluck out input tokens with specific index where mask value is true) and pass that plucked out input to the expert layer and then multiply the expert layer&rsquo;s output with the router&rsquo;s probability for that specific expert and then keep adding these values for all the experts because we are doing the weighted sum.</p>
+<p>The code to do that is given below (it can take some time to understand, but it&rsquo;s relative easy if you understand this explanation)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">forward</span>(self, x):
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         we = self.we(x) # batch&#39;s embeddings (B,T,C)</span>
+</span></span><span style="display:flex;"><span>        out,topk_val,topk_ind <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>router(x) <span style="color:#75715e"># out is size (B,T,experts) experts (B,T,top_k)</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>        flat_x <span style="color:#f92672">=</span> x<span style="color:#f92672">.</span>view(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, x<span style="color:#f92672">.</span>shape[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]) <span style="color:#75715e">#(B*T,C)</span>
+</span></span><span style="display:flex;"><span>        final_output <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>zeros_like(flat_x) <span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> i,expert <span style="color:#f92672">in</span> enumerate(self<span style="color:#f92672">.</span>experts):
+</span></span><span style="display:flex;"><span>            expert_mask <span style="color:#f92672">=</span> (out[:,:,i] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>) <span style="color:#75715e"># (B,T)</span>
+</span></span><span style="display:flex;"><span>            expert_mask <span style="color:#f92672">=</span> expert_mask<span style="color:#f92672">.</span>view(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#75715e"># (B*T)</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> expert_mask<span style="color:#f92672">.</span>any(): <span style="color:#75715e"># pass through expert layer only if flattened expert has any one true value</span>
+</span></span><span style="display:flex;"><span>                select_x <span style="color:#f92672">=</span> flat_x[expert_mask]
+</span></span><span style="display:flex;"><span>                expert_x <span style="color:#f92672">=</span> expert(select_x) <span style="color:#f92672">*</span> (out[:,:,i])<span style="color:#f92672">.</span>view(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)[expert_mask]<span style="color:#f92672">.</span>unsqueeze(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#75715e">#unsqueeze for broadcasting across columns</span>
+</span></span><span style="display:flex;"><span>                final_output[expert_mask] <span style="color:#f92672">+=</span> expert_x <span style="color:#75715e"># add because our inp is combination of experts, i.e one token can take can top2 prob</span>
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>        final_output <span style="color:#f92672">=</span> final_output<span style="color:#f92672">.</span>view(x<span style="color:#f92672">.</span>shape)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> final_output
+</span></span></code></pre></div><h4 id="full-code-til-here">Full code til here<a hidden class="anchor" aria-hidden="true" href="#full-code-til-here">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Router</span>(nn<span style="color:#f92672">.</span>Module):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self,config):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__()
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>config <span style="color:#f92672">=</span> config
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>router <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Sequential(nn<span style="color:#f92672">.</span>Linear(self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>n_embd,self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>expert_size))
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>wnoise <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Linear(self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>n_embd, self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>expert_size)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">forward</span>(self,x):
+</span></span><span style="display:flex;"><span>        clean_logits <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>router(x)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        noise <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn_like(clean_logits)<span style="color:#f92672">*</span>nn<span style="color:#f92672">.</span>Softplus(self<span style="color:#f92672">.</span>wnoise(x))
+</span></span><span style="display:flex;"><span>        h <span style="color:#f92672">=</span> clean_logits <span style="color:#f92672">+</span> noise
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        topk_val, topk_ind <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>topk(h,self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>top_k, dim <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>        out <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>full_like(h, fill_value<span style="color:#f92672">=</span>float(<span style="color:#e6db74">&#39;-inf&#39;</span>))
+</span></span><span style="display:flex;"><span>        out <span style="color:#f92672">=</span> out<span style="color:#f92672">.</span>scatter(dim<span style="color:#f92672">=-</span><span style="color:#ae81ff">1</span>,index<span style="color:#f92672">=</span>topk_ind, src<span style="color:#f92672">=</span>topk_val)
+</span></span><span style="display:flex;"><span>        out <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>softmax(out, dim<span style="color:#f92672">=-</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> out,topk_val, topk_ind
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MoE</span>(nn<span style="color:#f92672">.</span>Module):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self, config):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__()
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>config <span style="color:#f92672">=</span> config
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>router <span style="color:#f92672">=</span> Router(config)
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>experts <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>ModuleList([FFN(config) <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(config<span style="color:#f92672">.</span>expert_size)])
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">forward</span>(self, x):
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         we = self.we(x) # batch&#39;s embeddings (B,T,C)</span>
+</span></span><span style="display:flex;"><span>        out,topk_val,topk_ind <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>router(x) <span style="color:#75715e"># out is size (B,T,experts) experts (B,T,top_k)</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>        flat_x <span style="color:#f92672">=</span> x<span style="color:#f92672">.</span>view(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, x<span style="color:#f92672">.</span>shape[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]) <span style="color:#75715e">#(B*T,C)</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        final_output <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>zeros_like(flat_x)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> i,expert <span style="color:#f92672">in</span> enumerate(self<span style="color:#f92672">.</span>experts):
+</span></span><span style="display:flex;"><span>            expert_mask <span style="color:#f92672">=</span> (out[:,:,i] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>) <span style="color:#75715e"># (B,T)</span>
+</span></span><span style="display:flex;"><span>            expert_mask <span style="color:#f92672">=</span> expert_mask<span style="color:#f92672">.</span>view(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#75715e"># (B*T)</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            print(em_new <span style="color:#f92672">==</span> expert_mask)
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> expert_mask<span style="color:#f92672">.</span>any():
+</span></span><span style="display:flex;"><span>                select_x <span style="color:#f92672">=</span> flat_x[expert_mask]
+</span></span><span style="display:flex;"><span>                expert_x <span style="color:#f92672">=</span> expert(select_x) <span style="color:#f92672">*</span> (out[:,:,i])<span style="color:#f92672">.</span>view(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)[expert_mask]<span style="color:#f92672">.</span>unsqueeze(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#75715e">#unsqueeze for broadcasting across columns</span>
+</span></span><span style="display:flex;"><span>                final_output[expert_mask] <span style="color:#f92672">+=</span> expert_x <span style="color:#75715e"># add because our inp is combination of experts, i.e one token can take can top2 prob</span>
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>        final_output <span style="color:#f92672">=</span> final_output<span style="color:#f92672">.</span>view(x<span style="color:#f92672">.</span>shape)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> final_output
+</span></span></code></pre></div><p>This implementation assigns expert for each no.of.steps in our training step, here even if the experts are assigned equally, the total number of tokens assigned to those expert could be different, for that reason we would want to distribute input tokens equally to all the experts. We can do that using expert capacity explained above in the Load Balancing section above.</p>
+<h4 id="expert-capacity-implementation">Expert Capacity implementation<a hidden class="anchor" aria-hidden="true" href="#expert-capacity-implementation">#</a></h4>
+<p>we define expert capacity as total number of tokens in a batch divided by number of experts times the capacity factor (which controls the scale).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>exp_cap <span style="color:#f92672">=</span> int(B<span style="color:#f92672">*</span>T<span style="color:#f92672">*</span>self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>top_k <span style="color:#f92672">/</span> self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>expert_size <span style="color:#f92672">*</span> self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>capacity_factor)
+</span></span></code></pre></div><p>select the indices of input where this specific expert is applied and limit the inputs to be processed to be within the expert capacity if it is greater than expert capacity and truncate other tokens.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>selected_indices <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>nonzero(expert_mask)<span style="color:#f92672">.</span>squeeze(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>limited_indices <span style="color:#f92672">=</span> selected_indices[:exp_cap] <span style="color:#66d9ef">if</span> selected_indices<span style="color:#f92672">.</span>numel() <span style="color:#f92672">&gt;</span> exp_cap <span style="color:#66d9ef">else</span> selected_indices
+</span></span></code></pre></div><h3 id="full-implementation">Full implementation<a hidden class="anchor" aria-hidden="true" href="#full-implementation">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Router</span>(nn<span style="color:#f92672">.</span>Module):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self,config):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__()
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>config <span style="color:#f92672">=</span> config
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>router <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Sequential(nn<span style="color:#f92672">.</span>Linear(self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>n_embd,self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>expert_size))
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>wnoise <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Linear(self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>n_embd, self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>expert_size)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">forward</span>(self,x):
+</span></span><span style="display:flex;"><span>        clean_logits <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>router(x)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        noise <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn_like(clean_logits)<span style="color:#f92672">*</span>F<span style="color:#f92672">.</span>softplus(self<span style="color:#f92672">.</span>wnoise(x))
+</span></span><span style="display:flex;"><span>        h <span style="color:#f92672">=</span> clean_logits <span style="color:#f92672">+</span> noise
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        topk_val, topk_ind <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>topk(h,self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>top_k, dim <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>        out <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>full_like(h, fill_value<span style="color:#f92672">=</span>float(<span style="color:#e6db74">&#39;-inf&#39;</span>))
+</span></span><span style="display:flex;"><span>        out <span style="color:#f92672">=</span> out<span style="color:#f92672">.</span>scatter(dim<span style="color:#f92672">=-</span><span style="color:#ae81ff">1</span>,index<span style="color:#f92672">=</span>topk_ind, src<span style="color:#f92672">=</span>topk_val)
+</span></span><span style="display:flex;"><span>        out <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>softmax(out, dim<span style="color:#f92672">=-</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> out,topk_val, topk_ind
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MoE</span>(nn<span style="color:#f92672">.</span>Module):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self, config):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__()
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>config <span style="color:#f92672">=</span> config
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>router <span style="color:#f92672">=</span> Router(config)
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>experts <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>ModuleList([FFN(config) <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(config<span style="color:#f92672">.</span>expert_size)])
+</span></span><span style="display:flex;"><span>	    self<span style="color:#f92672">.</span>wimportance <span style="color:#f92672">=</span> <span style="color:#ae81ff">1.0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">forward</span>(self, x):
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         we = self.we(x) # batch&#39;s embeddings (B,T,C)</span>
+</span></span><span style="display:flex;"><span>        B,T,C <span style="color:#f92672">=</span> x<span style="color:#f92672">.</span>shape
+</span></span><span style="display:flex;"><span>        out,topk_val,topk_ind <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>router(x) <span style="color:#75715e"># out is size (B,T,experts) experts (B,T,top_k)</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>        flat_x <span style="color:#f92672">=</span> x<span style="color:#f92672">.</span>view(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, x<span style="color:#f92672">.</span>shape[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]) <span style="color:#75715e">#(B*T,C)</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        final_output <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>zeros_like(flat_x)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        exp_cap <span style="color:#f92672">=</span> int(B<span style="color:#f92672">*</span>T<span style="color:#f92672">*</span>self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>top_k <span style="color:#f92672">/</span> self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>expert_size <span style="color:#f92672">*</span> self<span style="color:#f92672">.</span>config<span style="color:#f92672">.</span>capacity_factor)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> i,expert <span style="color:#f92672">in</span> enumerate(self<span style="color:#f92672">.</span>experts):
+</span></span><span style="display:flex;"><span>            expert_mask <span style="color:#f92672">=</span> (out[:,:,i] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>) <span style="color:#75715e"># (B,T)</span>
+</span></span><span style="display:flex;"><span>            expert_mask <span style="color:#f92672">=</span> expert_mask<span style="color:#f92672">.</span>view(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#75715e"># (B*T)</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            selected_indices <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>nonzero(expert_mask)<span style="color:#f92672">.</span>squeeze(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            limited_indices <span style="color:#f92672">=</span> selected_indices[:exp_cap] <span style="color:#66d9ef">if</span> selected_indices<span style="color:#f92672">.</span>numel() <span style="color:#f92672">&gt;</span> exp_cap <span style="color:#66d9ef">else</span> selected_indices
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> expert_mask<span style="color:#f92672">.</span>any():
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>                select_x <span style="color:#f92672">=</span> flat_x[limited_indices]
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>                expert_x <span style="color:#f92672">=</span> expert(select_x) <span style="color:#f92672">*</span> (out[:,:,i])<span style="color:#f92672">.</span>view(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)[limited_indices]<span style="color:#f92672">.</span>unsqueeze(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#75715e">#unsqueeze for broadcasting across columns</span>
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>                final_output[limited_indices] <span style="color:#f92672">+=</span> expert_x <span style="color:#75715e"># add because our inp is combination of experts, i.e one token can take can top2 prob</span>
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>        final_output <span style="color:#f92672">=</span> final_output<span style="color:#f92672">.</span>view(x<span style="color:#f92672">.</span>shape)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Importance scores for experts i.e batchwise sum of the router&#39;s output</span>
+</span></span><span style="display:flex;"><span>        importance <span style="color:#f92672">=</span> out<span style="color:#f92672">.</span>sum(dim<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># loss that needs to be added to encourage model to choose diverse experts</span>
+</span></span><span style="display:flex;"><span>        imp_std,imp_mean <span style="color:#f92672">=</span> importance<span style="color:#f92672">.</span>std(), importance<span style="color:#f92672">.</span>mean()
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        loss_moe <span style="color:#f92672">=</span> ((imp_std<span style="color:#f92672">/</span>imp_mean)<span style="color:#f92672">**</span><span style="color:#ae81ff">2</span>)<span style="color:#f92672">*</span>self<span style="color:#f92672">.</span>wimportance
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> final_output,loss_moe
+</span></span></code></pre></div><h4 id="auxiliary-loss">Auxiliary Loss<a hidden class="anchor" aria-hidden="true" href="#auxiliary-loss">#</a></h4>
+<p><img loading="lazy" src="fig7.png" alt="fig7"  />
+</p>
+<p>To encourage models to make expert&rsquo;s probability uniform (choosing all the experts and not restricting to some experts) We add to our main loss another loss term that we get from our MoE layer. It is calculated by first calculating the importance which is simply calculating the batch sum over the inputs for the router&rsquo;s output and calculating the square of the coefficient of variation from the importance and then multiplying with a hand tuned scaling factor called Wimportance.</p>
+<p>The implementation from this auxiliary loss is already implemented in the code above.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="next" href="https://cohlem.github.io/sub-notes/ddp/">
+    <span class="title">Next »</span>
+    <br>
+    <span>DDP and gradient sync</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2025 <a href="https://cohlem.github.io">CohleM</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

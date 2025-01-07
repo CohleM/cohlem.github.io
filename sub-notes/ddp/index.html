@@ -236,7 +236,7 @@ The way to do this in pytorch is to use DDP (take a look into their docs)"/>
 <p>At first I was confused how would this be equivalent to the gradients when we trained it on single GPU but with 8x the batch size.</p>
 <p>Here&rsquo;s a simple mathematical formula.</p>
 <p>FIGURE1
-<img loading="lazy" src="fig1.png" alt="DDP"  />
+<img loading="lazy" src="sub-notes/DDP/fig1.png" alt="DDP"  />
 </p>
 <p>But lets look at our manual backprogpagation which will help us understand better.</p>
 <h3 id="forward-pass">Forward pass<a hidden class="anchor" aria-hidden="true" href="#forward-pass">#</a></h3>
@@ -405,6 +405,11 @@ dL/dlogprobs = 1 (which comes from dL/dL) x d(dlogprobs[range(n), Yb])/dlogprobs
     <ul class="post-tags">
     </ul>
 <nav class="paginav">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/mixture-of-experts/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Mixture of Experts</span>
+  </a>
   <a class="next" href="https://cohlem.github.io/sub-notes/gradient-accumulation/">
     <span class="title">Next »</span>
     <br>

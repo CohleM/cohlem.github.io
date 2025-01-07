@@ -223,7 +223,7 @@ Why add the identity of input x to the output ? We calculate the gradients of pa
 <p>When we add the identity of input to it&rsquo;s output like this
 hl+1​=F(hl​)+hl​</p>
 <p>and when we backpropagate, we get this type of equation.
-<img loading="lazy" src="fig3.png" alt="fig3"  />
+<img loading="lazy" src="sub-notes/skip-connections/fig3.png" alt="fig3"  />
 </p>
 <p>So even when d(F(h1))/dh1 becomes close to 0 the previous gradient dL/dhl+1 is propagated as it is multiplied with 1 which is the outcome of adding the identity of input to its output.</p>
 <p>Eventually, skip connections stop vanishing gradient problem, and the other thing they help with is that, when going to a residual block(could be attention block or feedforward block) neural network may loose previous information when going through that transformation, so adding identity of input to its output will take into consideration the new learned features + the previous features.</p>

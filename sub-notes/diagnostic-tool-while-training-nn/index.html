@@ -429,15 +429,15 @@ Now the values are being evenly distributed, and the standard deviation is stabl
     Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
     Layer(n_dim, n_vocab),BatchNormalization1(n_vocab)
 ]
-</code></pre><p><img loading="lazy" src="fig4.png" alt="fig4"  />
+</code></pre><p><img loading="lazy" src="sub-notes/Diagnostic-tool-while-training-nn/fig4.png" alt="fig4"  />
 
 The output values are properly distributed, with very less saturation and a constant standard deviation.</p>
 <h3 id="gradient-plot">Gradient plot<a hidden class="anchor" aria-hidden="true" href="#gradient-plot">#</a></h3>
 <p>The gradient distribution at each layers would look like this when the pre activations are batch normalized.
-<img loading="lazy" src="fig5.png" alt="fig5"  />
+<img loading="lazy" src="sub-notes/Diagnostic-tool-while-training-nn/fig5.png" alt="fig5"  />
 </p>
 <h3 id="gradient-to-data-ratio-plot">Gradient to data ratio plot<a hidden class="anchor" aria-hidden="true" href="#gradient-to-data-ratio-plot">#</a></h3>
-<p><img loading="lazy" src="fig6.png" alt="fig6"  />
+<p><img loading="lazy" src="sub-notes/Diagnostic-tool-while-training-nn/fig6.png" alt="fig6"  />
 
 This is what the ratio of gradient (calculated after backprop) to data plot looks like.
 x-axis represent iterations, y represent the exponents. Ideally, 1e-3 is suitable and that ratio should lie around that line. If the ratio is below that line it means, we need to step up our learning rate, and if it is higher than that line we need to lower our learning rate.</p>
@@ -450,7 +450,7 @@ x-axis represent iterations, y represent the exponents. Ideally, 1e-3 is suitabl
   for layer in layers[:-1]:
     if isinstance(layer, Linear):
       layer.weight *= 0.3 
-</code></pre><p><img loading="lazy" src="fig7.png" alt="fig7"  />
+</code></pre><p><img loading="lazy" src="sub-notes/Diagnostic-tool-while-training-nn/fig7.png" alt="fig7"  />
 
 as you can see, when I make gain to 0.3 the ratio significantly varies, i.e ratio for later layers are around 1e-1.5, which mean we would have to lower our learning rate because of this gain change.</p>
 <p>So the gain significantly affects our learning rate, but it doesn&rsquo;t affect other plots that we plot above, because it&rsquo;s controlled by batch normalization.</p>

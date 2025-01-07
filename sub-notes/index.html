@@ -164,6 +164,21 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Mixture of Experts
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Summaries taken from: https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts
+Basic structure Experts are FFNN themselves Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
+Down the line it could use multiple experts but at different blocks i.e (layers)
+A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-05 00:00:00 +0000 UTC'>January 5, 2025</span>&nbsp;·&nbsp;9 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Mixture of Experts" href="https://cohlem.github.io/sub-notes/mixture-of-experts/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>DDP and gradient sync
     </h2>
   </header>
@@ -214,18 +229,6 @@ Why add the identity of input x to the output ? We calculate the gradients of pa
   </div>
   <footer class="entry-footer"><span title='2024-12-30 00:00:00 +0000 UTC'>December 30, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to skip-connections" href="https://cohlem.github.io/sub-notes/skip-connections/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Optimization Algorithms (SGD with momentum, RMSProp, Adam)
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>The simplest algorithm is the gradient descent in which we simply calculate loss over all the training data and then update our parameters, but it would be too slow and would consume too much resources. A faster approach is to use SGD where we calculate loss over every single training data and then do the parameter update, but the gradient update could be fuzzy. A more robust approach is to do mini batch SGD....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-27 00:00:00 +0000 UTC'>December 27, 2024</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Optimization Algorithms (SGD with momentum, RMSProp, Adam)" href="https://cohlem.github.io/sub-notes/optimization-algorithms/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
