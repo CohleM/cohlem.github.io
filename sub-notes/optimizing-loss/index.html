@@ -394,7 +394,7 @@ so we want to preserve that distribution the same for our y value.</p>
 <p>A simple multiplication by 0.01 to weights would result is better initialization and would result in good activations. But, how do we get these values (0.001) that we multiply our weights with?
 So the proper initialization technique can be determined by using <strong>Kaiming init</strong></p>
 <p>The value with which we can multiply is given by this formula below.
-<img loading="lazy" src="fig8.png" alt="fig8"  />
+<img loading="lazy" src="sub-notes/optimizing-loss/fig8.png" alt="fig8"  />
 </p>
 <p>where different activations have different gains, and in place of fan_mode we can add the input dimension of our weight matrix.</p>
 <p>For tanh, our gain = 5/3 and fan_in = (n_embd * block_size). so we can multiply our weights in this way.</p>

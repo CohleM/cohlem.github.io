@@ -13,10 +13,10 @@
       <pubDate>Sun, 05 Jan 2025 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/sub-notes/mixture-of-experts/</guid>
-      <description>Summaries taken from: https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts
-Basic structure Experts are FFNN themselves Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
+      <description>Image Source: https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts
+Basic MoE structure Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs. Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
 Down the line it could use multiple experts but at different blocks i.e (layers)
-A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected.</description>
+A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.</description>
     </item>
     
     <item>
