@@ -211,6 +211,21 @@ A routing layer is set to choose experts depending on how many experts are selec
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>GPUs
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>let’s first understand the structure of GPU.
+Inside a CPU it has a chip named GA102 (ampere architecture) built from 28.3 transistors (semiconductor device that can switch or amplify electrical signals) and majority area covered by processing cores.
+If processor runs at 1Ghz, it can run 10^9 cycles per second, assuming 1cycle = 1 basic operation it can execute 10^9 operations.
+its basically like a unit of time, 10^9 cycles per 1 second means, one cycle takes 10^-9 seconds to run....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-08 00:00:00 +0000 UTC'>January 8, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to GPUs" href="https://cohlem.github.io/sub-notes/gpus/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>DDP and gradient sync
     </h2>
   </header>
@@ -248,19 +263,6 @@ torch.compile It works in a similar fashion like the GCC compiler. It works by r
   </div>
   <footer class="entry-footer"><span title='2025-01-02 00:00:00 +0000 UTC'>January 2, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Training Speed Optimization" href="https://cohlem.github.io/sub-notes/training-speed-optimization/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>skip-connections
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Skip connections are simply skipping the layers by adding the identity of input to it’s output as shown in the figure below.
-Why add the identity of input x to the output ? We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-30 00:00:00 +0000 UTC'>December 30, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to skip-connections" href="https://cohlem.github.io/sub-notes/skip-connections/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
