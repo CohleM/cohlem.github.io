@@ -25,10 +25,9 @@ A routing layer is set to choose experts depending on how many experts are selec
       <pubDate>Wed, 08 Jan 2025 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/sub-notes/gpus/</guid>
-      <description>let&amp;rsquo;s first understand the structure of GPU.
-Inside a CPU it has a chip named GA102 (ampere architecture) built from 28.3 transistors (semiconductor device that can switch or amplify electrical signals) and majority area covered by processing cores.
-If processor runs at 1Ghz, it can run 10^9 cycles per second, assuming 1cycle = 1 basic operation it can execute 10^9 operations.
-its basically like a unit of time, 10^9 cycles per 1 second means, one cycle takes 10^-9 seconds to run.</description>
+      <description>GPU physcial structure let&amp;rsquo;s first understand the structure of GPU.
+Inside a GPU it has a chip named GA102 (depends on architecture, this is for ampere architecture) built from 28.3million transistors (semiconductor device that can switch or amplify electrical signals) and majority area covered by processing cores. processing core is divide into seven Graphics processing clusters (GPCs)
+among each GPC there are 12 Streaming Multiprocessors. Inside each SM there are 4 warps and 1 Raytracing core inside a warp there are 32 Cudas and 1 Tensor Core.</description>
     </item>
     
     <item>
