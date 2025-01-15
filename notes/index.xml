@@ -6,7 +6,17 @@
     <description>Recent content in Notes on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Fri, 03 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/notes/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 10 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/notes/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>projects</title>
+      <link>https://cohlem.github.io/notes/projects/</link>
+      <pubDate>Fri, 10 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/notes/projects/</guid>
+      <description>Fine-tuning model to generate manim code data sources
+manim docs 3blue1brow&amp;rsquo;s github </description>
+    </item>
+    
     <item>
       <title>Essential blogs</title>
       <link>https://cohlem.github.io/notes/essential-blogs/</link>
@@ -22,7 +32,7 @@
       <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
       
       <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
-      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization Architecture Implementation GPT implementation MoE GPU </description>
+      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization RMSNorm Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization Architecture Implementation GPT implementation MoE GPU </description>
     </item>
     
   </channel>

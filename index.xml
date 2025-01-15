@@ -6,7 +6,7 @@
     <description>Recent content on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 08 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 15 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Mixture of Experts</title>
       <link>https://cohlem.github.io/sub-notes/mixture-of-experts/</link>
@@ -17,6 +17,36 @@
 Basic MoE structure Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs. Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
 Down the line it could use multiple experts but at different blocks i.e (layers)
 A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.</description>
+    </item>
+    
+    <item>
+      <title>RMSNorm</title>
+      <link>https://cohlem.github.io/sub-notes/rmsnorm/</link>
+      <pubDate>Wed, 15 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/rmsnorm/</guid>
+      <description>Recap of LayerNorm let&amp;rsquo;s first recap by understanding why LayerNorm was used:
+We needed to balance the distribution of inputs (internal covariance shift) i.e we want inputs to be roughly gaussian (mean 0, std 1), it not maintained it would result in zeroing out the gradients. output of some blocks (transformer block) may produce large values or very small values that would result in either exploding or vanishing gradient problem, in order to have stable training, we needed to have stable range for those outputs.</description>
+    </item>
+    
+    <item>
+      <title>Movies</title>
+      <link>https://cohlem.github.io/random/movies/</link>
+      <pubDate>Mon, 13 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/random/movies/</guid>
+      <description>Watch list Mirror (1975) Saltburn Personal Favorites (unranked) Stalker (1979) Parasite Mother (dir. Bong Joon ho) Memories of murder Dune 1 and 2 Snowpiercer Gravity Arrival Incendis Prisoners &amp;hellip;.. I&amp;rsquo;ll add some when I remember, by now I&amp;rsquo;ve almost forgotten 50% of the movies I&amp;rsquo;ve watches over the past years. Series (ranked) I don&amp;rsquo;t follow series a lot but these are some that I&amp;rsquo;ve enjoyed watching.
+Breaking Bad Game of Thrones True Detective House of the Dragon </description>
+    </item>
+    
+    <item>
+      <title>projects</title>
+      <link>https://cohlem.github.io/notes/projects/</link>
+      <pubDate>Fri, 10 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/notes/projects/</guid>
+      <description>Fine-tuning model to generate manim code data sources
+manim docs 3blue1brow&amp;rsquo;s github </description>
     </item>
     
     <item>
@@ -161,7 +191,7 @@ a = Value(2.0, label=&amp;#39;a&amp;#39;) b = Value(-3.0, label=&amp;#39;b&amp;#
       <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
       
       <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
-      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization Architecture Implementation GPT implementation MoE GPU </description>
+      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization RMSNorm Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization Architecture Implementation GPT implementation MoE GPU </description>
     </item>
     
     <item>

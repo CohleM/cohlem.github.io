@@ -5,12 +5,15 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="index, follow">
-<title>Sub-notes | CohleM</title>
+<title>RMSNorm | CohleM</title>
 <meta name="keywords" content="">
-<meta name="description" content="Sub-notes - CohleM">
-<meta name="author" content="">
-<link rel="canonical" href="https://cohlem.github.io/sub-notes/">
+<meta name="description" content="Recap of LayerNorm let&rsquo;s first recap by understanding why LayerNorm was used:
+We needed to balance the distribution of inputs (internal covariance shift) i.e we want inputs to be roughly gaussian (mean 0, std 1), it not maintained it would result in zeroing out the gradients. output of some blocks (transformer block) may produce large values or very small values that would result in either exploding or vanishing gradient problem, in order to have stable training, we needed to have stable range for those outputs.">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/rmsnorm/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
 <link rel="icon" href="https://cohlem.github.io/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
@@ -18,7 +21,6 @@
 <link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="https://cohlem.github.io/sub-notes/index.xml">
 <noscript>
     <style>
         #theme-toggle,
@@ -66,14 +68,18 @@ if (!doNotTrack) {
 	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
 }
 </script>
-<meta property="og:title" content="Sub-notes" />
-<meta property="og:description" content="" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://cohlem.github.io/sub-notes/" />
+<meta property="og:title" content="RMSNorm" />
+<meta property="og:description" content="Recap of LayerNorm let&rsquo;s first recap by understanding why LayerNorm was used:
+We needed to balance the distribution of inputs (internal covariance shift) i.e we want inputs to be roughly gaussian (mean 0, std 1), it not maintained it would result in zeroing out the gradients. output of some blocks (transformer block) may produce large values or very small values that would result in either exploding or vanishing gradient problem, in order to have stable training, we needed to have stable range for those outputs." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/rmsnorm/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2025-01-15T00:00:00+00:00" />
+<meta property="article:modified_time" content="2025-01-15T00:00:00+00:00" />
 
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Sub-notes"/>
-<meta name="twitter:description" content=""/>
+<meta name="twitter:title" content="RMSNorm"/>
+<meta name="twitter:description" content="Recap of LayerNorm let&rsquo;s first recap by understanding why LayerNorm was used:
+We needed to balance the distribution of inputs (internal covariance shift) i.e we want inputs to be roughly gaussian (mean 0, std 1), it not maintained it would result in zeroing out the gradients. output of some blocks (transformer block) may produce large values or very small values that would result in either exploding or vanishing gradient problem, in order to have stable training, we needed to have stable range for those outputs."/>
 
 
 <script type="application/ld+json">
@@ -86,13 +92,52 @@ if (!doNotTrack) {
       "position":  2 ,
       "name": "Sub-notes",
       "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "RMSNorm",
+      "item": "https://cohlem.github.io/sub-notes/rmsnorm/"
     }
   ]
 }
 </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "RMSNorm",
+  "name": "RMSNorm",
+  "description": "Recap of LayerNorm let\u0026rsquo;s first recap by understanding why LayerNorm was used:\nWe needed to balance the distribution of inputs (internal covariance shift) i.e we want inputs to be roughly gaussian (mean 0, std 1), it not maintained it would result in zeroing out the gradients. output of some blocks (transformer block) may produce large values or very small values that would result in either exploding or vanishing gradient problem, in order to have stable training, we needed to have stable range for those outputs.",
+  "keywords": [
+    
+  ],
+  "articleBody": "Recap of LayerNorm let’s first recap by understanding why LayerNorm was used:\nWe needed to balance the distribution of inputs (internal covariance shift) i.e we want inputs to be roughly gaussian (mean 0, std 1), it not maintained it would result in zeroing out the gradients. output of some blocks (transformer block) may produce large values or very small values that would result in either exploding or vanishing gradient problem, in order to have stable training, we needed to have stable range for those outputs. In this paper, the authors raise concern about LayerNorm.\nit’s computationally expensive and they claim that re-centering (calculating the x - mean) has little impact for stabilization. they\ncompletely get rid of mean statistic now there is less overhead because we don’t have to calculate one extra statistic. they also provide that RMSNorm is invariant (does not change) to inputs or weights matrices.\nwhich indicates that the change in scale of input of weights doesn’t affect the RMSNorm.\n",
+  "wordCount" : "163",
+  "inLanguage": "en",
+  "datePublished": "2025-01-15T00:00:00Z",
+  "dateModified": "2025-01-15T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/rmsnorm/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
 </head>
 
-<body class="list" id="top">
+<body class="" id="top">
 <script>
     if (localStorage.getItem("pref-theme") === "dark") {
         document.body.classList.add('dark');
@@ -155,86 +200,77 @@ if (!doNotTrack) {
         </ul>
     </nav>
 </header>
-<main class="main"> 
-<header class="page-header"><div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a></div>
-  <h1>
-    Sub-notes
-  </h1>
-</header>
+<main class="main">
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Mixture of Experts
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Image Source: https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts
-Basic MoE structure Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs. Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
-Down the line it could use multiple experts but at different blocks i.e (layers)
-A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-05 00:00:00 +0000 UTC'>January 5, 2025</span>&nbsp;·&nbsp;14 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Mixture of Experts" href="https://cohlem.github.io/sub-notes/mixture-of-experts/"></a>
-</article>
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      RMSNorm
+    </h1>
+    <div class="post-meta"><span title='2025-01-15 00:00:00 +0000 UTC'>January 15, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>RMSNorm
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Recap of LayerNorm let’s first recap by understanding why LayerNorm was used:
-We needed to balance the distribution of inputs (internal covariance shift) i.e we want inputs to be roughly gaussian (mean 0, std 1), it not maintained it would result in zeroing out the gradients. output of some blocks (transformer block) may produce large values or very small values that would result in either exploding or vanishing gradient problem, in order to have stable training, we needed to have stable range for those outputs....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-15 00:00:00 +0000 UTC'>January 15, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to RMSNorm" href="https://cohlem.github.io/sub-notes/rmsnorm/"></a>
-</article>
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>GPUs
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>GPU physcial structure let’s first understand the structure of GPU.
-Inside a GPU it has a chip named GA102 (depends on architecture, this is for ampere architecture) built from 28.3million transistors (semiconductor device that can switch or amplify electrical signals) and majority area covered by processing cores. processing core is divide into seven Graphics processing clusters (GPCs)
-among each GPC there are 12 Streaming Multiprocessors. Inside each SM there are 4 warps and 1 Raytracing core inside a warp there are 32 Cudas and 1 Tensor Core....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-08 00:00:00 +0000 UTC'>January 8, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to GPUs" href="https://cohlem.github.io/sub-notes/gpus/"></a>
-</article>
+        <div class="inner"><ul>
+                <li>
+                    <a href="#recap-of-layernorm" aria-label="Recap of LayerNorm">Recap of LayerNorm</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>DDP and gradient sync
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.
-The way to do this in pytorch is to use DDP (take a look into their docs)...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to DDP and gradient sync" href="https://cohlem.github.io/sub-notes/ddp/"></a>
-</article>
+  <div class="post-content"><h3 id="recap-of-layernorm">Recap of LayerNorm<a hidden class="anchor" aria-hidden="true" href="#recap-of-layernorm">#</a></h3>
+<p>let&rsquo;s first recap by understanding why LayerNorm was used:</p>
+<ul>
+<li>We needed to balance the distribution of inputs (internal covariance shift) i.e we want inputs to be roughly gaussian (mean 0, std 1), it not maintained it would result in zeroing out the gradients.</li>
+<li>output of some blocks (transformer block) may produce large values or very small values that would result in either exploding or vanishing gradient problem, in order to have stable training, we needed to have stable range for those outputs.</li>
+</ul>
+<p>In this <a href="https://arxiv.org/pdf/1910.07467">paper</a>, the authors raise concern about LayerNorm.</p>
+<ul>
+<li>it&rsquo;s computationally expensive
+and they claim that</li>
+<li>re-centering (calculating the x - mean) has little impact for stabilization.</li>
+</ul>
+<p><img loading="lazy" src="rms1.png" alt="rms1"  />
+</p>
+<p>they</p>
+<ul>
+<li>completely get rid of mean statistic</li>
+<li>now there is less overhead because we don&rsquo;t have to calculate one extra statistic.</li>
+</ul>
+<p>they also provide that RMSNorm is invariant (does not change) to inputs or weights matrices.</p>
+<p><img loading="lazy" src="rms2.png" alt="rms2"  />
+</p>
+<p>which indicates that the change in scale of input of weights doesn&rsquo;t affect the RMSNorm.</p>
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Gradient Accumulation
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Gradient Accumulation When we want to train a neural network with some predefined set of tokens, but don’t have enough GPU resources, what do we do?
-Gradient Accumulation We simply accumulate the gradients. For instance, in order to reproduce GPT-2 124B, we need to train the model with 0.5 Million tokens in a single run with 1024 context length, we would need 0.5e6/ 1024 = 488 batches i.e B,T = (488,1024) to calculate the gradients and update them....</p>
+
   </div>
-  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Gradient Accumulation" href="https://cohlem.github.io/sub-notes/gradient-accumulation/"></a>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/mixture-of-experts/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Mixture of Experts</span>
+  </a>
+  <a class="next" href="https://cohlem.github.io/sub-notes/gpus/">
+    <span class="title">Next »</span>
+    <br>
+    <span>GPUs</span>
+  </a>
+</nav>
+
+  </footer>
 </article>
-<footer class="page-footer">
-  <nav class="pagination">
-    <a class="next" href="https://cohlem.github.io/sub-notes/page/2/">Next&nbsp;&nbsp;»
-    </a>
-  </nav>
-</footer>
     </main>
     
 <footer class="footer">
