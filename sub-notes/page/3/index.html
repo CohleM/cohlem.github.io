@@ -164,18 +164,6 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2>manual-backpropagation-on-tensors
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Main code n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 64 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) # Layer 1 W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5) b1 = torch.randn(n_hidden, generator=g) * 0.1 # using b1 just for fun, it&#39;s useless because of BN # Layer 2 W2 = torch....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-24 00:00:00 +0000 UTC'>December 24, 2024</span>&nbsp;·&nbsp;8 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to manual-backpropagation-on-tensors" href="https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
     <h2>Matrix Visualization
     </h2>
   </header>
@@ -228,6 +216,21 @@ stable training preserves vanishing gradients BatchNormalization As the name sug
   </div>
   <footer class="entry-footer"><span title='2024-12-16 00:00:00 +0000 UTC'>December 16, 2024</span>&nbsp;·&nbsp;0 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Maximum likelihood estimate as loss function" href="https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>Backpropagation from scratch
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Source: The spelled-out intro to neural networks and backpropagation: building micrograd
+Backpropagation on paper It implements backpropagation for two arithmetic operation (multiplication and addition) which are quite straightforward.
+Implementation is for this equation.
+a = Value(2.0, label=&#39;a&#39;) b = Value(-3.0, label=&#39;b&#39;) c = Value(10.0, label=&#39;c&#39;) e = a*b; e.label = &#39;e&#39; d = e &#43; c; d.label = &#39;d&#39; f = Value(-2.0, label=&#39;f&#39;) L = d * f; L.label = &#39;L&#39; L The most important thing to note here is the gradient accumulation step (shown at the bottom-left)....</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-12-08 21:57:23 +0545 +0545'>December 8, 2024</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Backpropagation from scratch" href="https://cohlem.github.io/sub-notes/backpropagation-from-scratch/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

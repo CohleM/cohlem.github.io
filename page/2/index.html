@@ -159,19 +159,6 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2>DDP and gradient sync
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.
-The way to do this in pytorch is to use DDP (take a look into their docs)...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to DDP and gradient sync" href="https://cohlem.github.io/sub-notes/ddp/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
     <h2>Gradient Accumulation
     </h2>
   </header>
@@ -221,6 +208,18 @@ Why add the identity of input x to the output ? We calculate the gradients of pa
   </div>
   <footer class="entry-footer"><span title='2024-12-27 00:00:00 +0000 UTC'>December 27, 2024</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Optimization Algorithms (SGD with momentum, RMSProp, Adam)" href="https://cohlem.github.io/sub-notes/optimization-algorithms/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>manual-backpropagation-on-tensors
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Main code n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 64 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) # Layer 1 W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5) b1 = torch.randn(n_hidden, generator=g) * 0.1 # using b1 just for fun, it&#39;s useless because of BN # Layer 2 W2 = torch....</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-12-24 00:00:00 +0000 UTC'>December 24, 2024</span>&nbsp;·&nbsp;8 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to manual-backpropagation-on-tensors" href="https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

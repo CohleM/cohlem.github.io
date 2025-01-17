@@ -211,18 +211,6 @@ A routing layer is set to choose experts depending on how many experts are selec
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2>Complex Numbers
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>There’s this weird assumption that i^2 = -1</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-17 00:00:00 +0000 UTC'>January 17, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Complex Numbers" href="https://cohlem.github.io/sub-notes/complex-numbers/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
     <h2>RMSNorm
     </h2>
   </header>
@@ -259,6 +247,19 @@ among each GPC there are 12 Streaming Multiprocessors. Inside each SM there are 
   </div>
   <footer class="entry-footer"><span title='2025-01-08 00:00:00 +0000 UTC'>January 8, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to GPUs" href="https://cohlem.github.io/sub-notes/gpus/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>DDP and gradient sync
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.
+The way to do this in pytorch is to use DDP (take a look into their docs)...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to DDP and gradient sync" href="https://cohlem.github.io/sub-notes/ddp/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
