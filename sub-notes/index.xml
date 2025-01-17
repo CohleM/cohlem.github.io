@@ -6,7 +6,7 @@
     <description>Recent content in Sub-notes on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 15 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 17 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Mixture of Experts</title>
       <link>https://cohlem.github.io/sub-notes/mixture-of-experts/</link>
@@ -20,6 +20,15 @@ A routing layer is set to choose experts depending on how many experts are selec
     </item>
     
     <item>
+      <title>Complex Numbers</title>
+      <link>https://cohlem.github.io/sub-notes/complex-numbers/</link>
+      <pubDate>Fri, 17 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/complex-numbers/</guid>
+      <description>There&amp;rsquo;s this weird assumption that i^2 = -1</description>
+    </item>
+    
+    <item>
       <title>RMSNorm</title>
       <link>https://cohlem.github.io/sub-notes/rmsnorm/</link>
       <pubDate>Wed, 15 Jan 2025 00:00:00 +0000</pubDate>
@@ -27,6 +36,16 @@ A routing layer is set to choose experts depending on how many experts are selec
       <guid>https://cohlem.github.io/sub-notes/rmsnorm/</guid>
       <description>Recap of LayerNorm let&amp;rsquo;s first recap by understanding why LayerNorm was used:
 We needed to balance the distribution of inputs (internal covariance shift) i.e we want inputs to be roughly gaussian (mean 0, std 1), it not maintained it would result in zeroing out the gradients. output of some blocks (transformer block) may produce large values or very small values that would result in either exploding or vanishing gradient problem, in order to have stable training, we needed to have stable range for those outputs.</description>
+    </item>
+    
+    <item>
+      <title>RoPE</title>
+      <link>https://cohlem.github.io/sub-notes/rope/</link>
+      <pubDate>Wed, 15 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/rope/</guid>
+      <description>Recap of Absolute PE We previously used absolute positional embedding in our GPT-2 model.
+Disadvantages No notion of relative information between tokens doesn&amp;rsquo;t work for sequences larger than context length the model is trained with, because we run out of token embeddings for tokens that come at sequence larger than the context length. RoPE pre-requisites This is how we rotate a point by an angel theta in a two dimensional space and this is all we need in RoPE.</description>
     </item>
     
     <item>
