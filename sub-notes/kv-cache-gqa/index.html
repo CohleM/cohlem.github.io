@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>KV cache and Grouped Query Attention | CohleM</title>
+<meta name="keywords" content="">
+<meta name="description" content="KV Cache KV cache visual operation In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.
+We don&rsquo;t make use of KV cache while training because we already have data filled for each sequence length, we don&rsquo;t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one.">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/kv-cache-gqa/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://cohlem.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://cohlem.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X6LV4QY2G2"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
+}
+</script>
+<meta property="og:title" content="KV cache and Grouped Query Attention" />
+<meta property="og:description" content="KV Cache KV cache visual operation In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.
+We don&rsquo;t make use of KV cache while training because we already have data filled for each sequence length, we don&rsquo;t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/kv-cache-gqa/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2025-01-18T00:00:00+00:00" />
+<meta property="article:modified_time" content="2025-01-18T00:00:00+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="KV cache and Grouped Query Attention"/>
+<meta name="twitter:description" content="KV Cache KV cache visual operation In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.
+We don&rsquo;t make use of KV cache while training because we already have data filled for each sequence length, we don&rsquo;t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one."/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Sub-notes",
+      "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "KV cache and Grouped Query Attention",
+      "item": "https://cohlem.github.io/sub-notes/kv-cache-gqa/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "KV cache and Grouped Query Attention",
+  "name": "KV cache and Grouped Query Attention",
+  "description": "KV Cache KV cache visual operation In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.\nWe don\u0026rsquo;t make use of KV cache while training because we already have data filled for each sequence length, we don\u0026rsquo;t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one.",
+  "keywords": [
+    
+  ],
+  "articleBody": "KV Cache KV cache visual operation In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.\nWe don’t make use of KV cache while training because we already have data filled for each sequence length, we don’t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one. To understand better look at the notes below.\nMemory needed for storing KV cache let’s calculate total memory needed for storing KV cache\nbatch_size = 1 (for inferencing) d_model = 4096 num_of_kv_heads = 32 head_dim = d_model/num_of_kv_heads = 128 seq_len = 10000 precision (fp16) = 2 bytes 2 (for k and v separately) x precision x head_dim x num_of_kv_heads x d_model x seq_len x batch_size = 5,24,28,80,000 bytes close to 5GB lets say we have 7B parameter model, 7x10^9 x2 (bytes) = 14x10^9 bytes = 14GB\nwe need almost 1/3 total memory for inferencing.\nLet’s explore the code for using KV cache in Llama models.\nPlease note I’ve modified some part of the original Llama code below to just explain the case of KV cache here.\n@dataclass class ModelArgs: dim: int = 4096 n_layers: int = 32 n_heads: int = 32 n_kv_heads: int = 16 # modified to explain GQA vocab_size: int = -1 # defined later by tokenizer multiple_of: int = 256 # make SwiGLU hidden layer size multiple of large power of 2 ffn_dim_multiplier: Optional[float] = None norm_eps: float = 1e-5 max_batch_size: int = 32 max_seq_len: int = 2048 Attention Architecture Code you might be familiar with the code below if you’ve implemented attention mechanism on your own (more explanation below)\nclass Attention(nn.Module): \"\"\"Multi-head attention module.\"\"\" def __init__(self, args: ModelArgs): \"\"\" Initialize the Attention module. Args: args (ModelArgs): Model configuration parameters. Attributes: n_kv_heads (int): Number of key and value heads. n_local_heads (int): Number of local query heads. n_local_kv_heads (int): Number of local key and value heads. n_rep (int): Number of repetitions for local heads. head_dim (int): Dimension size of each attention head. wq (ColumnParallelLinear): Linear transformation for queries. wk (ColumnParallelLinear): Linear transformation for keys. wv (ColumnParallelLinear): Linear transformation for values. wo (RowParallelLinear): Linear transformation for output. cache_k (torch.Tensor): Cached keys for attention. cache_v (torch.Tensor): Cached values for attention. \"\"\" super().__init__() self.n_kv_heads = args.n_heads if args.n_kv_heads is None else args.n_kv_heads # model_parallel_size = fs_init.get_model_parallel_world_size() self.n_local_heads = args.n_heads self.n_local_kv_heads = self.n_kv_heads self.n_rep = self.n_local_heads // self.n_local_kv_heads self.head_dim = args.dim // args.n_heads self.wq = nn.Linear( args.dim, args.n_heads * self.head_dim, bias=False, ) self.wk = nn.Linear( args.dim, self.n_kv_heads * self.head_dim, bias=False, ) self.wv = nn.Linear( args.dim, self.n_kv_heads * self.head_dim, bias=False, ) self.wo = nn.Linear( args.n_heads * self.head_dim, args.dim, bias=False, ) self.cache_k = torch.zeros( ( args.max_batch_size, args.max_seq_len, self.n_local_kv_heads, self.head_dim, ) ) self.cache_v = torch.zeros( ( args.max_batch_size, args.max_seq_len, self.n_local_kv_heads, self.head_dim, ) ) def forward( self, x: torch.Tensor, start_pos: int, # freqs_cis: torch.Tensor, mask: Optional[torch.Tensor], ): \"\"\" Forward pass of the attention module. Args: x (torch.Tensor): Input tensor. start_pos (int): Starting position for caching. freqs_cis (torch.Tensor): Precomputed frequency tensor. mask (torch.Tensor, optional): Attention mask tensor. Returns: torch.Tensor: Output tensor after attention. \"\"\" bsz, seqlen, _ = x.shape xq, xk, xv = self.wq(x), self.wk(x), self.wv(x) xq = xq.view(bsz, seqlen, self.n_local_heads, self.head_dim) xk = xk.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim) xv = xv.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim) # xq, xk = apply_rotary_emb(xq, xk, freqs_cis=freqs_cis) self.cache_k = self.cache_k.to(xq) self.cache_v = self.cache_v.to(xq) self.cache_k[:bsz, start_pos : start_pos + seqlen] = xk self.cache_v[:bsz, start_pos : start_pos + seqlen] = xv keys = self.cache_k[:bsz, : start_pos + seqlen] values = self.cache_v[:bsz, : start_pos + seqlen] # Grouped Query Attention # for production use repeat_kv function, it's memory efficient ## Repeat the key, values heads, repeats values at dim =2 self.n_rep times, now keys and values size match query size. keys = torch.repeat_interleave(keys, dim=2, repeats=self.n_rep) # (bs, cache_len + seqlen, n_local_heads, head_dim) values= torch.repeat_interleave(values, dim=2, repeats=self.n_rep) # (bs, cache_len + seqlen, n_local_heads, head_dim) xq = xq.transpose(1, 2) # (bs, n_local_heads, seqlen, head_dim) keys = keys.transpose(1, 2) # (bs, n_local_heads, cache_len + seqlen, head_dim) values = values.transpose(1, 2) # (bs, n_local_heads, cache_len + seqlen, head_dim) print(xq.shape) print(keys.transpose(2,3).shape) scores = torch.matmul(xq, keys.transpose(2, 3)) / math.sqrt(self.head_dim) if mask is not None: scores = scores + mask # (bs, n_local_heads, seqlen, cache_len + seqlen) scores = F.softmax(scores.float(), dim=-1).type_as(xq) output = torch.matmul(scores, values) # (bs, n_local_heads, seqlen, head_dim) output = output.transpose(1, 2).contiguous().view(bsz, seqlen, -1) return self.wo(output) Inferencing code This code generates embedding for next tokens by passing existing sequence of tokens to our attention layer (not FFNN) and append it to our existing sequence of tokens and pass it again to the attention layer and do it to generate it til 10 tokens.\nimport torch import torch.nn as nn import math # Define a simple ModelArgs class for testing # Initialize the Attention module args = ModelArgs() attn = Attention(args) # Input sentence and tokenization sentence = 'this is awesome' tokens = sentence.split(' ') # Hyperparameters B = 1 # Batch size T = len(tokens) # Sequence length C = args.dim # Feature dimension # Initialize input tensor with random values (for demonstration) x = torch.randn(B, args.max_seq_len, C) # Shape: (batch_size, max_seq_len, feature_dim) # Inference loop start_pos = 0 for cur_pos in range(T, 10): # Generate tokens up to max_seq_len # Forward pass through the attention module out = attn(x[:, start_pos:cur_pos], start_pos, None) # Shape: (batch_size, cur_pos - start_pos, feature_dim) # Update the input tensor with the output for the next position x[:, cur_pos] = out[:, -1, :] # Take the last token's output and append it to the sequence # Update start_pos for the next iteration start_pos = cur_pos # Final output print(\"Final output tensor:\") print(x) let’s break down the whole code one by one\n# Initialize the Attention module args = ModelArgs() attn = Attention(args) # Input sentence and tokenization sentence = 'this is a' tokens = sentence.split(' ') # Hyperparameters B = 1 # Batch size T = len(tokens) # Sequence length C = args.dim # Feature dimension # Initialize input tensor with random values (for demonstration) x = torch.randn(B, args.max_seq_len, C) # Shape: (batch_size, max_seq_len, feature_dim) this is straightforward, we have initial sentence that we pass it to the model i.e “this is awesome”, construct a random input matrix “x” of (batch_size, max_seq_len, feature_dim). In real, these random input matrix is the matrix full of input embeddings.\nstart_pos = 0 the is the starting point for caching, since we haven’t cached anything yet, we start from the initial position i.e 0 for token “this”\nfor cur_pos in range(T, 10): # Generate tokens up to max_seq_len # Forward pass through the attention module out = attn(x[:, start_pos:cur_pos], start_pos, None) # Shape: (batch_size, cur_pos - start_pos, feature_dim) # Update the input tensor with the output for the next position x[:, cur_pos] = out[:, -1, :] # Take the last token's output and append it to the sequence # Update start_pos for the next iteration start_pos = cur_pos we iterate from T,10 because we already have tokens til T and we want to generate 10-T tokens.\nwe pass the sequence from start_pos:cur_pos to our attn architecture.\nfirst this will be x[:, 0:3] (which is the initial tokens “this is a”, because we first need to calculate the attention for these initial tokens and cache them first.\nlet’s directly come down to this part of code, because all other are usual code for attention without caching.\nself.cache_k[:bsz, start_pos : start_pos + seqlen] = xk self.cache_v[:bsz, start_pos : start_pos + seqlen] = xv keys = self.cache_k[:bsz, : start_pos + seqlen] values = self.cache_v[:bsz, : start_pos + seqlen] as you can see we first cache xk to the positions [:bsz, start_pos : start_pos + seqlen]\nwhich is basically caching this index of our input [:1, 0:3] which is basically the initially tokens (’this is a')\nand then we pluck out the same tokens from our cached keys and cached values\nkeys = self.cache_k[:bsz, : start_pos + seqlen]\nthis plucking out will make sense in the next run.\nnow rest of the code in the attn class is executed and we get output same as the size of query i.e which is prediction for these positions [:bsz, start_pos : start_pos + seqlen]\nand then we pluck out the last one, because its want we need and add it in the end of our input x[:, cur_pos] = out[:, -1, :].\nnow lets say the predicted token was “good”, we now have sequence “this is a good” and start_pos=3, and now in the next iteration cur_pos=4, we pass this input i.e (x[:, 3:4], 3, None) to our attention\nas you can see this is simply the prediction from earlier iteration and this is what we pass, because we only need the embedding for this token “good”.\nand then we only this new token in the code\nself.cache_k[:bsz, start_pos : start_pos + seqlen] = xk self.cache_v[:bsz, start_pos : start_pos + seqlen] = xv self.cache_k[:bsz, 3:3 + 1], as you can see we are just appending this new token to the preivous cache to be used in the later iteration.\nnow we pluck out this cache\nkeys = self.cache_k[:bsz, : start_pos + seqlen] values = self.cache_v[:bsz, : start_pos + seqlen] i.e keys = self.cache_k[:bsz, :3+1] which is the key and values cache til that token and simply calculate the attention scores and apply them, and this process goes on until the required sequence is generated (in our case 10)\nThis is all we need to know about KV cache.\nGrouped Query Attention Explanation As we know the main bottleneck while training and inferencing is not the amount of operations that our GPU can perform but rather the amount of data our GPU can move between tensor cores and the GPU memory. This is what GQA tries to solve, it tries to achieve balance between the accuracy of Multi-Head Attention (it performs better than these attention variants) and speed of attention calculation. The picture below accurately explains Multi-Head Attention (MHA), Multi-Query Attention (MQA) and Grouped Query Attention (GQA)\nThe main difference between them is:\nMHA : Q,K,V are divided into equal number of heads MQA: Only Q is divided into different heads, whereas K,V remain the same. However, the resulting number of attention heads are the same as MHA. (K,V are same, we don’t have to move data back and forth, this is where it helps in achieving performance gains.) GQA: Query is divided into total number of heads but mainly in groups, and K, V have different number of heads mainly referred to as kv_heads. As shown in the figure, similar group of query interact with their respective heads. Code for GQA keys = torch.repeat_interleave(keys, dim=2, repeats=self.n_rep) # (bs, cache_len + seqlen, n_local_heads, head_dim) values= torch.repeat_interleave(values, dim=2, repeats=self.n_rep) # The way this code works is just by duplicating the keys and values across the dim=2, self.n_rep number of times. This self.n_rep is obtained by dividing self.n_local_heads by self.n_local_kv_heads.\nFor instance, lets say our keys were (2,2,2,4) ( # (bs, cache_len + seqlen, n_local_kv_heads, head_dim))\nThe dimension across n_local_kv_heads will be repeated self.n_rep times,\na = torch.randn(2,2,2,4) # B,T,n_kv_head, head_dim a tensor([[[[ 0.6406, -1.2496, 0.9831, -0.3773], [ 1.0520, 0.5683, 0.6138, 0.0082]], [[-0.6792, 1.0518, 0.6339, 0.9386], [-0.0693, 0.8445, 1.8666, 1.6446]]], [[[-0.5852, -1.5809, -0.3186, 1.2536], [-0.9714, 0.4342, -1.0229, 0.1140]], [[-0.4645, 0.6589, -0.6345, 0.9500], [ 0.3443, -0.7342, -0.0163, 0.3242]]]]) torch.repeat_interleave(a, dim=2, repeats=2) tensor([[[[ 0.6406, -1.2496, 0.9831, -0.3773], [ 0.6406, -1.2496, 0.9831, -0.3773], [ 1.0520, 0.5683, 0.6138, 0.0082], [ 1.0520, 0.5683, 0.6138, 0.0082]], [[-0.6792, 1.0518, 0.6339, 0.9386], [-0.6792, 1.0518, 0.6339, 0.9386], [-0.0693, 0.8445, 1.8666, 1.6446], [-0.0693, 0.8445, 1.8666, 1.6446]]], [[[-0.5852, -1.5809, -0.3186, 1.2536], [-0.5852, -1.5809, -0.3186, 1.2536], [-0.9714, 0.4342, -1.0229, 0.1140], [-0.9714, 0.4342, -1.0229, 0.1140]], [[-0.4645, 0.6589, -0.6345, 0.9500], [-0.4645, 0.6589, -0.6345, 0.9500], [ 0.3443, -0.7342, -0.0163, 0.3242], [ 0.3443, -0.7342, -0.0163, 0.3242]]]]) you can see how the values are copied one by one 2 times for this scenario.\nBUT, this simply copies the numbers twice, there’s another way that’s used in Llama code\ndef repeat_kv(x: torch.Tensor, n_rep: int) -\u003e torch.Tensor: \"\"\"torch.repeat_interleave(x, dim=2, repeats=n_rep)\"\"\" bs, slen, n_kv_heads, head_dim = x.shape if n_rep == 1: return x return ( x[:, :, :, None, :] .expand(bs, slen, n_kv_heads, n_rep, head_dim) .reshape(bs, slen, n_kv_heads * n_rep, head_dim) ) It performs the same operation as torch.repeat_interleave, but the in a more memory efficient way.\nx[:, :, :, None, :] adding None will add one extra dimension to our vector. its shape will be (2,2,2,1,4)\n.expand(bs, slen, n_kv_heads, n_rep, head_dim) will expand(repeat) the the singleton dimension i.e our dimension 3 to n_rep, it will repeat n_rep times but not by copying the same elements but by creating a new view for that dimension which points to the same old memory location, and then we reshape it to (bs, slen, n_kv_heads * n_rep, head_dim).\nBy not copying and simply creating a new view, it saves memory.\n",
+  "wordCount" : "2153",
+  "inLanguage": "en",
+  "datePublished": "2025-01-18T00:00:00Z",
+  "dateModified": "2025-01-18T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/kv-cache-gqa/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://cohlem.github.io" accesskey="h" title="CohleM (Alt + H)">CohleM</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://cohlem.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/archives/" title="Archive">
+                    <span>Archive</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/notes/" title="Notes">
+                    <span>Notes</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      KV cache and Grouped Query Attention
+    </h1>
+    <div class="post-meta"><span title='2025-01-18 00:00:00 +0000 UTC'>January 18, 2025</span>&nbsp;·&nbsp;11 min&nbsp;·&nbsp;CohleM
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#kv-cache" aria-label="KV Cache">KV Cache</a><ul>
+                        
+                <li>
+                    <a href="#kv-cache-visual-operation" aria-label="KV cache visual operation">KV cache visual operation</a></li>
+                <li>
+                    <a href="#memory-needed-for-storing-kv-cache" aria-label="Memory needed for storing KV cache">Memory needed for storing KV cache</a></li>
+                <li>
+                    <a href="#attention-architecture-code" aria-label="Attention Architecture Code">Attention Architecture Code</a></li>
+                <li>
+                    <a href="#inferencing-code" aria-label="Inferencing code">Inferencing code</a></li></ul>
+                </li>
+                <li>
+                    <a href="#grouped-query-attention" aria-label="Grouped Query Attention">Grouped Query Attention</a><ul>
+                        
+                <li>
+                    <a href="#explanation" aria-label="Explanation">Explanation</a></li>
+                <li>
+                    <a href="#code-for-gqa" aria-label="Code for GQA">Code for GQA</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="kv-cache">KV Cache<a hidden class="anchor" aria-hidden="true" href="#kv-cache">#</a></h2>
+<h3 id="kv-cache-visual-operation">KV cache visual operation<a hidden class="anchor" aria-hidden="true" href="#kv-cache-visual-operation">#</a></h3>
+<p>In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.</p>
+<p>We don&rsquo;t make use of KV cache while training because we already have data filled for each sequence length, we don&rsquo;t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one. To understand better look at the notes below.</p>
+<p><img loading="lazy" src="kvnote1.jpg" alt="kvnote1"  />
+</p>
+<p><img loading="lazy" src="kvnote2.jpg" alt="kvnote2"  />
+
+<img loading="lazy" src="kvnote3.jpg" alt="kvnote3"  />
+</p>
+<h3 id="memory-needed-for-storing-kv-cache">Memory needed for storing KV cache<a hidden class="anchor" aria-hidden="true" href="#memory-needed-for-storing-kv-cache">#</a></h3>
+<p>let&rsquo;s calculate total memory needed for storing KV cache</p>
+<pre tabindex="0"><code>batch_size = 1 (for inferencing)
+d_model = 4096
+num_of_kv_heads = 32
+head_dim = d_model/num_of_kv_heads = 128
+seq_len = 10000
+precision (fp16) = 2 bytes
+
+2 (for k and v separately) x precision x head_dim x num_of_kv_heads x d_model x seq_len x batch_size = 5,24,28,80,000 bytes close to 5GB
+</code></pre><p>lets say we have 7B parameter model, 7x10^9 x2 (bytes) = 14x10^9 bytes = 14GB</p>
+<p>we need almost 1/3 total memory for inferencing.</p>
+<p>Let&rsquo;s explore the code for using KV cache in Llama models.</p>
+<p>Please note I&rsquo;ve modified some part of the original Llama code below to just explain the case of KV cache here.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#a6e22e">@dataclass</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ModelArgs</span>:
+</span></span><span style="display:flex;"><span>    dim: int <span style="color:#f92672">=</span> <span style="color:#ae81ff">4096</span>
+</span></span><span style="display:flex;"><span>    n_layers: int <span style="color:#f92672">=</span> <span style="color:#ae81ff">32</span>
+</span></span><span style="display:flex;"><span>    n_heads: int <span style="color:#f92672">=</span> <span style="color:#ae81ff">32</span>
+</span></span><span style="display:flex;"><span>    n_kv_heads: int <span style="color:#f92672">=</span> <span style="color:#ae81ff">16</span> <span style="color:#75715e"># modified to explain GQA </span>
+</span></span><span style="display:flex;"><span>    vocab_size: int <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>  <span style="color:#75715e"># defined later by tokenizer</span>
+</span></span><span style="display:flex;"><span>    multiple_of: int <span style="color:#f92672">=</span> <span style="color:#ae81ff">256</span>  <span style="color:#75715e"># make SwiGLU hidden layer size multiple of large power of 2</span>
+</span></span><span style="display:flex;"><span>    ffn_dim_multiplier: Optional[float] <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>    norm_eps: float <span style="color:#f92672">=</span> <span style="color:#ae81ff">1e-5</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    max_batch_size: int <span style="color:#f92672">=</span> <span style="color:#ae81ff">32</span>
+</span></span><span style="display:flex;"><span>    max_seq_len: int <span style="color:#f92672">=</span> <span style="color:#ae81ff">2048</span>
+</span></span></code></pre></div><h3 id="attention-architecture-code">Attention Architecture Code<a hidden class="anchor" aria-hidden="true" href="#attention-architecture-code">#</a></h3>
+<p>you might be familiar with the code below if you&rsquo;ve implemented attention mechanism on your own (more explanation below)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Attention</span>(nn<span style="color:#f92672">.</span>Module):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Multi-head attention module.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self, args: ModelArgs):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Initialize the Attention module.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Args:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            args (ModelArgs): Model configuration parameters.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Attributes:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            n_kv_heads (int): Number of key and value heads.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            n_local_heads (int): Number of local query heads.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            n_local_kv_heads (int): Number of local key and value heads.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            n_rep (int): Number of repetitions for local heads.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            head_dim (int): Dimension size of each attention head.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            wq (ColumnParallelLinear): Linear transformation for queries.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            wk (ColumnParallelLinear): Linear transformation for keys.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            wv (ColumnParallelLinear): Linear transformation for values.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            wo (RowParallelLinear): Linear transformation for output.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            cache_k (torch.Tensor): Cached keys for attention.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            cache_v (torch.Tensor): Cached values for attention.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__()
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>n_kv_heads <span style="color:#f92672">=</span> args<span style="color:#f92672">.</span>n_heads <span style="color:#66d9ef">if</span> args<span style="color:#f92672">.</span>n_kv_heads <span style="color:#f92672">is</span> <span style="color:#66d9ef">None</span> <span style="color:#66d9ef">else</span> args<span style="color:#f92672">.</span>n_kv_heads
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         model_parallel_size = fs_init.get_model_parallel_world_size()</span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>n_local_heads <span style="color:#f92672">=</span> args<span style="color:#f92672">.</span>n_heads 
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>n_local_kv_heads <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>n_kv_heads 
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>n_rep <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>n_local_heads <span style="color:#f92672">//</span> self<span style="color:#f92672">.</span>n_local_kv_heads
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>head_dim <span style="color:#f92672">=</span> args<span style="color:#f92672">.</span>dim <span style="color:#f92672">//</span> args<span style="color:#f92672">.</span>n_heads
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>wq <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Linear(
+</span></span><span style="display:flex;"><span>            args<span style="color:#f92672">.</span>dim,
+</span></span><span style="display:flex;"><span>            args<span style="color:#f92672">.</span>n_heads <span style="color:#f92672">*</span> self<span style="color:#f92672">.</span>head_dim,
+</span></span><span style="display:flex;"><span>            bias<span style="color:#f92672">=</span><span style="color:#66d9ef">False</span>,
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>wk <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Linear(
+</span></span><span style="display:flex;"><span>            args<span style="color:#f92672">.</span>dim,
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>n_kv_heads <span style="color:#f92672">*</span> self<span style="color:#f92672">.</span>head_dim,
+</span></span><span style="display:flex;"><span>            bias<span style="color:#f92672">=</span><span style="color:#66d9ef">False</span>,
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>wv <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Linear(
+</span></span><span style="display:flex;"><span>            args<span style="color:#f92672">.</span>dim,
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>n_kv_heads <span style="color:#f92672">*</span> self<span style="color:#f92672">.</span>head_dim,
+</span></span><span style="display:flex;"><span>            bias<span style="color:#f92672">=</span><span style="color:#66d9ef">False</span>,
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>wo <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Linear(
+</span></span><span style="display:flex;"><span>            args<span style="color:#f92672">.</span>n_heads <span style="color:#f92672">*</span> self<span style="color:#f92672">.</span>head_dim,
+</span></span><span style="display:flex;"><span>            args<span style="color:#f92672">.</span>dim,
+</span></span><span style="display:flex;"><span>            bias<span style="color:#f92672">=</span><span style="color:#66d9ef">False</span>,
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>cache_k <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>zeros(
+</span></span><span style="display:flex;"><span>            (
+</span></span><span style="display:flex;"><span>                args<span style="color:#f92672">.</span>max_batch_size,
+</span></span><span style="display:flex;"><span>                args<span style="color:#f92672">.</span>max_seq_len,
+</span></span><span style="display:flex;"><span>                self<span style="color:#f92672">.</span>n_local_kv_heads,
+</span></span><span style="display:flex;"><span>                self<span style="color:#f92672">.</span>head_dim,
+</span></span><span style="display:flex;"><span>            )
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>cache_v <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>zeros(
+</span></span><span style="display:flex;"><span>            (
+</span></span><span style="display:flex;"><span>                args<span style="color:#f92672">.</span>max_batch_size,
+</span></span><span style="display:flex;"><span>                args<span style="color:#f92672">.</span>max_seq_len,
+</span></span><span style="display:flex;"><span>                self<span style="color:#f92672">.</span>n_local_kv_heads,
+</span></span><span style="display:flex;"><span>                self<span style="color:#f92672">.</span>head_dim,
+</span></span><span style="display:flex;"><span>            )
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">forward</span>(
+</span></span><span style="display:flex;"><span>        self,
+</span></span><span style="display:flex;"><span>        x: torch<span style="color:#f92672">.</span>Tensor,
+</span></span><span style="display:flex;"><span>        start_pos: int,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         freqs_cis: torch.Tensor,</span>
+</span></span><span style="display:flex;"><span>        mask: Optional[torch<span style="color:#f92672">.</span>Tensor],
+</span></span><span style="display:flex;"><span>    ):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Forward pass of the attention module.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Args:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            x (torch.Tensor): Input tensor.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            start_pos (int): Starting position for caching.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            freqs_cis (torch.Tensor): Precomputed frequency tensor.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            mask (torch.Tensor, optional): Attention mask tensor.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Returns:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            torch.Tensor: Output tensor after attention.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        bsz, seqlen, _ <span style="color:#f92672">=</span> x<span style="color:#f92672">.</span>shape
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        xq, xk, xv <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>wq(x), self<span style="color:#f92672">.</span>wk(x), self<span style="color:#f92672">.</span>wv(x)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        xq <span style="color:#f92672">=</span> xq<span style="color:#f92672">.</span>view(bsz, seqlen, self<span style="color:#f92672">.</span>n_local_heads, self<span style="color:#f92672">.</span>head_dim)
+</span></span><span style="display:flex;"><span>        xk <span style="color:#f92672">=</span> xk<span style="color:#f92672">.</span>view(bsz, seqlen, self<span style="color:#f92672">.</span>n_local_kv_heads, self<span style="color:#f92672">.</span>head_dim)
+</span></span><span style="display:flex;"><span>        xv <span style="color:#f92672">=</span> xv<span style="color:#f92672">.</span>view(bsz, seqlen, self<span style="color:#f92672">.</span>n_local_kv_heads, self<span style="color:#f92672">.</span>head_dim)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         xq, xk = apply_rotary_emb(xq, xk, freqs_cis=freqs_cis)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>cache_k <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>cache_k<span style="color:#f92672">.</span>to(xq)
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>cache_v <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>cache_v<span style="color:#f92672">.</span>to(xq)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>cache_k[:bsz, start_pos : start_pos <span style="color:#f92672">+</span> seqlen] <span style="color:#f92672">=</span> xk
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>cache_v[:bsz, start_pos : start_pos <span style="color:#f92672">+</span> seqlen] <span style="color:#f92672">=</span> xv
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        keys <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>cache_k[:bsz, : start_pos <span style="color:#f92672">+</span> seqlen]
+</span></span><span style="display:flex;"><span>        values <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>cache_v[:bsz, : start_pos <span style="color:#f92672">+</span> seqlen]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Grouped Query Attention</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># for production use repeat_kv function, it&#39;s memory efficient</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">## Repeat the key, values heads, repeats values at dim =2 self.n_rep times, now keys and values size match query size.</span>
+</span></span><span style="display:flex;"><span>        keys <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>repeat_interleave(keys, dim<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>, repeats<span style="color:#f92672">=</span>self<span style="color:#f92672">.</span>n_rep) <span style="color:#75715e"># (bs, cache_len + seqlen, n_local_heads, head_dim)</span>
+</span></span><span style="display:flex;"><span>        values<span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>repeat_interleave(values, dim<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>, repeats<span style="color:#f92672">=</span>self<span style="color:#f92672">.</span>n_rep) <span style="color:#75715e"># (bs, cache_len + seqlen, n_local_heads, head_dim)</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        xq <span style="color:#f92672">=</span> xq<span style="color:#f92672">.</span>transpose(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>)  <span style="color:#75715e"># (bs, n_local_heads, seqlen, head_dim)</span>
+</span></span><span style="display:flex;"><span>        keys <span style="color:#f92672">=</span> keys<span style="color:#f92672">.</span>transpose(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>) <span style="color:#75715e"># (bs, n_local_heads, cache_len + seqlen, head_dim)</span>
+</span></span><span style="display:flex;"><span>        values <span style="color:#f92672">=</span> values<span style="color:#f92672">.</span>transpose(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>) <span style="color:#75715e"># (bs, n_local_heads, cache_len + seqlen, head_dim)</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        print(xq<span style="color:#f92672">.</span>shape)
+</span></span><span style="display:flex;"><span>        print(keys<span style="color:#f92672">.</span>transpose(<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>)<span style="color:#f92672">.</span>shape)
+</span></span><span style="display:flex;"><span>        scores <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>matmul(xq, keys<span style="color:#f92672">.</span>transpose(<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>)) <span style="color:#f92672">/</span> math<span style="color:#f92672">.</span>sqrt(self<span style="color:#f92672">.</span>head_dim)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> mask <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>            scores <span style="color:#f92672">=</span> scores <span style="color:#f92672">+</span> mask  <span style="color:#75715e"># (bs, n_local_heads, seqlen, cache_len + seqlen)</span>
+</span></span><span style="display:flex;"><span>        scores <span style="color:#f92672">=</span> F<span style="color:#f92672">.</span>softmax(scores<span style="color:#f92672">.</span>float(), dim<span style="color:#f92672">=-</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">.</span>type_as(xq)
+</span></span><span style="display:flex;"><span>        output <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>matmul(scores, values)  <span style="color:#75715e"># (bs, n_local_heads, seqlen, head_dim)</span>
+</span></span><span style="display:flex;"><span>        output <span style="color:#f92672">=</span> output<span style="color:#f92672">.</span>transpose(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>)<span style="color:#f92672">.</span>contiguous()<span style="color:#f92672">.</span>view(bsz, seqlen, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>wo(output)
+</span></span></code></pre></div><h3 id="inferencing-code">Inferencing code<a hidden class="anchor" aria-hidden="true" href="#inferencing-code">#</a></h3>
+<p>This code generates embedding for next tokens by passing existing sequence of tokens to our attention layer (not FFNN) and append it to our existing sequence of tokens and pass it again to the attention layer and do it to generate it til 10 tokens.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> torch
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> torch.nn <span style="color:#66d9ef">as</span> nn
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> math
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Define a simple ModelArgs class for testing</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize the Attention module</span>
+</span></span><span style="display:flex;"><span>args <span style="color:#f92672">=</span> ModelArgs()
+</span></span><span style="display:flex;"><span>attn <span style="color:#f92672">=</span> Attention(args)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Input sentence and tokenization</span>
+</span></span><span style="display:flex;"><span>sentence <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;this is awesome&#39;</span>
+</span></span><span style="display:flex;"><span>tokens <span style="color:#f92672">=</span> sentence<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#39; &#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Hyperparameters</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>  <span style="color:#75715e"># Batch size</span>
+</span></span><span style="display:flex;"><span>T <span style="color:#f92672">=</span> len(tokens)  <span style="color:#75715e"># Sequence length</span>
+</span></span><span style="display:flex;"><span>C <span style="color:#f92672">=</span> args<span style="color:#f92672">.</span>dim  <span style="color:#75715e"># Feature dimension</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize input tensor with random values (for demonstration)</span>
+</span></span><span style="display:flex;"><span>x <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn(B, args<span style="color:#f92672">.</span>max_seq_len, C)  <span style="color:#75715e"># Shape: (batch_size, max_seq_len, feature_dim)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Inference loop</span>
+</span></span><span style="display:flex;"><span>start_pos <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> cur_pos <span style="color:#f92672">in</span> range(T, <span style="color:#ae81ff">10</span>):  <span style="color:#75715e"># Generate tokens up to max_seq_len</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Forward pass through the attention module</span>
+</span></span><span style="display:flex;"><span>    out <span style="color:#f92672">=</span> attn(x[:, start_pos:cur_pos], start_pos, <span style="color:#66d9ef">None</span>)  <span style="color:#75715e"># Shape: (batch_size, cur_pos - start_pos, feature_dim)</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Update the input tensor with the output for the next position</span>
+</span></span><span style="display:flex;"><span>    x[:, cur_pos] <span style="color:#f92672">=</span> out[:, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, :]  <span style="color:#75715e"># Take the last token&#39;s output and append it to the sequence</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Update start_pos for the next iteration</span>
+</span></span><span style="display:flex;"><span>    start_pos <span style="color:#f92672">=</span> cur_pos
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Final output</span>
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;Final output tensor:&#34;</span>)
+</span></span><span style="display:flex;"><span>print(x)
+</span></span></code></pre></div><p>let&rsquo;s break down the whole code one by one</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># Initialize the Attention module</span>
+</span></span><span style="display:flex;"><span>args <span style="color:#f92672">=</span> ModelArgs()
+</span></span><span style="display:flex;"><span>attn <span style="color:#f92672">=</span> Attention(args)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Input sentence and tokenization</span>
+</span></span><span style="display:flex;"><span>sentence <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;this is a&#39;</span>
+</span></span><span style="display:flex;"><span>tokens <span style="color:#f92672">=</span> sentence<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#39; &#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Hyperparameters</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>  <span style="color:#75715e"># Batch size</span>
+</span></span><span style="display:flex;"><span>T <span style="color:#f92672">=</span> len(tokens)  <span style="color:#75715e"># Sequence length</span>
+</span></span><span style="display:flex;"><span>C <span style="color:#f92672">=</span> args<span style="color:#f92672">.</span>dim  <span style="color:#75715e"># Feature dimension</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize input tensor with random values (for demonstration)</span>
+</span></span><span style="display:flex;"><span>x <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn(B, args<span style="color:#f92672">.</span>max_seq_len, C)  <span style="color:#75715e"># Shape: (batch_size, max_seq_len, feature_dim)</span>
+</span></span></code></pre></div><p>this is straightforward, we have initial sentence that we pass it to the model i.e &ldquo;this is awesome&rdquo;, construct a random input matrix &ldquo;x&rdquo; of (batch_size, max_seq_len, feature_dim). In real, these random input matrix is the matrix full of input embeddings.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>start_pos <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span></code></pre></div><p>the is the starting point for caching, since we haven&rsquo;t cached anything yet, we start from the initial position i.e 0 for token &ldquo;this&rdquo;</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> cur_pos <span style="color:#f92672">in</span> range(T, <span style="color:#ae81ff">10</span>):  <span style="color:#75715e"># Generate tokens up to max_seq_len</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Forward pass through the attention module</span>
+</span></span><span style="display:flex;"><span>    out <span style="color:#f92672">=</span> attn(x[:, start_pos:cur_pos], start_pos, <span style="color:#66d9ef">None</span>)  <span style="color:#75715e"># Shape: (batch_size, cur_pos - start_pos, feature_dim)</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Update the input tensor with the output for the next position</span>
+</span></span><span style="display:flex;"><span>    x[:, cur_pos] <span style="color:#f92672">=</span> out[:, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, :]  <span style="color:#75715e"># Take the last token&#39;s output and append it to the sequence</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Update start_pos for the next iteration</span>
+</span></span><span style="display:flex;"><span>    start_pos <span style="color:#f92672">=</span> cur_pos
+</span></span></code></pre></div><p>we iterate from T,10 because we already have tokens til T and we want to generate 10-T tokens.</p>
+<p>we pass the sequence from start_pos:cur_pos to our attn architecture.</p>
+<p>first this will be x[:, 0:3] (which is the initial tokens &ldquo;this is a&rdquo;, because we first need to calculate the attention for these initial tokens and cache them first.</p>
+<p>let&rsquo;s directly come down to this part of code, because all other are usual code for attention without caching.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>cache_k[:bsz, start_pos : start_pos <span style="color:#f92672">+</span> seqlen] <span style="color:#f92672">=</span> xk
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>cache_v[:bsz, start_pos : start_pos <span style="color:#f92672">+</span> seqlen] <span style="color:#f92672">=</span> xv
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        keys <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>cache_k[:bsz, : start_pos <span style="color:#f92672">+</span> seqlen]
+</span></span><span style="display:flex;"><span>        values <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>cache_v[:bsz, : start_pos <span style="color:#f92672">+</span> seqlen]
+</span></span></code></pre></div><p>as you can see we first cache xk to the positions [:bsz, start_pos : start_pos + seqlen]</p>
+<p>which is basically caching this index of our input [:1, 0:3] which is basically the initially tokens (&rsquo;this is a')</p>
+<p>and then we pluck out the same tokens from our cached keys and cached values</p>
+<p>keys = self.cache_k[:bsz, : start_pos + seqlen]</p>
+<p>this plucking out will make sense in the next run.</p>
+<p>now rest of the code in the attn class is executed and we get output same as the size of query i.e which is prediction for these positions   [:bsz, start_pos : start_pos + seqlen]</p>
+<p>and then we pluck out the last one, because its want we need and add it in the end of our input x[:, cur_pos] = out[:, -1, :].</p>
+<p>now lets say the predicted token was &ldquo;good&rdquo;, we now have sequence &ldquo;this is a good&rdquo;
+and start_pos=3,
+and now in the next iteration cur_pos=4, we pass this input i.e (x[:, 3:4], 3, None) to our attention</p>
+<p>as you can see this is simply the prediction from earlier iteration and this is what we pass, because we only need the embedding for this token &ldquo;good&rdquo;.</p>
+<p>and then we <strong>only</strong> this new token in the code</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>	    self<span style="color:#f92672">.</span>cache_k[:bsz, start_pos : start_pos <span style="color:#f92672">+</span> seqlen] <span style="color:#f92672">=</span> xk
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>cache_v[:bsz, start_pos : start_pos <span style="color:#f92672">+</span> seqlen] <span style="color:#f92672">=</span> xv
+</span></span></code></pre></div><p>self.cache_k[:bsz, 3:3 + 1], as you can see we are just appending this new token to the preivous cache to be used in the later iteration.</p>
+<p>now we pluck out this cache</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>        keys <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>cache_k[:bsz, : start_pos <span style="color:#f92672">+</span> seqlen]
+</span></span><span style="display:flex;"><span>        values <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>cache_v[:bsz, : start_pos <span style="color:#f92672">+</span> seqlen]
+</span></span></code></pre></div><p>i.e keys = self.cache_k[:bsz, :3+1] which is the key and values cache til that token and simply calculate the attention scores and apply them, and this process goes on until the required sequence is generated (in our case 10)</p>
+<p>This is all we need to know about KV cache.</p>
+<h2 id="grouped-query-attention">Grouped Query Attention<a hidden class="anchor" aria-hidden="true" href="#grouped-query-attention">#</a></h2>
+<h3 id="explanation">Explanation<a hidden class="anchor" aria-hidden="true" href="#explanation">#</a></h3>
+<p>As we know the main bottleneck while training and inferencing is not the amount of operations that our GPU can perform but rather the amount of data our GPU can move between tensor cores and the GPU memory. This is what GQA tries to solve, it tries to achieve balance between the accuracy of Multi-Head Attention (it performs better than these attention variants) and speed of attention calculation.
+<img loading="lazy" src="kv1.png" alt="kv1"  />
+</p>
+<p>The picture below accurately explains Multi-Head Attention (MHA), Multi-Query Attention (MQA)
+and Grouped Query Attention (GQA)</p>
+<p>The main difference between them is:</p>
+<ul>
+<li>MHA : Q,K,V are divided into equal number of heads</li>
+<li>MQA: Only Q is divided into different heads, whereas K,V remain the same. However, the resulting number of attention heads are the same as MHA. (K,V are same, we don&rsquo;t have to move data back and forth, this is where it helps in achieving performance gains.)</li>
+<li>GQA: Query is divided into total number of heads but mainly in groups, and K, V have different number of heads mainly referred to as kv_heads. As shown in the figure, similar group of query interact with their respective heads.
+<img loading="lazy" src="kv2.png" alt="kv2"  />
+</li>
+</ul>
+<h3 id="code-for-gqa">Code for GQA<a hidden class="anchor" aria-hidden="true" href="#code-for-gqa">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>        keys <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>repeat_interleave(keys, dim<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>, repeats<span style="color:#f92672">=</span>self<span style="color:#f92672">.</span>n_rep) <span style="color:#75715e"># (bs, cache_len + seqlen, n_local_heads, head_dim)</span>
+</span></span><span style="display:flex;"><span>        values<span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>repeat_interleave(values, dim<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>, repeats<span style="color:#f92672">=</span>self<span style="color:#f92672">.</span>n_rep) <span style="color:#75715e"># </span>
+</span></span></code></pre></div><p>The way this code works is just by duplicating the keys and values across the dim=2, self.n_rep number of times. This self.n_rep is obtained by dividing self.n_local_heads by self.n_local_kv_heads.</p>
+<p>For instance, lets say our keys were (2,2,2,4) ( # (bs, cache_len + seqlen, n_local_kv_heads, head_dim))</p>
+<p>The dimension across n_local_kv_heads will be repeated self.n_rep times,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>a <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>randn(<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">4</span>) <span style="color:#75715e"># B,T,n_kv_head, head_dim</span>
+</span></span><span style="display:flex;"><span>a
+</span></span></code></pre></div><pre tabindex="0"><code>tensor([[[[ 0.6406, -1.2496,  0.9831, -0.3773],
+          [ 1.0520,  0.5683,  0.6138,  0.0082]],
+
+         [[-0.6792,  1.0518,  0.6339,  0.9386],
+          [-0.0693,  0.8445,  1.8666,  1.6446]]],
+
+
+        [[[-0.5852, -1.5809, -0.3186,  1.2536],
+          [-0.9714,  0.4342, -1.0229,  0.1140]],
+
+         [[-0.4645,  0.6589, -0.6345,  0.9500],
+          [ 0.3443, -0.7342, -0.0163,  0.3242]]]])
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>torch<span style="color:#f92672">.</span>repeat_interleave(a, dim<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>, repeats<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>)
+</span></span></code></pre></div><pre tabindex="0"><code>tensor([[[[ 0.6406, -1.2496,  0.9831, -0.3773],
+          [ 0.6406, -1.2496,  0.9831, -0.3773],
+          [ 1.0520,  0.5683,  0.6138,  0.0082],
+          [ 1.0520,  0.5683,  0.6138,  0.0082]],
+
+         [[-0.6792,  1.0518,  0.6339,  0.9386],
+          [-0.6792,  1.0518,  0.6339,  0.9386],
+          [-0.0693,  0.8445,  1.8666,  1.6446],
+          [-0.0693,  0.8445,  1.8666,  1.6446]]],
+
+
+        [[[-0.5852, -1.5809, -0.3186,  1.2536],
+          [-0.5852, -1.5809, -0.3186,  1.2536],
+          [-0.9714,  0.4342, -1.0229,  0.1140],
+          [-0.9714,  0.4342, -1.0229,  0.1140]],
+
+         [[-0.4645,  0.6589, -0.6345,  0.9500],
+          [-0.4645,  0.6589, -0.6345,  0.9500],
+          [ 0.3443, -0.7342, -0.0163,  0.3242],
+          [ 0.3443, -0.7342, -0.0163,  0.3242]]]])
+</code></pre><p>you can see how the values are copied one by one 2 times for this scenario.</p>
+<p>BUT, this simply copies the numbers twice, there&rsquo;s another way that&rsquo;s used in Llama code</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">repeat_kv</span>(x: torch<span style="color:#f92672">.</span>Tensor, n_rep: int) <span style="color:#f92672">-&gt;</span> torch<span style="color:#f92672">.</span>Tensor:
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;torch.repeat_interleave(x, dim=2, repeats=n_rep)&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    bs, slen, n_kv_heads, head_dim <span style="color:#f92672">=</span> x<span style="color:#f92672">.</span>shape
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> n_rep <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> x
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>        x[:, :, :, <span style="color:#66d9ef">None</span>, :]
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">.</span>expand(bs, slen, n_kv_heads, n_rep, head_dim)
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">.</span>reshape(bs, slen, n_kv_heads <span style="color:#f92672">*</span> n_rep, head_dim)
+</span></span><span style="display:flex;"><span>    )
+</span></span></code></pre></div><p>It performs the same operation as torch.repeat_interleave, but the in a more memory efficient way.</p>
+<p>x[:, :, :, None, :] adding None will add one extra dimension to our vector. its shape will be (2,2,2,1,4)</p>
+<p>.expand(bs, slen, n_kv_heads, n_rep, head_dim) will expand(repeat) the the singleton dimension i.e our dimension 3 to n_rep, it will repeat n_rep times but not by copying the same elements but by creating a new view for that dimension which points to the same old memory location, and then we reshape it to (bs, slen, n_kv_heads * n_rep, head_dim).</p>
+<p>By not copying and simply creating a new view, it saves memory.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/mixture-of-experts/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Mixture of Experts</span>
+  </a>
+  <a class="next" href="https://cohlem.github.io/sub-notes/rmsnorm/">
+    <span class="title">Next »</span>
+    <br>
+    <span>RMSNorm</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2025 <a href="https://cohlem.github.io">CohleM</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

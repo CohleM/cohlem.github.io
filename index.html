@@ -211,6 +211,19 @@ A routing layer is set to choose experts depending on how many experts are selec
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>KV cache and Grouped Query Attention
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>KV Cache KV cache visual operation In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.
+We don’t make use of KV cache while training because we already have data filled for each sequence length, we don’t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-18 00:00:00 +0000 UTC'>January 18, 2025</span>&nbsp;·&nbsp;11 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to KV cache and Grouped Query Attention" href="https://cohlem.github.io/sub-notes/kv-cache-gqa/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>RMSNorm
     </h2>
   </header>
@@ -247,19 +260,6 @@ among each GPC there are 12 Streaming Multiprocessors. Inside each SM there are 
   </div>
   <footer class="entry-footer"><span title='2025-01-08 00:00:00 +0000 UTC'>January 8, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to GPUs" href="https://cohlem.github.io/sub-notes/gpus/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>DDP and gradient sync
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.
-The way to do this in pytorch is to use DDP (take a look into their docs)...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to DDP and gradient sync" href="https://cohlem.github.io/sub-notes/ddp/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
