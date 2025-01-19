@@ -59,16 +59,6 @@ Disadvantages No notion of relative information between tokens doesn&amp;rsquo;t
     </item>
     
     <item>
-      <title>projects</title>
-      <link>https://cohlem.github.io/notes/projects/</link>
-      <pubDate>Fri, 10 Jan 2025 00:00:00 +0000</pubDate>
-      
-      <guid>https://cohlem.github.io/notes/projects/</guid>
-      <description>Fine-tuning model to generate manim code data sources
-manim docs 3blue1brow&amp;rsquo;s github </description>
-    </item>
-    
-    <item>
       <title>GPUs</title>
       <link>https://cohlem.github.io/sub-notes/gpus/</link>
       <pubDate>Wed, 08 Jan 2025 00:00:00 +0000</pubDate>
