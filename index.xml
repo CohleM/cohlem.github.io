@@ -85,7 +85,8 @@ The way to do this in pytorch is to use DDP (take a look into their docs)</descr
       <pubDate>Fri, 03 Jan 2025 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/notes/essential-blogs/</guid>
-      <description>Training Neural Networks Karpathy&amp;rsquo;s advice while training NN</description>
+      <description>Training Neural Networks Karpathy&amp;rsquo;s advice while training NN
+Deep Learning Concepts Contains simple explanation for DL concepts</description>
     </item>
     
     <item>
