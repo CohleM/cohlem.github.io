@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="en" dir="auto">
 
-<head>
-	<meta name="generator" content="Hugo 0.115.4"><meta charset="utf-8">
+<head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="index, follow">
-<title>CohleM</title>
-
-<meta name="description" content="">
-<meta name="author" content="">
-<link rel="canonical" href="https://cohlem.github.io/">
+<title>Papers Read | CohleM</title>
+<meta name="keywords" content="">
+<meta name="description" content="Papers that I&rsquo;ve read with their respective notes.
+LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. The Llama 3 Herd of Models Uses 15T tokens ">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/paper-read/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
 <link rel="icon" href="https://cohlem.github.io/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
@@ -19,8 +21,6 @@
 <link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="https://cohlem.github.io/index.xml">
-<link rel="alternate" type="application/json" href="https://cohlem.github.io/index.json">
 <noscript>
     <style>
         #theme-toggle,
@@ -68,31 +68,76 @@ if (!doNotTrack) {
 	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
 }
 </script>
-<meta property="og:title" content="CohleM" />
-<meta property="og:description" content="" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://cohlem.github.io/" />
+<meta property="og:title" content="Papers Read" />
+<meta property="og:description" content="Papers that I&rsquo;ve read with their respective notes.
+LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. The Llama 3 Herd of Models Uses 15T tokens " />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/paper-read/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2025-01-21T00:00:00+00:00" />
+<meta property="article:modified_time" content="2025-01-21T00:00:00+00:00" />
 
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="CohleM"/>
-<meta name="twitter:description" content=""/>
+<meta name="twitter:title" content="Papers Read"/>
+<meta name="twitter:description" content="Papers that I&rsquo;ve read with their respective notes.
+LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. The Llama 3 Herd of Models Uses 15T tokens "/>
+
 
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "CohleM",
-  "url": "https://cohlem.github.io",
-  "description": "",
-  "thumbnailUrl": "https://cohlem.github.io/favicon.ico",
-  "sameAs": [
-      "https://github.com/CohleM", "https://twitter.com/Cohle_M", "https://www.linkedin.com/in/manish-bhatta-030a61189//"
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Sub-notes",
+      "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "Papers Read",
+      "item": "https://cohlem.github.io/sub-notes/paper-read/"
+    }
   ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Papers Read",
+  "name": "Papers Read",
+  "description": "Papers that I\u0026rsquo;ve read with their respective notes.\nLLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. The Llama 3 Herd of Models Uses 15T tokens ",
+  "keywords": [
+    
+  ],
+  "articleBody": "Papers that I’ve read with their respective notes.\nLLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. The Llama 3 Herd of Models Uses 15T tokens ",
+  "wordCount" : "77",
+  "inLanguage": "en",
+  "datePublished": "2025-01-21T00:00:00Z",
+  "dateModified": "2025-01-21T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/paper-read/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
 }
 </script>
 </head>
 
-<body class="list" id="top">
+<body class="" id="top">
 <script>
     if (localStorage.getItem("pref-theme") === "dark") {
         document.body.classList.add('dark');
@@ -155,84 +200,68 @@ if (!doNotTrack) {
         </ul>
     </nav>
 </header>
-<main class="main"> 
+<main class="main">
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>RoPE
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Recap of Absolute PE We previously used absolute positional embedding in our GPT-2 model.
-Disadvantages No notion of relative information between tokens doesn’t work for sequences larger than context length the model is trained with, because we run out of token embeddings for tokens that come at sequence larger than the context length. RoPE pre-requisites This is how we rotate a point by an angel theta in a two dimensional space and this is all we need in RoPE....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-15 00:00:00 +0000 UTC'>January 15, 2025</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to RoPE" href="https://cohlem.github.io/sub-notes/rope/"></a>
-</article>
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      Papers Read
+    </h1>
+    <div class="post-meta"><span title='2025-01-21 00:00:00 +0000 UTC'>January 21, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>GPUs
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>GPU physcial structure let’s first understand the structure of GPU.
-Inside a GPU it has a chip named GA102 (depends on architecture, this is for ampere architecture) built from 28.3million transistors (semiconductor device that can switch or amplify electrical signals) and majority area covered by processing cores. processing core is divide into seven Graphics processing clusters (GPCs)
-among each GPC there are 12 Streaming Multiprocessors. Inside each SM there are 4 warps and 1 Raytracing core inside a warp there are 32 Cudas and 1 Tensor Core....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-08 00:00:00 +0000 UTC'>January 8, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to GPUs" href="https://cohlem.github.io/sub-notes/gpus/"></a>
-</article>
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>DDP and gradient sync
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.
-The way to do this in pytorch is to use DDP (take a look into their docs)...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to DDP and gradient sync" href="https://cohlem.github.io/sub-notes/ddp/"></a>
-</article>
+        <div class="inner"><ul>
+                <li>
+                    <a href="#llama-open-and-efficient-foundation-language-modelshttpsarxivorgpdf230213971" aria-label="LLaMA: Open and Efficient Foundation Language Models"><a href="https://arxiv.org/pdf/2302.13971">LLaMA: Open and Efficient Foundation Language Models</a></a></li>
+                <li>
+                    <a href="#the-llama-3-herd-of-modelshttpsarxivorgpdf240721783" aria-label="The Llama 3 Herd of Models"><a href="https://arxiv.org/pdf/2407.21783">The Llama 3 Herd of Models</a></a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Gradient Accumulation
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Gradient Accumulation When we want to train a neural network with some predefined set of tokens, but don’t have enough GPU resources, what do we do?
-Gradient Accumulation We simply accumulate the gradients. For instance, in order to reproduce GPT-2 124B, we need to train the model with 0.5 Million tokens in a single run with 1024 context length, we would need 0.5e6/ 1024 = 488 batches i.e B,T = (488,1024) to calculate the gradients and update them....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Gradient Accumulation" href="https://cohlem.github.io/sub-notes/gradient-accumulation/"></a>
-</article>
+  <div class="post-content"><p>Papers that I&rsquo;ve read with their respective notes.</p>
+<h3 id="llama-open-and-efficient-foundation-language-modelshttpsarxivorgpdf230213971"><a href="https://arxiv.org/pdf/2302.13971">LLaMA: Open and Efficient Foundation Language Models</a><a hidden class="anchor" aria-hidden="true" href="#llama-open-and-efficient-foundation-language-modelshttpsarxivorgpdf230213971">#</a></h3>
+<ul>
+<li>Trained on 1.4T tokens.</li>
+<li>Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences)</li>
+<li>use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly.</li>
+</ul>
+<h3 id="the-llama-3-herd-of-modelshttpsarxivorgpdf240721783"><a href="https://arxiv.org/pdf/2407.21783">The Llama 3 Herd of Models</a><a hidden class="anchor" aria-hidden="true" href="#the-llama-3-herd-of-modelshttpsarxivorgpdf240721783">#</a></h3>
+<ul>
+<li>Uses 15T tokens</li>
+<li></li>
+</ul>
 
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Training Speed Optimization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Precision The more the precision point the less operation (TFLOPS) is performed.
-FP64 used for scientific research purposes, where precision is a must. TF32 and BFLOAT16 are mostly used in NN training. INT8 is used for inference. Picture below shows specifications of A100 GPU.
-Using these precision points may have some difference in code. See pytorch’s docs
-torch.compile It works in a similar fashion like the GCC compiler. It works by reducing overheads introduced by the python interpreter and optimizing the GPU read and writes....</p>
+
   </div>
-  <footer class="entry-footer"><span title='2025-01-02 00:00:00 +0000 UTC'>January 2, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Training Speed Optimization" href="https://cohlem.github.io/sub-notes/training-speed-optimization/"></a>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/tokenization/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Tokenization</span>
+  </a>
+  <a class="next" href="https://cohlem.github.io/sub-notes/kv-cache-gqa/">
+    <span class="title">Next »</span>
+    <br>
+    <span>KV cache and Grouped Query Attention</span>
+  </a>
+</nav>
+
+  </footer>
 </article>
-<footer class="page-footer">
-  <nav class="pagination">
-    <a class="prev" href="https://cohlem.github.io/">
-      «&nbsp;Prev&nbsp;
-    </a>
-    <a class="next" href="https://cohlem.github.io/page/3/">Next&nbsp;&nbsp;»
-    </a>
-  </nav>
-</footer>
     </main>
     
 <footer class="footer">

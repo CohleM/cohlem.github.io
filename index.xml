@@ -6,7 +6,7 @@
     <description>Recent content on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 22 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Mixture of Experts</title>
       <link>https://cohlem.github.io/sub-notes/mixture-of-experts/</link>
@@ -17,6 +17,25 @@
 Basic MoE structure Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs. Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
 Down the line it could use multiple experts but at different blocks i.e (layers)
 A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.</description>
+    </item>
+    
+    <item>
+      <title>Tokenization</title>
+      <link>https://cohlem.github.io/sub-notes/tokenization/</link>
+      <pubDate>Wed, 22 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/tokenization/</guid>
+      <description>Unicode Character encoding standard aims to incorporate all the available digital characters Each character in Unicode has a unique 4 to 6-digit hexadecimal number. For Example, the letter &amp;lsquo;A&amp;rsquo; has the code 0041, represented as U+0041. compatible with ASCII first 128 characters in Unicode directly correspond to the characters represented in the 7-bit ASCII table Unicode Transformation Format (UTF-8) uses 1-4 bytes to represent each character can encode all the unicode code points backward compatible with ASCII Example: (1 byte) The character &amp;#39;A&amp;#39; (U+0041) is encoded as `01000001` (0x41 in hexadecimal).</description>
+    </item>
+    
+    <item>
+      <title>Papers Read</title>
+      <link>https://cohlem.github.io/sub-notes/paper-read/</link>
+      <pubDate>Tue, 21 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/paper-read/</guid>
+      <description>Papers that I&amp;rsquo;ve read with their respective notes.
+LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. The Llama 3 Herd of Models Uses 15T tokens </description>
     </item>
     
     <item>
