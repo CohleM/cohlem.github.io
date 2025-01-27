@@ -109,8 +109,8 @@ if (!doNotTrack) {
   "keywords": [
     
   ],
-  "articleBody": "Unicode Character encoding standard aims to incorporate all the available digital characters Each character in Unicode has a unique 4 to 6-digit hexadecimal number. For Example, the letter ‘A’ has the code 0041, represented as U+0041. compatible with ASCII first 128 characters in Unicode directly correspond to the characters represented in the 7-bit ASCII table Unicode Transformation Format (UTF-8) uses 1-4 bytes to represent each character can encode all the unicode code points backward compatible with ASCII Example: (1 byte) The character 'A' (U+0041) is encoded as `01000001` (0x41 in hexadecimal). (2 byte) The character '¢' (U+00A2) is encoded as `11000010 10100010` (0xC2 0xA2 in hexadecimal). (3 byte) The character '€' (U+20AC) is encoded as `11100010 10000010 10101100` (0xE2 0x82 0xAC in hexadecimal). (4 byte) The character '𠜎' (U+2070E) is encoded as `11110000 10100000 10011100 10001110`(0xF0 0xA0 0x9C 0x8E in hexadecimal). let’s understand some difference between unicode and utf-8 character ‘€’ has\nunicode code point (hex): U+20AC unicode code point (decimal): 8364\nSo there is a single number (decimal) that represents characters in unicode\nbut, the same character in utf-8 is represented as\nBinary: 11100010 10000010 10101100\nHexadecimal: 0xE2 0x82 0xAC\nDecimal: 226, 130, 172\nWhy ? utf-8 is a standard that stores characters in 1-4 bytes as described above.\nsimilarly in python, we can get it’s hex values by '€'.encode('utf-8') and converting it to list gives us it’s list of decimal values and doing ord(‘€’) gives us it’s unicode code point in decimal`\n",
-  "wordCount" : "244",
+  "articleBody": "Unicode Character encoding standard aims to incorporate all the available digital characters Each character in Unicode has a unique 4 to 6-digit hexadecimal number. For Example, the letter ‘A’ has the code 0041, represented as U+0041. compatible with ASCII first 128 characters in Unicode directly correspond to the characters represented in the 7-bit ASCII table Unicode Transformation Format (UTF-8) uses 1-4 bytes to represent each character can encode all the unicode code points backward compatible with ASCII Example: (1 byte) The character 'A' (U+0041) is encoded as `01000001` (0x41 in hexadecimal). (2 byte) The character '¢' (U+00A2) is encoded as `11000010 10100010` (0xC2 0xA2 in hexadecimal). (3 byte) The character '€' (U+20AC) is encoded as `11100010 10000010 10101100` (0xE2 0x82 0xAC in hexadecimal). (4 byte) The character '𠜎' (U+2070E) is encoded as `11110000 10100000 10011100 10001110`(0xF0 0xA0 0x9C 0x8E in hexadecimal). let’s understand some difference between unicode and utf-8 character ‘€’ has\nunicode code point (hex): U+20AC unicode code point (decimal): 8364\nSo there is a single number (decimal) that represents characters in unicode\nbut, the same character in utf-8 is represented as\nBinary: 11100010 10000010 10101100\nHexadecimal: 0xE2 0x82 0xAC\nDecimal: 226, 130, 172\nWhy ? utf-8 is a standard that stores characters in 1-4 bytes as described above.\nsimilarly in python, we can get it’s hex values by '€'.encode('utf-8') and converting it to list gives us it’s list of decimal values and doing ord(‘€’) gives us it’s unicode code point in decimal`\nBuild vocabulary We build our vocabulary by gathering chunks of bytes that appear together most of the times,\nSuppose the data to be encoded is\naaabdaaabac\nthe byte pair “aa” occurs most often, so it will be replaced by a byte that is not used in the data, such as “Z”. Now there is the following data and replacement table:\nZabdZabac Z=aa Then the process is repeated with byte pair “ab”, replacing it with “Y”:\nZYdZYac Y=ab Z=aa again, the pair ZY occurs twice so our data and replacement table becomes.\nXdXac X=ZY Y=ab Z=aa We now write code to implement this same functionality.\nThe function below constructs a dictionary that keeps track of frequency of bytes that come together.\ndef get_stats(text): freq = dict() for t1,t2 in zip(text, text[1:]): freq[(t1,t2)] = freq.get((t1,t2),0) + 1 return freq This merge function is now used to merge the two bytes into one. similar to Z=aa in the example above.\ndef merge(pair, ids, idx): n_ids = [] i=0 while i \u003c len(ids): if i\u003clen(ids) -1 and ids[i] == pair[0] and ids[i+1] == pair[1]: n_ids.append(idx) i+=2 else: n_ids.append(ids[i]) i+=1 return n_ids We do this iteratively for total_merges times,\nmax_vocab = 356 total_merges = max_vocab - 256 merge_dict = {} for i in range(total_merges): stats = get_stats(ids) pair = max(stats, key=stats.get) idx = 256+i ids = merge(pair, text_utf8, idx) merge_dict[pair] = idx Encode lets encode our text into our tokens using our merge_dict which keeps track of all the possible combination of characters.\ndef encode(text): # given a string, return list of integers (the tokens) tokens = list(text.encode(\"utf-8\")) while len(tokens) \u003e= 2: stats = get_stats(tokens) pair = min(stats, key=lambda p: merge_dict.get(p, float(\"inf\"))) print(pair) if pair not in merges: break # nothing else can be merged idx = merge_dict[pair] tokens = merge(tokens, pair, idx) return tokens here we need to be careful about how we encode the tokens, i.e for instance the new 256 index in our merge_dict should be encoded first because later index for ex: 352 could be combination of 256 and 108. So we have to maintain this order.\nto do that we first get all the token combination available to us in our dataset using stats = get_stats(tokens), and this line of code pair = min(stats, key=lambda p: merges.get(p, float(\"inf\"))) finds the pair with the lowest key (lets say 101,32 -\u003e 256) and then merges those 101,32 tokens to be 256 and the process is continued until there are no pairs that can be combined using our merge_dict mapping.\nDecode vocab = {idx : bytes([idx]) for idx in range(256)} for (p1,p2),idx in merge_dict.items(): vocab[idx] = vocab[p1] + vocab[p2] The code above maps index to its corresponding byte in utf-8, and the loop combines the byte information corresponding to their indexs, for instance lets say 256 is combo of 101,32, the bytes of 101 and 32 will be combined. lets say 352 is now a combo of 256 and 32, their byte information will be combined, which will be easier to decode the information in the code below.\ndef decode(ids): tokens = b\"\".join(vocab[idx] for idx in ids) return tokens.decode('utf-8', errors = \"replace\") the first line in the function above maps their index to byte information, and then those utf-8 bytes will be decoded to their corresponding characters in utf-8.\nThis is the building block of tokenizer, everything that comes next is a more complex and efficient version of the tokenizer.\nOpenai’s BPE tokenizer Let’s first understand the problem our current implementation of tokenizer has.\nIt will tokenize the whole sequence. i.e lets say we have a sentence\nI’ve chosen a bit funky sentence here, just for the purpose of explanation.\nyou are 52 years old, u are good too, you've achieved so much\nif you look closely, this sequence of characters u are appear twice and will have their own mapping in the vocabulary.\nso for token u are it will have one index in our vocabulary, we can see it combines characters from two separate words, which we would like to minimize, and we would like to separate out these types of tokens 've because they generally go along with other words as well. For this purpose, we process our initial text through this regex.\nre.compile(r\"\"\"'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+\"\"\") as you can see these tokens s|'t|'re|'ve|'m|'ll|'d| are separated from text, and we separate out words and numbers as well\nimport regex as re samplere = re.compile(r\"\"\"'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+\"\"\") samplere.findall(\" you've done soo much 1245234 \") The sentence is processed in this way.\n[' you', \"'ve\", ' done', ' soo', ' much', ' 1245234', ' '] and then we train our tokenizer on each elements that we get from this.\nComplete code for tokenizer class Tokenizer: def __init__(self): self.pattern = None self.merges = dict() self.vocab = None def get_stats(self,ids, freq=None): freq = dict() if freq is None else freq for t1,t2 in zip(ids, ids[1:]): freq[(t1,t2)] = freq.get((t1,t2),0) + 1 return freq def merge(self, ids, pair, idx): n_ids = [] i=0 while i \u003c len(ids): if i\u003clen(ids) -1 and ids[i] == pair[0] and ids[i+1] == pair[1]: n_ids.append(idx) i+=2 else: n_ids.append(ids[i]) i+=1 return n_ids GPT4Pattern = r\"\"\"'(?i:[sdmt]|ll|ve|re)|[^\\r\\n\\p{L}\\p{N}]?+\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]++[\\r\\n]*|\\s*[\\r\\n]|\\s+(?!\\S)|\\s+\"\"\" class SampleTokenizer(Tokenizer): def __init__(self,max_vocab, pattern=None): super().__init__() self.pattern = re.compile(GPT4Pattern if pattern is None else pattern) self.max_vocab = max_vocab self.total_merges = max_vocab - 256 def train(self, x): \"\"\"This objective of this function is to build the merges dictionary mapping and build vocab\"\"\" chunks = self.pattern.findall(x) ids = [list(ch.encode('utf-8')) for ch in chunks] for p in range(self.total_merges): freq = dict() idx = 256 + p for item in ids: self.get_stats(item, freq) pair = max(freq, key=freq.get) ids = [self.merge(i,pair, idx) for i in ids] self.merges[pair] = idx self._build_vocab() def _build_vocab(self): self.vocab = {idx : bytes([idx]) for idx in range(256)} for (p1,p2),idx in self.merges.items(): self.vocab[idx] = self.vocab[p1] + self.vocab[p2] def encode(self, x): # given a string, return list of integers (the tokens) tokens = list(x.encode(\"utf-8\")) while len(tokens) \u003e= 2: stats = self.get_stats(tokens) pair = min(stats, key=lambda p: self.merges.get(p, float(\"inf\"))) if pair not in self.merges: break # nothing else can be merged idx = self.merges[pair] tokens = self.merge(tokens, pair, idx) return tokens def decode(self,ids): tokens = b\"\".join(self.vocab[idx] for idx in ids) return tokens.decode('utf-8', errors = \"replace\") st = SampleTokenizer(356) st.train(text) a = st.encode(\"hey how are you doing 124\") st.decode(a) # outputs: 'hey how are you doing 124' ",
+  "wordCount" : "1290",
   "inLanguage": "en",
   "datePublished": "2025-01-22T00:00:00Z",
   "dateModified": "2025-01-22T00:00:00Z",
@@ -205,7 +205,7 @@ if (!doNotTrack) {
     <h1 class="post-title">
       Tokenization
     </h1>
-    <div class="post-meta"><span title='2025-01-22 00:00:00 +0000 UTC'>January 22, 2025</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;CohleM
+    <div class="post-meta"><span title='2025-01-22 00:00:00 +0000 UTC'>January 22, 2025</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;CohleM
 
 </div>
   </header> <div class="toc">
@@ -218,7 +218,17 @@ if (!doNotTrack) {
                 <li>
                     <a href="#unicode" aria-label="Unicode">Unicode</a></li>
                 <li>
-                    <a href="#unicode-transformation-format-utf-8" aria-label="Unicode Transformation Format (UTF-8)">Unicode Transformation Format (UTF-8)</a>
+                    <a href="#unicode-transformation-format-utf-8" aria-label="Unicode Transformation Format (UTF-8)">Unicode Transformation Format (UTF-8)</a></li>
+                <li>
+                    <a href="#build-vocabulary" aria-label="Build vocabulary">Build vocabulary</a></li>
+                <li>
+                    <a href="#encode" aria-label="Encode">Encode</a></li>
+                <li>
+                    <a href="#decode" aria-label="Decode">Decode</a></li>
+                <li>
+                    <a href="#openais-bpe-tokenizer" aria-label="Openai&amp;rsquo;s BPE tokenizer">Openai&rsquo;s BPE tokenizer</a></li>
+                <li>
+                    <a href="#complete-code-for-tokenizer" aria-label="Complete code for tokenizer">Complete code for tokenizer</a>
                 </li>
             </ul>
         </div>
@@ -263,7 +273,186 @@ unicode code point (decimal): 8364</p>
 </ul>
 <p>Why ? utf-8 is a standard that stores characters in 1-4 bytes as described above.</p>
 <p>similarly in python, we can get it&rsquo;s hex values by <code>'€'.encode('utf-8')</code> and converting it to list gives us it&rsquo;s list of decimal values and doing <code>ord(</code>&lsquo;€&rsquo;) gives us it&rsquo;s unicode code point in decimal`</p>
-
+<h3 id="build-vocabulary">Build vocabulary<a hidden class="anchor" aria-hidden="true" href="#build-vocabulary">#</a></h3>
+<p>We build our vocabulary by gathering chunks of bytes that appear together most of the times,</p>
+<p>Suppose the data to be encoded is</p>
+<p><code>aaabdaaabac</code></p>
+<p>the byte pair &ldquo;aa&rdquo; occurs most often, so it will be replaced by a byte that is not used in the data, such as &ldquo;Z&rdquo;. Now there is the following data and replacement table:</p>
+<pre tabindex="0"><code>ZabdZabac
+Z=aa
+</code></pre><p>Then the process is repeated with byte pair &ldquo;ab&rdquo;, replacing it with &ldquo;Y&rdquo;:</p>
+<pre tabindex="0"><code>ZYdZYac
+Y=ab
+Z=aa
+</code></pre><p>again, the pair ZY occurs twice so our data and replacement table becomes.</p>
+<pre tabindex="0"><code>XdXac
+X=ZY
+Y=ab
+Z=aa
+</code></pre><p>We now write code to implement this same functionality.</p>
+<p>The function below constructs a dictionary that keeps track of frequency of bytes that come together.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_stats</span>(text):
+</span></span><span style="display:flex;"><span>    freq <span style="color:#f92672">=</span> dict()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> t1,t2 <span style="color:#f92672">in</span> zip(text, text[<span style="color:#ae81ff">1</span>:]):
+</span></span><span style="display:flex;"><span>        freq[(t1,t2)] <span style="color:#f92672">=</span> freq<span style="color:#f92672">.</span>get((t1,t2),<span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> freq
+</span></span></code></pre></div><p>This merge function is now used to merge the two bytes into one. similar to Z=aa in the example above.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">merge</span>(pair, ids, idx):
+</span></span><span style="display:flex;"><span>    n_ids <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> i <span style="color:#f92672">&lt;</span> len(ids):
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> i<span style="color:#f92672">&lt;</span>len(ids) <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> <span style="color:#f92672">and</span> ids[i] <span style="color:#f92672">==</span> pair[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">and</span> ids[i<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">==</span> pair[<span style="color:#ae81ff">1</span>]:
+</span></span><span style="display:flex;"><span>            n_ids<span style="color:#f92672">.</span>append(idx)
+</span></span><span style="display:flex;"><span>            i<span style="color:#f92672">+=</span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            n_ids<span style="color:#f92672">.</span>append(ids[i])
+</span></span><span style="display:flex;"><span>            i<span style="color:#f92672">+=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> n_ids
+</span></span></code></pre></div><p>We do this iteratively for <code>total_merges</code> times,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>max_vocab <span style="color:#f92672">=</span> <span style="color:#ae81ff">356</span>
+</span></span><span style="display:flex;"><span>total_merges <span style="color:#f92672">=</span> max_vocab <span style="color:#f92672">-</span> <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>merge_dict <span style="color:#f92672">=</span> {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(total_merges):
+</span></span><span style="display:flex;"><span>    stats <span style="color:#f92672">=</span> get_stats(ids)
+</span></span><span style="display:flex;"><span>    pair <span style="color:#f92672">=</span> max(stats, key<span style="color:#f92672">=</span>stats<span style="color:#f92672">.</span>get)
+</span></span><span style="display:flex;"><span>    idx <span style="color:#f92672">=</span> <span style="color:#ae81ff">256</span><span style="color:#f92672">+</span>i
+</span></span><span style="display:flex;"><span>    ids <span style="color:#f92672">=</span> merge(pair, text_utf8, idx)
+</span></span><span style="display:flex;"><span>    merge_dict[pair] <span style="color:#f92672">=</span> idx
+</span></span><span style="display:flex;"><span>    
+</span></span></code></pre></div><h3 id="encode">Encode<a hidden class="anchor" aria-hidden="true" href="#encode">#</a></h3>
+<p>lets encode our text into our tokens using our merge_dict which keeps track of all the possible combination of characters.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">encode</span>(text):
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># given a string, return list of integers (the tokens)</span>
+</span></span><span style="display:flex;"><span>    tokens <span style="color:#f92672">=</span> list(text<span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#34;utf-8&#34;</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> len(tokens) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">2</span>:
+</span></span><span style="display:flex;"><span>        stats <span style="color:#f92672">=</span> get_stats(tokens)
+</span></span><span style="display:flex;"><span>        pair <span style="color:#f92672">=</span> min(stats, key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> p: merge_dict<span style="color:#f92672">.</span>get(p, float(<span style="color:#e6db74">&#34;inf&#34;</span>)))
+</span></span><span style="display:flex;"><span>        print(pair)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> pair <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> merges:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>  <span style="color:#75715e"># nothing else can be merged</span>
+</span></span><span style="display:flex;"><span>        idx <span style="color:#f92672">=</span> merge_dict[pair]
+</span></span><span style="display:flex;"><span>        tokens <span style="color:#f92672">=</span> merge(tokens, pair, idx)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> tokens
+</span></span></code></pre></div><p>here we need to be careful about how we encode the tokens, i.e for instance the new 256 index in our merge_dict should be encoded first because later index for ex: 352 could be combination of 256 and 108. So we have to maintain this order.</p>
+<p>to do that we first get all the token combination available to us in our dataset using stats = get_stats(tokens), and this line of code <code>pair = min(stats, key=lambda p: merges.get(p, float(&quot;inf&quot;)))</code> finds the pair with the lowest key (lets say 101,32 -&gt; 256) and then merges those 101,32 tokens to be 256 and the process is continued until there are no pairs that can be combined using our merge_dict mapping.</p>
+<h3 id="decode">Decode<a hidden class="anchor" aria-hidden="true" href="#decode">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>vocab <span style="color:#f92672">=</span> {idx : bytes([idx]) <span style="color:#66d9ef">for</span> idx <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">256</span>)}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (p1,p2),idx <span style="color:#f92672">in</span> merge_dict<span style="color:#f92672">.</span>items():
+</span></span><span style="display:flex;"><span>    vocab[idx] <span style="color:#f92672">=</span> vocab[p1] <span style="color:#f92672">+</span> vocab[p2]
+</span></span></code></pre></div><p>The code above maps index to its corresponding byte in utf-8, and the loop combines the byte information corresponding to their indexs, for instance lets say 256 is combo of 101,32, the bytes of 101 and 32 will be combined. lets say 352 is now a combo of 256 and 32, their byte information will be combined, which will be easier to decode the information in the code below.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">decode</span>(ids):
+</span></span><span style="display:flex;"><span>    tokens <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#f92672">.</span>join(vocab[idx] <span style="color:#66d9ef">for</span> idx <span style="color:#f92672">in</span> ids)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> tokens<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;utf-8&#39;</span>, errors <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;replace&#34;</span>)
+</span></span></code></pre></div><p>the first line in the function above maps their index to byte information, and then those utf-8 bytes will be decoded to their corresponding characters in utf-8.</p>
+<p>This is the building block of tokenizer, everything that comes next is a more complex and efficient version of the tokenizer.</p>
+<h3 id="openais-bpe-tokenizer">Openai&rsquo;s BPE tokenizer<a hidden class="anchor" aria-hidden="true" href="#openais-bpe-tokenizer">#</a></h3>
+<p>Let&rsquo;s first understand the problem our current implementation of tokenizer has.</p>
+<p>It will tokenize the whole sequence. i.e lets say we have a sentence</p>
+<p>I&rsquo;ve chosen a bit funky sentence here, just for the purpose of explanation.</p>
+<p><code>you are 52 years old, u are good too, you've achieved so much</code></p>
+<p>if you look closely, this sequence of characters <code>u are</code> appear twice and will have their own mapping in the vocabulary.</p>
+<p>so for token <code>u are</code> it will have one index in our vocabulary, we can see it combines characters from two separate words, which we would like to minimize, and we would like to separate out these types of tokens <code>'ve</code> because they generally go along with other words as well. For this purpose, we process our initial text through this regex.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>re<span style="color:#f92672">.</span>compile(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;&#34;&#34;&#39;s|&#39;t|&#39;re|&#39;ve|&#39;m|&#39;ll|&#39;d| ?\p</span><span style="color:#e6db74">{L}</span><span style="color:#e6db74">+| ?\p</span><span style="color:#e6db74">{N}</span><span style="color:#e6db74">+| ?[^\s\p</span><span style="color:#e6db74">{L}</span><span style="color:#e6db74">\p</span><span style="color:#e6db74">{N}</span><span style="color:#e6db74">]+|\s+(?!\S)|\s+&#34;&#34;&#34;</span>)
+</span></span></code></pre></div><p>as you can see these tokens <code>s|'t|'re|'ve|'m|'ll|'d|</code> are separated from text, and we separate out words and numbers as well</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> regex <span style="color:#66d9ef">as</span> re
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>samplere <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>compile(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;&#34;&#34;&#39;s|&#39;t|&#39;re|&#39;ve|&#39;m|&#39;ll|&#39;d| ?\p</span><span style="color:#e6db74">{L}</span><span style="color:#e6db74">+| ?\p</span><span style="color:#e6db74">{N}</span><span style="color:#e6db74">+| ?[^\s\p</span><span style="color:#e6db74">{L}</span><span style="color:#e6db74">\p</span><span style="color:#e6db74">{N}</span><span style="color:#e6db74">]+|\s+(?!\S)|\s+&#34;&#34;&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>samplere<span style="color:#f92672">.</span>findall(<span style="color:#e6db74">&#34; you&#39;ve done soo much 1245234 &#34;</span>)
+</span></span></code></pre></div><p>The sentence is processed in this way.</p>
+<pre tabindex="0"><code>[&#39; you&#39;, &#34;&#39;ve&#34;, &#39; done&#39;, &#39; soo&#39;, &#39; much&#39;, &#39; 1245234&#39;, &#39; &#39;]
+</code></pre><p>and then we train our tokenizer on each elements that we get from this.</p>
+<h3 id="complete-code-for-tokenizer">Complete code for tokenizer<a hidden class="anchor" aria-hidden="true" href="#complete-code-for-tokenizer">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Tokenizer</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self):
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>pattern <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>merges <span style="color:#f92672">=</span> dict()
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>vocab <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_stats</span>(self,ids, freq<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+</span></span><span style="display:flex;"><span>        freq <span style="color:#f92672">=</span> dict() <span style="color:#66d9ef">if</span> freq <span style="color:#f92672">is</span> <span style="color:#66d9ef">None</span> <span style="color:#66d9ef">else</span> freq
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> t1,t2 <span style="color:#f92672">in</span> zip(ids, ids[<span style="color:#ae81ff">1</span>:]):
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            freq[(t1,t2)] <span style="color:#f92672">=</span> freq<span style="color:#f92672">.</span>get((t1,t2),<span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> freq
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">merge</span>(self, ids, pair, idx):
+</span></span><span style="display:flex;"><span>        n_ids <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>        i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> i <span style="color:#f92672">&lt;</span> len(ids):
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> i<span style="color:#f92672">&lt;</span>len(ids) <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> <span style="color:#f92672">and</span> ids[i] <span style="color:#f92672">==</span> pair[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">and</span> ids[i<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">==</span> pair[<span style="color:#ae81ff">1</span>]:
+</span></span><span style="display:flex;"><span>                n_ids<span style="color:#f92672">.</span>append(idx)
+</span></span><span style="display:flex;"><span>                i<span style="color:#f92672">+=</span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>                n_ids<span style="color:#f92672">.</span>append(ids[i])
+</span></span><span style="display:flex;"><span>                i<span style="color:#f92672">+=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> n_ids
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>GPT4Pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;&#34;&#34;&#39;(?i:[sdmt]|ll|ve|re)|[^\r\n\p</span><span style="color:#e6db74">{L}</span><span style="color:#e6db74">\p</span><span style="color:#e6db74">{N}</span><span style="color:#e6db74">]?+\p</span><span style="color:#e6db74">{L}</span><span style="color:#e6db74">+|\p</span><span style="color:#e6db74">{N}</span><span style="color:#e6db74">{1,3}| ?[^\s\p</span><span style="color:#e6db74">{L}</span><span style="color:#e6db74">\p</span><span style="color:#e6db74">{N}</span><span style="color:#e6db74">]++[\r\n]*|\s*[\r\n]|\s+(?!\S)|\s+&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SampleTokenizer</span>(Tokenizer):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self,max_vocab, pattern<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__()
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>pattern <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>compile(GPT4Pattern <span style="color:#66d9ef">if</span> pattern <span style="color:#f92672">is</span> <span style="color:#66d9ef">None</span> <span style="color:#66d9ef">else</span> pattern)
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>max_vocab <span style="color:#f92672">=</span> max_vocab
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>total_merges <span style="color:#f92672">=</span> max_vocab <span style="color:#f92672">-</span> <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">train</span>(self, x):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;This objective of this function is to build the merges dictionary mapping and build vocab&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        chunks <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>pattern<span style="color:#f92672">.</span>findall(x)
+</span></span><span style="display:flex;"><span>        ids <span style="color:#f92672">=</span> [list(ch<span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#39;utf-8&#39;</span>)) <span style="color:#66d9ef">for</span> ch <span style="color:#f92672">in</span> chunks]
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> range(self<span style="color:#f92672">.</span>total_merges):
+</span></span><span style="display:flex;"><span>            freq <span style="color:#f92672">=</span> dict()
+</span></span><span style="display:flex;"><span>            idx <span style="color:#f92672">=</span> <span style="color:#ae81ff">256</span> <span style="color:#f92672">+</span> p
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> item <span style="color:#f92672">in</span> ids:
+</span></span><span style="display:flex;"><span>                self<span style="color:#f92672">.</span>get_stats(item, freq)
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            pair <span style="color:#f92672">=</span> max(freq, key<span style="color:#f92672">=</span>freq<span style="color:#f92672">.</span>get)
+</span></span><span style="display:flex;"><span>            ids <span style="color:#f92672">=</span> [self<span style="color:#f92672">.</span>merge(i,pair, idx) <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> ids]
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>merges[pair] <span style="color:#f92672">=</span> idx
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>_build_vocab()
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_build_vocab</span>(self):
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>vocab <span style="color:#f92672">=</span> {idx : bytes([idx]) <span style="color:#66d9ef">for</span> idx <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">256</span>)}
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (p1,p2),idx <span style="color:#f92672">in</span> self<span style="color:#f92672">.</span>merges<span style="color:#f92672">.</span>items():
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>vocab[idx] <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>vocab[p1] <span style="color:#f92672">+</span> self<span style="color:#f92672">.</span>vocab[p2]
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">encode</span>(self, x):
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># given a string, return list of integers (the tokens)</span>
+</span></span><span style="display:flex;"><span>        tokens <span style="color:#f92672">=</span> list(x<span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#34;utf-8&#34;</span>))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> len(tokens) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">2</span>:
+</span></span><span style="display:flex;"><span>            stats <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>get_stats(tokens)
+</span></span><span style="display:flex;"><span>            pair <span style="color:#f92672">=</span> min(stats, key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> p: self<span style="color:#f92672">.</span>merges<span style="color:#f92672">.</span>get(p, float(<span style="color:#e6db74">&#34;inf&#34;</span>)))
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> pair <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> self<span style="color:#f92672">.</span>merges:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">break</span>  <span style="color:#75715e"># nothing else can be merged</span>
+</span></span><span style="display:flex;"><span>            idx <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>merges[pair]
+</span></span><span style="display:flex;"><span>            tokens <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>merge(tokens, pair, idx)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> tokens
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">decode</span>(self,ids):
+</span></span><span style="display:flex;"><span>        tokens <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#f92672">.</span>join(self<span style="color:#f92672">.</span>vocab[idx] <span style="color:#66d9ef">for</span> idx <span style="color:#f92672">in</span> ids)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> tokens<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;utf-8&#39;</span>, errors <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;replace&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>st <span style="color:#f92672">=</span> SampleTokenizer(<span style="color:#ae81ff">356</span>)
+</span></span><span style="display:flex;"><span>st<span style="color:#f92672">.</span>train(text)
+</span></span><span style="display:flex;"><span>a <span style="color:#f92672">=</span> st<span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#34;hey how are you doing 124&#34;</span>)
+</span></span><span style="display:flex;"><span>st<span style="color:#f92672">.</span>decode(a)
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># outputs: &#39;hey how are you doing 124&#39;</span>
+</span></span></code></pre></div>
 
   </div>
 
