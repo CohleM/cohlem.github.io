@@ -211,6 +211,35 @@ A routing layer is set to choose experts depending on how many experts are selec
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Notes-while-building-lilLM
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Pre-training Document packing while pretraining, different documents could be packed inside a sequence. For instance, a model with context_length 1024 can have 256 tokens from one doc and rest from the other. Demilited by EOS token.
+The samples may contaminate the attention, for which cross sample attention masking is used. But, it isn’t used by DeepSeek v3, lets not use it.
+while packing documents. we simply pack them as they appear in order and then add EOS token (used by GPT-2,3)....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-29 00:00:00 +0000 UTC'>January 29, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Notes-while-building-lilLM" href="https://cohlem.github.io/sub-notes/building-lillm/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>Pytorch Commands I forget time to time/ commands that are essential
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>torch.stack(tensors, dim) stacks the tensors across dim
+#usage # data has to be tensor torch.stack([data[i:i&#43;some_number] for i in range(10)]) torch.from_numpy(numpy_array) shares the memory with the numpy_array but is tensor type
+a = np.array([1,2,3]) b = torch.tensor(a) # creates copy c = torch.from_numpy(a) # shares memory a[0] = 11 c # outputs: tensor([11, 2, 3]) torch.flatten(input, start,end=-1) flattens the input from dim start to end (-1 by default)
+t = torch.tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) torch....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-29 00:00:00 +0000 UTC'>January 29, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Pytorch Commands I forget time to time/ commands that are essential" href="https://cohlem.github.io/sub-notes/pytorch/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>Tokenization
     </h2>
   </header>
@@ -232,32 +261,6 @@ LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wik
   </div>
   <footer class="entry-footer"><span title='2025-01-21 00:00:00 +0000 UTC'>January 21, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Papers Read" href="https://cohlem.github.io/sub-notes/paper-read/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>KV cache and Grouped Query Attention
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>KV Cache KV cache visual operation In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.
-We don’t make use of KV cache while training because we already have data filled for each sequence length, we don’t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-18 00:00:00 +0000 UTC'>January 18, 2025</span>&nbsp;·&nbsp;11 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to KV cache and Grouped Query Attention" href="https://cohlem.github.io/sub-notes/kv-cache-gqa/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>RMSNorm
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Recap of LayerNorm let’s first recap by understanding why LayerNorm was used:
-We needed to balance the distribution of inputs (internal covariance shift) i.e we want inputs to be roughly gaussian (mean 0, std 1), it not maintained it would result in zeroing out the gradients. output of some blocks (transformer block) may produce large values or very small values that would result in either exploding or vanishing gradient problem, in order to have stable training, we needed to have stable range for those outputs....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-15 00:00:00 +0000 UTC'>January 15, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to RMSNorm" href="https://cohlem.github.io/sub-notes/rmsnorm/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

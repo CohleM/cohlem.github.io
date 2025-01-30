@@ -164,6 +164,34 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Gradient Accumulation
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Gradient Accumulation When we want to train a neural network with some predefined set of tokens, but don’t have enough GPU resources, what do we do?
+Gradient Accumulation We simply accumulate the gradients. For instance, in order to reproduce GPT-2 124B, we need to train the model with 0.5 Million tokens in a single run with 1024 context length, we would need 0.5e6/ 1024 = 488 batches i.e B,T = (488,1024) to calculate the gradients and update them....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Gradient Accumulation" href="https://cohlem.github.io/sub-notes/gradient-accumulation/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>Training Speed Optimization
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Precision The more the precision point the less operation (TFLOPS) is performed.
+FP64 used for scientific research purposes, where precision is a must. TF32 and BFLOAT16 are mostly used in NN training. INT8 is used for inference. Picture below shows specifications of A100 GPU.
+Using these precision points may have some difference in code. See pytorch’s docs
+torch.compile It works in a similar fashion like the GCC compiler. It works by reducing overheads introduced by the python interpreter and optimizing the GPU read and writes....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-02 00:00:00 +0000 UTC'>January 2, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Training Speed Optimization" href="https://cohlem.github.io/sub-notes/training-speed-optimization/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>skip-connections
     </h2>
   </header>
@@ -197,35 +225,6 @@ Why add the identity of input x to the output ? We calculate the gradients of pa
   </div>
   <footer class="entry-footer"><span title='2024-12-24 00:00:00 +0000 UTC'>December 24, 2024</span>&nbsp;·&nbsp;8 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to manual-backpropagation-on-tensors" href="https://cohlem.github.io/sub-notes/manual-backpropagation-on-tensors/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Matrix Visualization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>In deep learning, it’s important to visualize a matrix and how it is represented in a dimension space because the operations that we perform on those matrix becomes very much intuitive afterwards.
-Visualizing two dimensional matrix. This has to be the most intuitive visualization.
-[ [12, 63, 10, 42, 70, 31, 34, 8, 34, 5], [10, 97, 100, 39, 64, 25, 86, 22, 31, 25], [28, 44, 82, 61, 70, 94, 22, 88, 89, 56] ] We can simply imagine rows are some examples and columns as those examples’ features....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-24 00:00:00 +0000 UTC'>December 24, 2024</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Matrix Visualization" href="https://cohlem.github.io/sub-notes/matrix-visualization/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Diagnostic-tool-while-training-nn
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>source: Building makemore Part 3: Activations &amp; Gradients, BatchNorm
-Things to look out for while training NN Take a look at previous notes to understand this note better
-consider we have this simple 6 layer NN
-# Linear Layer g = torch.Generator().manual_seed(2147483647) # for reproducibility class Layer: def __init__(self,fan_in, fan_out, bias=False): self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying kaiming init self.bias = bias if bias: self.b = torch....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-20 00:00:00 +0000 UTC'>December 20, 2024</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Diagnostic-tool-while-training-nn" href="https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

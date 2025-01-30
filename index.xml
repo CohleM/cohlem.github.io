@@ -6,7 +6,7 @@
     <description>Recent content on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 22 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 29 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Mixture of Experts</title>
       <link>https://cohlem.github.io/sub-notes/mixture-of-experts/</link>
@@ -17,6 +17,29 @@
 Basic MoE structure Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs. Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
 Down the line it could use multiple experts but at different blocks i.e (layers)
 A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.</description>
+    </item>
+    
+    <item>
+      <title>Notes-while-building-lilLM</title>
+      <link>https://cohlem.github.io/sub-notes/building-lillm/</link>
+      <pubDate>Wed, 29 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/building-lillm/</guid>
+      <description>Pre-training Document packing while pretraining, different documents could be packed inside a sequence. For instance, a model with context_length 1024 can have 256 tokens from one doc and rest from the other. Demilited by EOS token.
+The samples may contaminate the attention, for which cross sample attention masking is used. But, it isn&amp;rsquo;t used by DeepSeek v3, lets not use it.
+while packing documents. we simply pack them as they appear in order and then add EOS token (used by GPT-2,3).</description>
+    </item>
+    
+    <item>
+      <title>Pytorch Commands I forget time to time/ commands that are essential</title>
+      <link>https://cohlem.github.io/sub-notes/pytorch/</link>
+      <pubDate>Wed, 29 Jan 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/pytorch/</guid>
+      <description>torch.stack(tensors, dim) stacks the tensors across dim
+#usage # data has to be tensor torch.stack([data[i:i+some_number] for i in range(10)]) torch.from_numpy(numpy_array) shares the memory with the numpy_array but is tensor type
+a = np.array([1,2,3]) b = torch.tensor(a) # creates copy c = torch.from_numpy(a) # shares memory a[0] = 11 c # outputs: tensor([11, 2, 3]) torch.flatten(input, start,end=-1) flattens the input from dim start to end (-1 by default)
+t = torch.tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) torch.</description>
     </item>
     
     <item>

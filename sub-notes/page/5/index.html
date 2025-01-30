@@ -164,6 +164,32 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Why we add regularization in loss function
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>it penalizes the weights, and prioritizes uniformity in weights. How does it penalize the weights? Now when we do the backprop and gradient descent.
+The gradient of loss w.r.t some weights become as we can see it penalizes the weight by reducing the weights’s value by some higher amount compared to the some minimial weight update when we only used loss function.
+So overall, the model tries to balance the Loss (L) as well as keep the weights small....</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-12-08 21:57:23 +0545 +0545'>December 8, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Why we add regularization in loss function" href="https://cohlem.github.io/sub-notes/why-we-need-regularization/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p># We always start with a dataset to train on. Let&#39;s download the tiny shakespeare dataset !wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt with open(&#39;input.txt&#39;, &#39;r&#39;, encoding=&#39;utf-8&#39;) as f: data = f.read() from torch import nn import torch vocab = sorted(list(set(data))) len(data) stoi = {s:i for i,s in enumerate(vocab)} itos = {i:s for s,i in stoi.items()} encode = lambda x: [stoi[i] for i in x] decode = lambda x: &#39;&#39;.join([itos[i] for i in x]) type(data) str Xtr = data[:int(0....</p>
+  </div>
+  <footer class="entry-footer">40 min</footer>
+  <a class="entry-link" aria-label="post link to " href="https://cohlem.github.io/sub-notes/gpt-implementation/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>optimizing-loss-with-weight-initialization
     </h2>
   </header>
