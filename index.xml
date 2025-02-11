@@ -68,11 +68,11 @@ t = torch.tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) torch.</description>
     </item>
     
     <item>
-      <title>Papers Read</title>
-      <link>https://cohlem.github.io/sub-notes/paper-read/</link>
+      <title>Papers Summaries</title>
+      <link>https://cohlem.github.io/sub-notes/paper-summaries/</link>
       <pubDate>Tue, 21 Jan 2025 00:00:00 +0000</pubDate>
       
-      <guid>https://cohlem.github.io/sub-notes/paper-read/</guid>
+      <guid>https://cohlem.github.io/sub-notes/paper-summaries/</guid>
       <description>Papers that I&amp;rsquo;ve read with their respective notes.
 LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. SmolLM2 including specific data eg.</description>
     </item>
