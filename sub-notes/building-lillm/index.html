@@ -115,8 +115,8 @@ while packing documents. we simply pack them as they appear in order and then ad
   "keywords": [
     
   ],
-  "articleBody": "Pre-training Document packing while pretraining, different documents could be packed inside a sequence. For instance, a model with context_length 1024 can have 256 tokens from one doc and rest from the other. Demilited by EOS token.\nThe samples may contaminate the attention, for which cross sample attention masking is used. But, it isn’t used by DeepSeek v3, lets not use it.\nwhile packing documents. we simply pack them as they appear in order and then add EOS token (used by GPT-2,3). But DeekSeek also uses FIM (Fill in middle) strategy using this Prefix-Suffix-Middle (PSM) framework.\n\u003c|fim_begin|\u003e 𝑓pre \u003c|fim_hole|\u003e 𝑓suf \u003c|fim_end|\u003e 𝑓middle \u003c|eos_token|\u003e.\nadopted for 0.1% of data, generally used for overfitting or limiting the model from using the same general method.\n",
-  "wordCount" : "121",
+  "articleBody": "Pre-training Document packing while pretraining, different documents could be packed inside a sequence. For instance, a model with context_length 1024 can have 256 tokens from one doc and rest from the other. Demilited by EOS token.\nThe samples may contaminate the attention, for which cross sample attention masking is used. But, it isn’t used by DeepSeek v3, lets not use it.\nwhile packing documents. we simply pack them as they appear in order and then add EOS token (used by GPT-2,3). But DeekSeek also uses FIM (Fill in middle) strategy using this Prefix-Suffix-Middle (PSM) framework.\n\u003c|fim_begin|\u003e 𝑓pre \u003c|fim_hole|\u003e 𝑓suf \u003c|fim_end|\u003e 𝑓middle \u003c|eos_token|\u003e.\nadopted for 0.1% of data, generally used for overfitting or limiting the model from using the same general method.\nDo vibe check once in a while commands\nchange num_proc in process.py\npython process.py –tokenizer_path /model/tokenizer\ntraining run torchrun –standalone –nproc_per_node=2 pretrain.py\n",
+  "wordCount" : "143",
   "inLanguage": "en",
   "datePublished": "2025-01-29T00:00:00Z",
   "dateModified": "2025-01-29T00:00:00Z",
@@ -242,6 +242,14 @@ But, it isn&rsquo;t used by DeepSeek v3, lets not use it.</p>
 <p>while packing documents. we simply pack them as they appear in order and then add EOS token (used by GPT-2,3). But DeekSeek also uses FIM (Fill in middle) strategy using this  Prefix-Suffix-Middle (PSM) framework.</p>
 <p><code>&lt;|fim_begin|&gt; 𝑓pre &lt;|fim_hole|&gt; 𝑓suf &lt;|fim_end|&gt; 𝑓middle &lt;|eos_token|&gt;.</code></p>
 <p>adopted for 0.1% of data, generally used for overfitting or limiting the model from using the same general method.</p>
+<ul>
+<li>Do vibe check once in a while</li>
+</ul>
+<p>commands</p>
+<p>change num_proc in process.py</p>
+<p>python process.py &ndash;tokenizer_path /model/tokenizer</p>
+<p>training run
+torchrun &ndash;standalone &ndash;nproc_per_node=2 pretrain.py</p>
 
 
   </div>
@@ -250,10 +258,10 @@ But, it isn&rsquo;t used by DeepSeek v3, lets not use it.</p>
     <ul class="post-tags">
     </ul>
 <nav class="paginav">
-  <a class="prev" href="https://cohlem.github.io/sub-notes/mixture-of-experts/">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/post-training-strategies/">
     <span class="title">« Prev</span>
     <br>
-    <span>Mixture of Experts</span>
+    <span>Post Training Strategies</span>
   </a>
   <a class="next" href="https://cohlem.github.io/sub-notes/pytorch/">
     <span class="title">Next »</span>

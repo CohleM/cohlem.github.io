@@ -159,6 +159,19 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Papers Read
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Papers that I’ve read with their respective notes.
+LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. SmolLM2 including specific data eg....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-21 00:00:00 +0000 UTC'>January 21, 2025</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Papers Read" href="https://cohlem.github.io/sub-notes/paper-read/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>KV cache and Grouped Query Attention
     </h2>
   </header>
@@ -208,19 +221,6 @@ among each GPC there are 12 Streaming Multiprocessors. Inside each SM there are 
   </div>
   <footer class="entry-footer"><span title='2025-01-08 00:00:00 +0000 UTC'>January 8, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to GPUs" href="https://cohlem.github.io/sub-notes/gpus/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>DDP and gradient sync
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.
-The way to do this in pytorch is to use DDP (take a look into their docs)...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to DDP and gradient sync" href="https://cohlem.github.io/sub-notes/ddp/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

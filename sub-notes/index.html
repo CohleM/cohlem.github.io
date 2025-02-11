@@ -179,6 +179,25 @@ A routing layer is set to choose experts depending on how many experts are selec
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Post Training Strategies
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>conversational open data: https://huggingface.co/datasets/OpenAssistant/oasst1/viewer/default/train?row=0
+synthetic data https://github.com/thunlp/UltraChat?tab=readme-ov-file
+To teach models to say certain things we either train it on sft datasets, or we put it in system message i.e put it in it’s context windows (usually hidden from users)
+olmo hard coded sft mixture data https://huggingface.co/datasets/allenai/olmo-2-hard-coded?row=2
+2**19 = 524288
+set grad_accumulation_step = 2 power 19/(512* 64) = 16
+assuming gpu can handle 64 batches
+grad_accumulation_step will be reduced again by number of gpus available....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-02-06 00:00:00 +0000 UTC'>February 6, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Post Training Strategies" href="https://cohlem.github.io/sub-notes/post-training-strategies/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>Notes-while-building-lilLM
     </h2>
   </header>
@@ -216,19 +235,6 @@ t = torch.tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) torch....</p>
   </div>
   <footer class="entry-footer"><span title='2025-01-22 00:00:00 +0000 UTC'>January 22, 2025</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Tokenization" href="https://cohlem.github.io/sub-notes/tokenization/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Papers Read
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Papers that I’ve read with their respective notes.
-LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. The Llama 3 Herd of Models Uses 15T tokens </p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-21 00:00:00 +0000 UTC'>January 21, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Papers Read" href="https://cohlem.github.io/sub-notes/paper-read/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

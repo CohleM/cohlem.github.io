@@ -6,7 +6,7 @@
     <description>Recent content in Sub-notes on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 29 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 06 Feb 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Mixture of Experts</title>
       <link>https://cohlem.github.io/sub-notes/mixture-of-experts/</link>
@@ -17,6 +17,22 @@
 Basic MoE structure Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs. Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
 Down the line it could use multiple experts but at different blocks i.e (layers)
 A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.</description>
+    </item>
+    
+    <item>
+      <title>Post Training Strategies</title>
+      <link>https://cohlem.github.io/sub-notes/post-training-strategies/</link>
+      <pubDate>Thu, 06 Feb 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/post-training-strategies/</guid>
+      <description>conversational open data: https://huggingface.co/datasets/OpenAssistant/oasst1/viewer/default/train?row=0
+synthetic data https://github.com/thunlp/UltraChat?tab=readme-ov-file
+To teach models to say certain things we either train it on sft datasets, or we put it in system message i.e put it in it&amp;rsquo;s context windows (usually hidden from users)
+olmo hard coded sft mixture data https://huggingface.co/datasets/allenai/olmo-2-hard-coded?row=2
+2**19 = 524288
+set grad_accumulation_step = 2 power 19/(512* 64) = 16
+assuming gpu can handle 64 batches
+grad_accumulation_step will be reduced again by number of gpus available.</description>
     </item>
     
     <item>
@@ -58,7 +74,7 @@ t = torch.tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) torch.</description>
       
       <guid>https://cohlem.github.io/sub-notes/paper-read/</guid>
       <description>Papers that I&amp;rsquo;ve read with their respective notes.
-LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. The Llama 3 Herd of Models Uses 15T tokens </description>
+LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. SmolLM2 including specific data eg.</description>
     </item>
     
     <item>
