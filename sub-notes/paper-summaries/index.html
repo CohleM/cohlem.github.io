@@ -112,8 +112,8 @@ LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wik
   "keywords": [
     
   ],
-  "articleBody": "Papers that I’ve read with their respective notes.\nLLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. SmolLM2 including specific data eg. math doesn’t only do well in math, but also seems to improve reasoning.\nrather than training on one specific dataset, training on mixture of datasets yields better results, for instance, 60-40 mixture of FineWeb-Edu and DCLM yielded almost similar performance to only training on FineWeb-Edu\ndecontamination of curated dataset is generally done, using some bi-gram matching using the eval dataset.\nthey do a multi-stage training approach rather than fixed-data mixture.\nLR decay\nWarmup Phase (Steps 0–2,000):\nLearning rate increases linearly from near 0 to 5.0×10−45.0×10−4. Stable Phase (Steps 2,000–N):\nLearning rate remains constant at 5.0×10−45.0×10−4. Decay Phase (Last 10% of Steps):\nLearning rate decreases linearly from 5.0×10−45.0×10−4 to 0. had loss spikes during stage 3, which remained persistent even after rewinding the trianing, and changing the data that caused the spike. The cause of spike remains undetermined, however the eval metrics recovered in the end.\nThey include high quality math data in the end, and decay the to 0\nThey expand the context length from 2k to 8k before the final 75 billion tokens of training and the mixture was adjusted to include 40% long-context documents\nthey curate their own instruction dataset named SmolTalk, because of low performance after training on previously available dataset i.e MagPie-Pro and OpenHermes2.5.\nFilter high conversational dataset and deduplicate using gte-large embedding models.\nin short they do a lot of decontamination (using bi-gram overlaps), deduplication, filtering,\nFor smaller models during sft, they filter smoltalk dataset (e.g., function calling) and hard examples from MagPie-Ultra to better align with the models’ capacity and do DPO on UltraFeedback dataset.\nTOREAD: Training Compute-Optimal Large Language Models https://lifearchitect.ai/chinchilla/#deepmind\n",
-  "wordCount" : "341",
+  "articleBody": "Papers that I’ve read with their respective notes.\nLLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences) use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly. SmolLM2 including specific data eg. math doesn’t only do well in math, but also seems to improve reasoning.\nrather than training on one specific dataset, training on mixture of datasets yields better results, for instance, 60-40 mixture of FineWeb-Edu and DCLM yielded almost similar performance to only training on FineWeb-Edu\ndecontamination of curated dataset is generally done, using some bi-gram matching using the eval dataset.\nthey do a multi-stage training approach rather than fixed-data mixture.\nLR decay\nWarmup Phase (Steps 0–2,000):\nLearning rate increases linearly from near 0 to 5.0×10−45.0×10−4. Stable Phase (Steps 2,000–N):\nLearning rate remains constant at 5.0×10−45.0×10−4. Decay Phase (Last 10% of Steps):\nLearning rate decreases linearly from 5.0×10−45.0×10−4 to 0. had loss spikes during stage 3, which remained persistent even after rewinding the trianing, and changing the data that caused the spike. The cause of spike remains undetermined, however the eval metrics recovered in the end.\nThey include high quality math data in the end, and decay the to 0\nThey expand the context length from 2k to 8k before the final 75 billion tokens of training and the mixture was adjusted to include 40% long-context documents\nthey curate their own instruction dataset named SmolTalk, because of low performance after training on previously available dataset i.e MagPie-Pro and OpenHermes2.5.\nFilter high conversational dataset and deduplicate using gte-large embedding models.\nin short they do a lot of decontamination (using bi-gram overlaps), deduplication, filtering,\nFor smaller models during sft, they filter smoltalk dataset (e.g., function calling) and hard examples from MagPie-Ultra to better align with the models’ capacity and do DPO on UltraFeedback dataset.\nTraining Compute-Optimal Large Language Models Given a fixed FLOPs budget, how should one trade-off model size and the number of training tokens? https://lifearchitect.ai/chinchilla/#deepmind\n",
+  "wordCount" : "357",
   "inLanguage": "en",
   "datePublished": "2025-01-21T00:00:00Z",
   "dateModified": "2025-01-21T00:00:00Z",
@@ -221,7 +221,9 @@ LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wik
                 <li>
                     <a href="#llama-open-and-efficient-foundation-language-modelshttpsarxivorgpdf230213971" aria-label="LLaMA: Open and Efficient Foundation Language Models"><a href="https://arxiv.org/pdf/2302.13971">LLaMA: Open and Efficient Foundation Language Models</a></a></li>
                 <li>
-                    <a href="#smollm2httpsarxivorgpdf250202737" aria-label="SmolLM2"><a href="https://arxiv.org/pdf/2502.02737">SmolLM2</a></a>
+                    <a href="#smollm2httpsarxivorgpdf250202737" aria-label="SmolLM2"><a href="https://arxiv.org/pdf/2502.02737">SmolLM2</a></a></li>
+                <li>
+                    <a href="#training-compute-optimal-large-language-modelshttpsarxivorgpdf220315556" aria-label="Training Compute-Optimal Large Language Models"><a href="https://arxiv.org/pdf/2203.15556">Training Compute-Optimal Large Language Models</a></a>
                 </li>
             </ul>
         </div>
@@ -296,9 +298,11 @@ LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wik
 
 <img loading="lazy" src="p3.png" alt="p3"  />
 </p>
-<p>TOREAD:
-<a href="https://arxiv.org/pdf/2203.15556">Training Compute-Optimal Large Language Models</a>
-<a href="https://lifearchitect.ai/chinchilla/#deepmind">https://lifearchitect.ai/chinchilla/#deepmind</a></p>
+<h3 id="training-compute-optimal-large-language-modelshttpsarxivorgpdf220315556"><a href="https://arxiv.org/pdf/2203.15556">Training Compute-Optimal Large Language Models</a><a hidden class="anchor" aria-hidden="true" href="#training-compute-optimal-large-language-modelshttpsarxivorgpdf220315556">#</a></h3>
+<ul>
+<li>Given a fixed FLOPs budget, how should one trade-off model size and the number of training tokens?</li>
+</ul>
+<p><a href="https://lifearchitect.ai/chinchilla/#deepmind">https://lifearchitect.ai/chinchilla/#deepmind</a></p>
 
 
   </div>

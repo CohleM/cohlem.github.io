@@ -159,6 +159,20 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>GPUs
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>GPU physcial structure let’s first understand the structure of GPU.
+Inside a GPU it has a chip named GA102 (depends on architecture, this is for ampere architecture) built from 28.3million transistors (semiconductor device that can switch or amplify electrical signals) and majority area covered by processing cores. processing core is divide into seven Graphics processing clusters (GPCs)
+among each GPC there are 12 Streaming Multiprocessors. Inside each SM there are 4 warps and 1 Raytracing core inside a warp there are 32 Cudas and 1 Tensor Core....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-08 00:00:00 +0000 UTC'>January 8, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to GPUs" href="https://cohlem.github.io/sub-notes/gpus/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>DDP and gradient sync
     </h2>
   </header>
@@ -209,18 +223,6 @@ Why add the identity of input x to the output ? We calculate the gradients of pa
   </div>
   <footer class="entry-footer"><span title='2024-12-30 00:00:00 +0000 UTC'>December 30, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to skip-connections" href="https://cohlem.github.io/sub-notes/skip-connections/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Optimization Algorithms (SGD with momentum, RMSProp, Adam)
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>The simplest algorithm is the gradient descent in which we simply calculate loss over all the training data and then update our parameters, but it would be too slow and would consume too much resources. A faster approach is to use SGD where we calculate loss over every single training data and then do the parameter update, but the gradient update could be fuzzy. A more robust approach is to do mini batch SGD....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-27 00:00:00 +0000 UTC'>December 27, 2024</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Optimization Algorithms (SGD with momentum, RMSProp, Adam)" href="https://cohlem.github.io/sub-notes/optimization-algorithms/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

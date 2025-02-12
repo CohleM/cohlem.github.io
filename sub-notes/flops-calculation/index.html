@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Flops calculation | CohleM</title>
+<meta name="keywords" content="">
+<meta name="description" content="Calculation of FLOPs multiply accumulate cost: 2FLOPS i.e 1 for multiplication and 1 for accumulation (addition) if we multiply two matrices with sizes (a x b) and (b x c), the flops involved is b Multiply-add operation per the output size (a x c) i.e 2 x b x (a x c) Embedding lookup we initially have tokens with (seq_len,vocab_size) one-hot representation and embedding lookup matrix is (vocab_size, d_model), it will take">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/flops-calculation/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://cohlem.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://cohlem.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X6LV4QY2G2"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
+}
+</script>
+<meta property="og:title" content="Flops calculation" />
+<meta property="og:description" content="Calculation of FLOPs multiply accumulate cost: 2FLOPS i.e 1 for multiplication and 1 for accumulation (addition) if we multiply two matrices with sizes (a x b) and (b x c), the flops involved is b Multiply-add operation per the output size (a x c) i.e 2 x b x (a x c) Embedding lookup we initially have tokens with (seq_len,vocab_size) one-hot representation and embedding lookup matrix is (vocab_size, d_model), it will take" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/flops-calculation/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2025-02-11T00:00:00+00:00" />
+<meta property="article:modified_time" content="2025-02-11T00:00:00+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Flops calculation"/>
+<meta name="twitter:description" content="Calculation of FLOPs multiply accumulate cost: 2FLOPS i.e 1 for multiplication and 1 for accumulation (addition) if we multiply two matrices with sizes (a x b) and (b x c), the flops involved is b Multiply-add operation per the output size (a x c) i.e 2 x b x (a x c) Embedding lookup we initially have tokens with (seq_len,vocab_size) one-hot representation and embedding lookup matrix is (vocab_size, d_model), it will take"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Sub-notes",
+      "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "Flops calculation",
+      "item": "https://cohlem.github.io/sub-notes/flops-calculation/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Flops calculation",
+  "name": "Flops calculation",
+  "description": "Calculation of FLOPs multiply accumulate cost: 2FLOPS i.e 1 for multiplication and 1 for accumulation (addition) if we multiply two matrices with sizes (a x b) and (b x c), the flops involved is b Multiply-add operation per the output size (a x c) i.e 2 x b x (a x c) Embedding lookup we initially have tokens with (seq_len,vocab_size) one-hot representation and embedding lookup matrix is (vocab_size, d_model), it will take",
+  "keywords": [
+    
+  ],
+  "articleBody": "Calculation of FLOPs multiply accumulate cost: 2FLOPS i.e 1 for multiplication and 1 for accumulation (addition) if we multiply two matrices with sizes (a x b) and (b x c), the flops involved is b Multiply-add operation per the output size (a x c) i.e 2 x b x (a x c) Embedding lookup we initially have tokens with (seq_len,vocab_size) one-hot representation and embedding lookup matrix is (vocab_size, d_model), it will take\nFLOPs = 2 x ( vocab_size x (seq_len x d_model))\nAttention Q,K,V projections X @ (Wq or Wk or Wv) i.e 2 x (seq_len x d_model x key_size x num_heads)\nattention matrix Q @ K.T i.e 2* (seq_len x seq_len x key_size x num_heads)\nsoftmax\n1 for exponential calculation (e^x). seq_len - 1 sum for each row. so if we divide it per row, its basically 1 FLOPs per elements. 1 for division so it becomes, 2 x num_heads x seq_len x seq_len Softmax @ query reductions 2 × seq_len × seq_len × (key_size × num_heads)\nFinal Linear 2 × seq_len × (key_size × num_heads) × d_model\nDense Block (per layer) 2×seq_len×(d_model×ffw_size+d_model×ffw_size) (ignoring FLOPs for actions here,)\nFinal Logits 2×seq_len×d_model×vocab_size\nso total FLOPs: embeddings+num_layers×(total_attention+dense_block) + logits\nFor backward, it takes 2 times the flops taken in backward.\ndef calculate_transformer_flops( seq_len: int, vocab_size: int, d_model: int, key_size: int, num_heads: int, ffw_size: int, num_layers: int, ) -\u003e dict: \"\"\" Calculate FLOPs for each component of a transformer model including forward and backward passes. Args: seq_len: Sequence length vocab_size: Vocabulary size d_model: Model dimension key_size: Key dimension num_heads: Number of attention heads ffw_size: Feed-forward layer size num_layers: Number of transformer layers Returns: Dictionary containing FLOPs for each component and total forward/backward passes \"\"\" # Embeddings embedding_flops = 2 * seq_len * vocab_size * d_model # Single Attention Layer key_query_value_proj = 2 * 3 * seq_len * d_model * (key_size * num_heads) key_query_logits = 2 * seq_len * seq_len * (key_size * num_heads) softmax_ops = 3 * num_heads * seq_len * seq_len softmax_query_reduction = 2 * seq_len * seq_len * (key_size * num_heads) final_linear = 2 * seq_len * (key_size * num_heads) * d_model total_attention_flops = ( key_query_value_proj + key_query_logits + softmax_ops + softmax_query_reduction + final_linear ) # Single Dense Block dense_block_flops = 2 * seq_len * (d_model * ffw_size + d_model * ffw_size) # Final Logits final_logits_flops = 2 * seq_len * d_model * vocab_size # Total forward pass total_forward_pass = ( embedding_flops + num_layers * (total_attention_flops + dense_block_flops) + final_logits_flops ) # Backward pass is approximately 2x forward pass total_backward_pass = 2 * total_forward_pass # Total forward + backward total_flops = total_forward_pass + total_backward_pass return total_flops # Example usage params = { \"seq_len\": 512, \"vocab_size\": 50000, \"d_model\": 640, \"key_size\": 64, \"num_heads\": 10, \"ffw_size\": 2560, \"num_layers\": 10, } flops = calculate_transformer_flops(**params) print(flops) So this is flops required for our model per step with one batch.\n",
+  "wordCount" : "474",
+  "inLanguage": "en",
+  "datePublished": "2025-02-11T00:00:00Z",
+  "dateModified": "2025-02-11T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/flops-calculation/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://cohlem.github.io" accesskey="h" title="CohleM (Alt + H)">CohleM</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://cohlem.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/archives/" title="Archive">
+                    <span>Archive</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/notes/" title="Notes">
+                    <span>Notes</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      Flops calculation
+    </h1>
+    <div class="post-meta"><span title='2025-02-11 00:00:00 +0000 UTC'>February 11, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#calculation-of-flops" aria-label="Calculation of FLOPs">Calculation of FLOPs</a><ul>
+                        
+                <li>
+                    <a href="#embedding-lookup" aria-label="Embedding lookup">Embedding lookup</a></li>
+                <li>
+                    <a href="#attention" aria-label="Attention">Attention</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h4 id="calculation-of-flops">Calculation of FLOPs<a hidden class="anchor" aria-hidden="true" href="#calculation-of-flops">#</a></h4>
+<ul>
+<li>multiply accumulate cost: 2FLOPS i.e 1 for multiplication and 1 for accumulation (addition)</li>
+<li>if we multiply two matrices with sizes (a x b) and (b x c), the flops involved is b Multiply-add operation per the output size (a x c) i.e 2 x b x (a x c)</li>
+</ul>
+<h5 id="embedding-lookup">Embedding lookup<a hidden class="anchor" aria-hidden="true" href="#embedding-lookup">#</a></h5>
+<p>we initially have tokens with (seq_len,vocab_size) one-hot representation  and embedding lookup matrix is (vocab_size, d_model), it will take</p>
+<p>FLOPs = 2 x (  vocab_size x (seq_len x d_model))</p>
+<h5 id="attention">Attention<a hidden class="anchor" aria-hidden="true" href="#attention">#</a></h5>
+<p><strong>Q,K,V projections</strong>
+X @ (Wq or Wk or Wv)
+i.e 2 x (seq_len x d_model  x key_size x num_heads)</p>
+<p><strong>attention matrix</strong>
+Q @ K.T
+i.e 2* (seq_len x seq_len x key_size x num_heads)</p>
+<p><strong>softmax</strong></p>
+<ul>
+<li>1 for exponential calculation (e^x).</li>
+<li>seq_len - 1 sum for each row. so if we divide it per row, its basically 1 FLOPs per elements.</li>
+<li>1 for division
+so it becomes, 2 x num_heads x seq_len x seq_len</li>
+</ul>
+<p><strong>Softmax @ query reductions</strong>
+2 × seq_len × seq_len × (key_size × num_heads)</p>
+<p><strong>Final Linear</strong>
+2 × seq_len × (key_size × num_heads) × d_model</p>
+<p><strong>Dense Block</strong> (per layer)
+2×seq_len×(d_model×ffw_size+d_model×ffw_size) (ignoring FLOPs for actions here,)</p>
+<p><strong>Final Logits</strong>
+2×seq_len×d_model×vocab_size</p>
+<p>so total FLOPs:   embeddings+num_layers×(total_attention+dense_block) + logits</p>
+<p>For backward, it takes 2 times the flops taken in backward.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">calculate_transformer_flops</span>(
+</span></span><span style="display:flex;"><span>    seq_len: int,
+</span></span><span style="display:flex;"><span>    vocab_size: int,
+</span></span><span style="display:flex;"><span>    d_model: int,
+</span></span><span style="display:flex;"><span>    key_size: int,
+</span></span><span style="display:flex;"><span>    num_heads: int,
+</span></span><span style="display:flex;"><span>    ffw_size: int,
+</span></span><span style="display:flex;"><span>    num_layers: int,
+</span></span><span style="display:flex;"><span>) <span style="color:#f92672">-&gt;</span> dict:
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Calculate FLOPs for each component of a transformer model including forward and backward passes.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Args:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        seq_len: Sequence length
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        vocab_size: Vocabulary size
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        d_model: Model dimension
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        key_size: Key dimension
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        num_heads: Number of attention heads
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ffw_size: Feed-forward layer size
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        num_layers: Number of transformer layers
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Returns:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Dictionary containing FLOPs for each component and total forward/backward passes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Embeddings</span>
+</span></span><span style="display:flex;"><span>    embedding_flops <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> seq_len <span style="color:#f92672">*</span> vocab_size <span style="color:#f92672">*</span> d_model
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Single Attention Layer</span>
+</span></span><span style="display:flex;"><span>    key_query_value_proj <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">3</span> <span style="color:#f92672">*</span> seq_len <span style="color:#f92672">*</span> d_model <span style="color:#f92672">*</span> (key_size <span style="color:#f92672">*</span> num_heads)
+</span></span><span style="display:flex;"><span>    key_query_logits <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> seq_len <span style="color:#f92672">*</span> seq_len <span style="color:#f92672">*</span> (key_size <span style="color:#f92672">*</span> num_heads)
+</span></span><span style="display:flex;"><span>    softmax_ops <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span> <span style="color:#f92672">*</span> num_heads <span style="color:#f92672">*</span> seq_len <span style="color:#f92672">*</span> seq_len
+</span></span><span style="display:flex;"><span>    softmax_query_reduction <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> seq_len <span style="color:#f92672">*</span> seq_len <span style="color:#f92672">*</span> (key_size <span style="color:#f92672">*</span> num_heads)
+</span></span><span style="display:flex;"><span>    final_linear <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> seq_len <span style="color:#f92672">*</span> (key_size <span style="color:#f92672">*</span> num_heads) <span style="color:#f92672">*</span> d_model
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    total_attention_flops <span style="color:#f92672">=</span> (
+</span></span><span style="display:flex;"><span>        key_query_value_proj
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">+</span> key_query_logits
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">+</span> softmax_ops
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">+</span> softmax_query_reduction
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">+</span> final_linear
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Single Dense Block</span>
+</span></span><span style="display:flex;"><span>    dense_block_flops <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> seq_len <span style="color:#f92672">*</span> (d_model <span style="color:#f92672">*</span> ffw_size <span style="color:#f92672">+</span> d_model <span style="color:#f92672">*</span> ffw_size)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Final Logits</span>
+</span></span><span style="display:flex;"><span>    final_logits_flops <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> seq_len <span style="color:#f92672">*</span> d_model <span style="color:#f92672">*</span> vocab_size
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Total forward pass</span>
+</span></span><span style="display:flex;"><span>    total_forward_pass <span style="color:#f92672">=</span> (
+</span></span><span style="display:flex;"><span>        embedding_flops
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">+</span> num_layers <span style="color:#f92672">*</span> (total_attention_flops <span style="color:#f92672">+</span> dense_block_flops)
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">+</span> final_logits_flops
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Backward pass is approximately 2x forward pass</span>
+</span></span><span style="display:flex;"><span>    total_backward_pass <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> total_forward_pass
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Total forward + backward</span>
+</span></span><span style="display:flex;"><span>    total_flops <span style="color:#f92672">=</span> total_forward_pass <span style="color:#f92672">+</span> total_backward_pass
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> total_flops
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Example usage</span>
+</span></span><span style="display:flex;"><span>params <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;seq_len&#34;</span>: <span style="color:#ae81ff">512</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;vocab_size&#34;</span>: <span style="color:#ae81ff">50000</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;d_model&#34;</span>: <span style="color:#ae81ff">640</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;key_size&#34;</span>: <span style="color:#ae81ff">64</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;num_heads&#34;</span>: <span style="color:#ae81ff">10</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;ffw_size&#34;</span>: <span style="color:#ae81ff">2560</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;num_layers&#34;</span>: <span style="color:#ae81ff">10</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>flops <span style="color:#f92672">=</span> calculate_transformer_flops(<span style="color:#f92672">**</span>params)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(flops)
+</span></span></code></pre></div><p>So this is flops required for our model per step with one batch.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/mixture-of-experts/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Mixture of Experts</span>
+  </a>
+  <a class="next" href="https://cohlem.github.io/sub-notes/post-training-strategies/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Post Training Strategies</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2025 <a href="https://cohlem.github.io">CohleM</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

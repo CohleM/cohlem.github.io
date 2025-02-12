@@ -211,6 +211,18 @@ A routing layer is set to choose experts depending on how many experts are selec
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Flops calculation
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Calculation of FLOPs multiply accumulate cost: 2FLOPS i.e 1 for multiplication and 1 for accumulation (addition) if we multiply two matrices with sizes (a x b) and (b x c), the flops involved is b Multiply-add operation per the output size (a x c) i.e 2 x b x (a x c) Embedding lookup we initially have tokens with (seq_len,vocab_size) one-hot representation and embedding lookup matrix is (vocab_size, d_model), it will take...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-02-11 00:00:00 +0000 UTC'>February 11, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Flops calculation" href="https://cohlem.github.io/sub-notes/flops-calculation/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>Post Training Strategies
     </h2>
   </header>
@@ -255,18 +267,6 @@ t = torch.tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) torch....</p>
   </div>
   <footer class="entry-footer"><span title='2025-01-29 00:00:00 +0000 UTC'>January 29, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Pytorch Commands I forget time to time/ commands that are essential" href="https://cohlem.github.io/sub-notes/pytorch/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Tokenization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Unicode Character encoding standard aims to incorporate all the available digital characters Each character in Unicode has a unique 4 to 6-digit hexadecimal number. For Example, the letter ‘A’ has the code 0041, represented as U&#43;0041. compatible with ASCII first 128 characters in Unicode directly correspond to the characters represented in the 7-bit ASCII table Unicode Transformation Format (UTF-8) uses 1-4 bytes to represent each character can encode all the unicode code points backward compatible with ASCII Example: (1 byte) The character &#39;A&#39; (U&#43;0041) is encoded as `01000001` (0x41 in hexadecimal)....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-22 00:00:00 +0000 UTC'>January 22, 2025</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Tokenization" href="https://cohlem.github.io/sub-notes/tokenization/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
