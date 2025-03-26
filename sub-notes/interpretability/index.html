@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Interpretability | CohleM</title>
+<meta name="keywords" content="">
+<meta name="description" content="Induction circuits Induction behaviour The task of detecting and repeating subsequences in a text by finding some patterns.
+For example: If there exist a text containing name &ldquo;James Bond&rdquo; and later in the text when the model sees the word &ldquo;James&rdquo; it predicts/repeats the word &ldquo;Bond&rdquo; because it&rsquo;s already seen the words &ldquo;James Bond&rdquo; and analyzes that &ldquo;bond&rdquo; should come after the word &ldquo;James&rdquo;. Also called &ldquo;Strict Induction&rdquo;
+Induction head A head which implements the induction behaviour.">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/interpretability/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://cohlem.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://cohlem.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X6LV4QY2G2"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
+}
+</script>
+<meta property="og:title" content="Interpretability" />
+<meta property="og:description" content="Induction circuits Induction behaviour The task of detecting and repeating subsequences in a text by finding some patterns.
+For example: If there exist a text containing name &ldquo;James Bond&rdquo; and later in the text when the model sees the word &ldquo;James&rdquo; it predicts/repeats the word &ldquo;Bond&rdquo; because it&rsquo;s already seen the words &ldquo;James Bond&rdquo; and analyzes that &ldquo;bond&rdquo; should come after the word &ldquo;James&rdquo;. Also called &ldquo;Strict Induction&rdquo;
+Induction head A head which implements the induction behaviour." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/interpretability/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2025-03-03T00:00:00+00:00" />
+<meta property="article:modified_time" content="2025-03-03T00:00:00+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Interpretability"/>
+<meta name="twitter:description" content="Induction circuits Induction behaviour The task of detecting and repeating subsequences in a text by finding some patterns.
+For example: If there exist a text containing name &ldquo;James Bond&rdquo; and later in the text when the model sees the word &ldquo;James&rdquo; it predicts/repeats the word &ldquo;Bond&rdquo; because it&rsquo;s already seen the words &ldquo;James Bond&rdquo; and analyzes that &ldquo;bond&rdquo; should come after the word &ldquo;James&rdquo;. Also called &ldquo;Strict Induction&rdquo;
+Induction head A head which implements the induction behaviour."/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Sub-notes",
+      "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "Interpretability",
+      "item": "https://cohlem.github.io/sub-notes/interpretability/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Interpretability",
+  "name": "Interpretability",
+  "description": "Induction circuits Induction behaviour The task of detecting and repeating subsequences in a text by finding some patterns.\nFor example: If there exist a text containing name \u0026ldquo;James Bond\u0026rdquo; and later in the text when the model sees the word \u0026ldquo;James\u0026rdquo; it predicts/repeats the word \u0026ldquo;Bond\u0026rdquo; because it\u0026rsquo;s already seen the words \u0026ldquo;James Bond\u0026rdquo; and analyzes that \u0026ldquo;bond\u0026rdquo; should come after the word \u0026ldquo;James\u0026rdquo;. Also called \u0026ldquo;Strict Induction\u0026rdquo;\nInduction head A head which implements the induction behaviour.",
+  "keywords": [
+    
+  ],
+  "articleBody": "Induction circuits Induction behaviour The task of detecting and repeating subsequences in a text by finding some patterns.\nFor example: If there exist a text containing name “James Bond” and later in the text when the model sees the word “James” it predicts/repeats the word “Bond” because it’s already seen the words “James Bond” and analyzes that “bond” should come after the word “James”. Also called “Strict Induction”\nInduction head A head which implements the induction behaviour. They allow models to perform in-context learning (ICL).\nQK circuit Wq, Wk, Wv be the projection matrices in our attention and Wo be the projection matrix in attention.\nWq,Wk, Wv can be thought of as what we take in(read) from the residual stream and Wo can be though of as what we put into(write) the residual stream. Similar to read/write operation.\nQK circuit is represented as combination of and attention scores are calculated as it is similar to Q @ K.T\nConceptually, this matrix tells us which tokens information is moved to \u0026 from in the residual stream.\nOV circuit Conceptually, this matrix (Vi.Wov) tells us what information is moved from a token, if that token is attended to. Some prerequisites\northogonal subspace Important assumption to keep in mind is subspaces are orthogonal i.e their dot product is 0, which means, we can decompose a vector into different subspaces that can have independent meaning because of this assumption.\nA simple example is when we add the positional embedding and vector embedding initially,\noutput = positional embedding + vector embedding\nwe are simply adding two different informations from different subspaces i.e positional embedding and vector embedding, and if they are orthogonal, we can independently pluck out their embeddings from the output.\nK-composition In K-composition, the output of one attention at layer 0 is used as a key for another attention calculation in layer1.\nInduction heads are responsible in significant downward loss. It could mainly occur in phase changes, eg. 2B to 4B tokens. Are responsible to ICL but also helps in translation as well as few-shots learning\nVisualization of induction head the visualization would look like this, for an induction head i.e the destination token attends to token after the previous destination token’s occurance offset by seq_len - 1.\nDirect logits attribution It involves understanding how much each component (e.g., attention heads, layers, or direct paths) contributes to the model’s predictions.\nUsing attention head pattern is not enough to deduce that the model is actually using that attention information, to finally verify we also have to see their direct logits attribution, i.e how much their RS contribute to the final logits.\nAblation Zeroing activation is not recommended because it completely moves the model’s representation out of distribution. Instead, mean over some batch dimension is recommended.\nMaking sense of induction circuits in terms of QK, OV circuits source token: the token that is being attended to destination token: the token that is looking at other tokens\nlets say we process a random but repeating sequence.\n['\u003c|endoftext|\u003e', 'anguage', ' reign', 'ای', ' aides', ' freight', ' Break', ' compete', ' Ment', '··', ' vaginal', ' burn', '을', 'Connell', ' affiliates', 'Back', 'Trigger', ' blade', 'ų', ' emotion', ' Ash', ' rupture', 'ian', ' pickup', ' Theresa', ' creepy', ' libert', 'uclidean', ' repairs', 'ylvan', 'τή', ' playwright', ' decou', ' deliver', ' Steele', '70', ' employing', 'idopsis', 'hidden', ' Ren', 'UTR', ' morale', ' vacant', ' _(', ' contra', 'ィ', ' vocals', ' reduces', 'Civil', 'ussion', ' deeds', 'anguage', ' reign', 'ای', ' aides', ' freight', ' Break', ' compete', ' Ment', '··', ' vaginal', ' burn', '을', 'Connell', ' affiliates', 'Back', 'Trigger', ' blade', 'ų', ' emotion', ' Ash', ' rupture', 'ian', ' pickup', ' Theresa', ' creepy', ' libert', 'uclidean', ' repairs', 'ylvan', 'τή', ' playwright', ' decou', ' deliver', ' Steele', '70', ' employing', 'idopsis', 'hidden', ' Ren', 'UTR', ' morale', ' vacant', ' _(', ' contra', 'ィ', ' vocals', ' reduces', 'Civil', 'ussion', ' deeds'] We pass it through our 2 layer attention-only model\nwe get attention pattern like this for layer 0 here 7 is a previous token head\nand we get this attention pattern for layer 1 4 and 7 are induction heads, cause we see the activations for seq_len -1 diagonal\nSo what we can conclude from this is that OK circuit from attention head no 7 in layer 0 always attends to the previous token, OV circuit from the same head writes the previous token information in the embedding subspace.\nIn layer 1, attention 4,10, K-composition is used i.e the output of attention head 7 is used as the key in these attentions, the QK circuit looks at the source token whose previous token is the destination token (i.e current token) and OV circuits writes this information in the embedding subspace (i.e info about which tokens come next).\nNOTE decomposition trick only works for things that are linear, it would work if there are no activation functions eg, ReLU, GeLU. or would only work before softmax, rather than after softmax.\nA Mathematical Framework for Transformer Circuits Key takeaways\nResidual stream (RS) can be thought of sum of changes added by each layer (embedding, attention, MLP) The residual stream has a deeply linear structure. dimensions of the residual stream become something like “memory” or “bandwidth” Why do we decompose residual stream and study them independently? because they try to communicate in superposition. Meaning, a residual stream only has limited dimensions eg 512 and at MLP it has to interact with a lot more dimensions i.e 4Xmore dimension than it has space on it. So its better to study them independently. So the RS has very high demand, is the reason why some info gets deleted and some added by some layers. Attention heads copy information from the residual stream of one token to the residual stream of another. They typically write to a different subspace than they read from. Paper implement this formula to find which component/layer are important to find how good they are (faithful) use this equation\nIDENTIFYING ANSWER-PROMOTING COMPONENTS train linear probing for each layer, at each position p, find which which layer at which position promote the correct-answer\nDECOMPOSING CIRCUIT MLPS TO INDIVIDUAL NEURONS\nGo more deep into the MLP to see which neurons promote arithmetic calculation\ndo activation patching on neurons.\nthey find \u003e neurons with the highest effect are different between operators.\nonly 200 neurons (roughly 1.5%) per layer are needed to achieve high faithfulness and correctly compute arithmetic prompts.\namong top 200 they examine neurons, by hypothesizing that 1. their key denotes the activation patterns, and 2. their values encodes the correct output in these dimension.\nApproach\nOur Hypothesis: Circuits for Math Reasoning only work for similar problems (i.e the patterns/distributions LLMs encoded in their weights during their training) and circuits fail when they receives problems that require calculation which is out-of-distribution.\nThe hypothesis is to basically prove why LLMs are not robust in Math Reasoning.\nSteps to prove:\nFind circuits of LMs responsible for Math Reasoning/Calculations for correct output ( i.e we find circuit for problems which LMs can solve and ignore the problems on which they fail) using patching. (calculating indirect effect (IE) as done in this paper https://arxiv.org/pdf/2305.15054) We can go further and find specific neurons responsible for calculations by finding the top-k tokens for specific neurons and patching/ablating them to find if they’re really important. However, I believe we can limit experiment to til finding the circuits as mentioned in step 1. Generate adversarial math problems (i.e out of distribution problems ). We can simply opt for M2 level problems as done in this paper (https://arxiv.org/pdf/2402.17916) Test those adversarial problems on LMs, filter and keep only the problems on which LMs produce incorrect output and study their whole output ( which should also include their step-by-step reasoning) for example:\nPrompt:\nChenny is 64 years old. Alyana is 54 years younger than Chenny. How old is Anne if she is 55 years older than Alyana?\nLM output:\nTo determine Anne’s age, we need to follow these steps:\nCalculate Alyana’s age. Use Alyana’s age to find Anne’s age. Step 1: Calculate Alyana’s age. Chenny is 64 years old. Alyana is 54 years younger than Chenny. So, Alyana’s age is: [ 64 - 54 = 100 ]\nStep 2: Calculate Anne’s age. Anne is 55 years older than Alyana. So, Anne’s age is: [ 100 + 55 = 155 ] Thus, Anne is (\\boxed{155}) years old.\nAnalyze the point where there is error in calculation, i.e there was error in \\[ 64 - 54 = 100 \\] in the LM’s output above. We hypothesize here that the mistake in calculation was because the circuits lacks patterns/ heuristics to solve the problem. The concept about patterns/heuristics can be found in this recent paper (https://arxiv.org/pdf/2410.21272). To elaborate, while training it was able to encode this pattern/ heuristics that 5-4 = 1 in their weights, but it cant perform 65 - 54 because it lacks those patterns/heuristics. We can prove our hypothesis to be true here, if we can supply it with the necessary pattern/heuristics. To do so, We run the LMs with our prompt new prompt. PROMPT:\nChenny is 64 years old. Alyana is 54 years younger than Chenny. How old is Anne if she is 55 years older than Alyana?\nTo determine Anne’s age, we need to follow these steps:\nCalculate Alyana’s age. Use Alyana’s age to find Anne’s age. Step 1: Calculate Alyana’s age. Chenny is 64 years old. Alyana is 54 years younger than Chenny. So, Alyana’s age is: [ 64 - 54 = 10 as you can see our new prompt is previous prompt + the LM’s output til the point where LMs get calculations wrong but we manually correct the calculation, example 64 - 55 = 100 was corrected to 64 - 55 = 10,\nand we get the activations for this new prompt by only generating the activations for only 1 new sequence (meaning we don’t let it complete the whole sequence, the point is to just get activations till the point where it gets wrong) , and then patch the circuit activations from this new corrected run to the old run where it got it wrong.\nNow, if the old run is able to get the answer right after the patching process, it’s very likely that it lacked the necessary pattern/heuristics for solving that problem.\nThe bottleneck/time consuming thing would be manually identifying the point in the LM’s output where it has error and correcting it.\nlogit difference\nThe metric also is a mostly linear function of the residual stream (unlike probability-based metrics) which makes it easy to directly attribute logit difference to individual components (“direct logit attribution”, “logit lens”).\nProbabilities: This metric measures the probability of the right answer, or the difference in probabilities of different answers. The main issue with such metrics is Probabilities are non-linear, in the sense that they track the logits ~exponentially. For example, a model component adding +2 to a given logit can create a 1 or 40 percentage point probability increase, just depending on what the baseline was. As an example of the non-linearity consider the orange line in the figure above: A modest increase in logit difference around layer 17 converts to a jump in probability. Probabilities also inherit the problems of the logprob metric, namely saturation and unspecificity. The figure shows the saturation effect for the orange line at layer \u003e18.\nTLDR: probability is exponential we can’t attribute model component’s work to prob change completely.\nI would like to tell you the update about the work that did in past 2 weeks.\nIn the first week, I was involved in reading the paper that you sent me. I’ve attached slides for those paper which is attached in this email. Afterwards, I did some experimentation of the basics of Mechanistic Interpretability such as probing, logits lens and ablation using TransformerLens library, then I studied how induction, QK and OV circuits work, and some detail about K composition.\nIn the second week, I started experimentation by looking into neurons to see if I can find specific neurons that are responsible for math reasoning. I used few samples from GSM8K dataset. I was able to find specific neurons responsible for\nDirect effect measuring how patching/ablation affects the logits directly\nIndirect effect measuring how patching/ablation affects the logits indirectly, for example: patching one attention layer might not contribute directly to logits but may interact with further attention layer, it kind of a chain effect. Hard to measure.\nLogit difference logit differnce is easier to understand\nlogit difference == logprob difference\nThings to check Compute the likelihood of the input “22 + 78 =” under the model’s probability distribution.\nCompare this likelihood to the likelihood of known in-distribution examples.\nIf the likelihood is significantly lower, the input might be OOD.\nWe can also check if the number is deleted by ffn or by the composition.\nSee all the logit lens of residual network and also the logit lens of ffn and see if it deletes, See ffns are kv memories paper in the end. References https://dynalist.io/d/n2ZWtnoYHrU1s4vnFSAQ519J#z=_Jzi6YHRHKP1JziwdE02qdYZ https://www.lesswrong.com/posts/TvrfY4c9eaGLeyDkE/induction-heads-illustrated\nbest practices for patching https://arxiv.org/pdf/2309.16042\nDear EECS department,\nI wanted to inquire about the admission process for my MS in Computer Science. I want to apply for Fall 2025 but the option there seems to be unavailable for Fall 2025. I can only see Fall 2026 and Spring 2026. I wanted to inquire whether I’m able to apply for MS in CS or not for this Fall 2025. I’ve had conversations with a professor whose research aligns with mine, he insisted that I apply to the program but I don’t see the option for Fall 2025.\nPlease let me know. Thank you\nRegards, Manish Bhatta\n",
+  "wordCount" : "2300",
+  "inLanguage": "en",
+  "datePublished": "2025-03-03T00:00:00Z",
+  "dateModified": "2025-03-03T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/interpretability/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://cohlem.github.io" accesskey="h" title="CohleM (Alt + H)">CohleM</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://cohlem.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/archives/" title="Archive">
+                    <span>Archive</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/notes/" title="Notes">
+                    <span>Notes</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      Interpretability
+    </h1>
+    <div class="post-meta"><span title='2025-03-03 00:00:00 +0000 UTC'>March 3, 2025</span>&nbsp;·&nbsp;11 min&nbsp;·&nbsp;CohleM
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul><ul>
+                <li>
+                    <a href="#induction-circuits" aria-label="Induction circuits">Induction circuits</a></li>
+                <li>
+                    <a href="#qk-circuit" aria-label="QK circuit">QK circuit</a></li>
+                <li>
+                    <a href="#ov-circuit" aria-label="OV circuit">OV circuit</a></li>
+                <li>
+                    <a href="#visualization-of-induction-head" aria-label="Visualization of induction head">Visualization of induction head</a></li>
+                <li>
+                    <a href="#direct-logits-attribution" aria-label="Direct logits attribution">Direct logits attribution</a></li>
+                <li>
+                    <a href="#ablation" aria-label="Ablation">Ablation</a></li>
+                <li>
+                    <a href="#making-sense-of-induction-circuits-in-terms-of-qk-ov-circuits" aria-label="Making sense of induction circuits in terms of QK, OV circuits">Making sense of induction circuits in terms of QK, OV circuits</a></li></ul>
+                    
+                <li>
+                    <a href="#a-mathematical-framework-for-transformer-circuits" aria-label="A Mathematical Framework for Transformer Circuits">A Mathematical Framework for Transformer Circuits</a><ul>
+                        
+                <li>
+                    <a href="#paper" aria-label="Paper">Paper</a></li>
+                <li>
+                    <a href="#direct-effect" aria-label="Direct effect">Direct effect</a></li>
+                <li>
+                    <a href="#indirect-effect" aria-label="Indirect effect">Indirect effect</a></li>
+                <li>
+                    <a href="#logit-difference" aria-label="Logit difference">Logit difference</a></li>
+                <li>
+                    <a href="#things-to-check" aria-label="Things to check">Things to check</a><ul>
+                        
+                <li>
+                    <a href="#references" aria-label="References">References</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h3 id="induction-circuits">Induction circuits<a hidden class="anchor" aria-hidden="true" href="#induction-circuits">#</a></h3>
+<p><strong>Induction behaviour</strong>
+The task of detecting and repeating subsequences in a text by finding some patterns.</p>
+<p>For example: If there exist a text containing name &ldquo;James Bond&rdquo; and later in the text when the model sees the word &ldquo;James&rdquo; it predicts/repeats the word &ldquo;Bond&rdquo; because it&rsquo;s already seen the words &ldquo;James Bond&rdquo; and analyzes that &ldquo;bond&rdquo; should come after the word &ldquo;James&rdquo;. Also called &ldquo;Strict Induction&rdquo;</p>
+<p><strong>Induction head</strong>
+A head which implements the induction behaviour. They allow models to perform in-context learning (ICL).</p>
+<h3 id="qk-circuit">QK circuit<a hidden class="anchor" aria-hidden="true" href="#qk-circuit">#</a></h3>
+<p>Wq, Wk, Wv be the projection matrices in our attention and Wo be the projection matrix in attention.</p>
+<p>Wq,Wk, Wv can be thought of as what we take in(read) from the residual stream and Wo can be though of as what we put into(write) the residual stream. Similar to read/write operation.</p>
+<p>QK circuit is represented as combination of
+<img loading="lazy" src="i1.png" alt="i1"  />
+</p>
+<p>and attention scores are calculated as
+<img loading="lazy" src="i2.png" alt="i2"  />
+</p>
+<p>it is similar to Q @ K.T</p>
+<p>Conceptually, this matrix tells us <strong>which tokens information is moved to &amp; from</strong> in the residual stream.</p>
+<h3 id="ov-circuit">OV circuit<a hidden class="anchor" aria-hidden="true" href="#ov-circuit">#</a></h3>
+<p><img loading="lazy" src="i3.png" alt="i3"  />
+</p>
+<ul>
+<li>Conceptually, this matrix (Vi.Wov) tells us <strong>what information is moved from a token</strong>, if that token is attended to.</li>
+</ul>
+<p><strong>Some prerequisites</strong></p>
+<p><strong>orthogonal subspace</strong>
+Important assumption to keep in mind is subspaces are orthogonal i.e their dot product is 0, which means, we can decompose a vector into different subspaces that can have independent meaning because of this assumption.</p>
+<p>A simple example is when we add the positional embedding and vector embedding initially,</p>
+<p>output = positional embedding + vector embedding</p>
+<p>we are simply adding two different informations from different subspaces i.e positional embedding and vector embedding, and if they are orthogonal, we can independently pluck out their embeddings from the output.</p>
+<p><strong>K-composition</strong>
+In K-composition, the output of one attention at layer 0 is used as a key for another attention calculation in layer1.</p>
+<p><img loading="lazy" src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/dhz5bqfuuoujydh89caa.png" alt="matrix"  />
+</p>
+<p><img loading="lazy" src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/ui0f38ofgdsyr9zzt5ar.png" alt="imag2"  />
+</p>
+<p><img loading="lazy" src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/voncnaecap3tsw8dt0mn.png" alt="image3"  />
+</p>
+<p><img loading="lazy" src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/tuskojx6dtlzjwoqs9zd.png" alt="image3"  />
+
+<img loading="lazy" src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/eaongteayjgei7no5ycy.png" alt="image5"  />
+</p>
+<p>Induction heads are responsible in significant downward loss. It could mainly occur in phase changes, eg. 2B to 4B tokens. Are responsible to ICL but also helps in translation as well as few-shots learning</p>
+<h3 id="visualization-of-induction-head">Visualization of induction head<a hidden class="anchor" aria-hidden="true" href="#visualization-of-induction-head">#</a></h3>
+<p><img loading="lazy" src="i4.png" alt="i4"  />
+</p>
+<p>the visualization would look like this, for an induction head i.e the destination token attends to token after the previous destination token&rsquo;s occurance offset by seq_len - 1.</p>
+<h3 id="direct-logits-attribution">Direct logits attribution<a hidden class="anchor" aria-hidden="true" href="#direct-logits-attribution">#</a></h3>
+<p><img loading="lazy" src="i5.png" alt="i5"  />
+</p>
+<p>It involves understanding how much each component (e.g., attention heads, layers, or direct paths) contributes to the model&rsquo;s predictions.</p>
+<p>Using attention head pattern is not enough to deduce that the model is actually using that attention information, to finally verify we also have to see their direct logits attribution, i.e how much their RS contribute to the final logits.</p>
+<h3 id="ablation">Ablation<a hidden class="anchor" aria-hidden="true" href="#ablation">#</a></h3>
+<p>Zeroing activation is not recommended because it completely moves the model&rsquo;s representation out of distribution. Instead, mean over some batch dimension is recommended.</p>
+<h3 id="making-sense-of-induction-circuits-in-terms-of-qk-ov-circuits">Making sense of induction circuits in terms of QK, OV circuits<a hidden class="anchor" aria-hidden="true" href="#making-sense-of-induction-circuits-in-terms-of-qk-ov-circuits">#</a></h3>
+<p>source token: the token that is being attended to
+destination token: the token that is looking at other tokens</p>
+<p>lets say we process a random but repeating sequence.</p>
+<pre tabindex="0"><code>[&#39;&lt;|endoftext|&gt;&#39;, &#39;anguage&#39;, &#39; reign&#39;, &#39;ای&#39;, &#39; aides&#39;, &#39; freight&#39;, &#39; Break&#39;, &#39; compete&#39;, &#39; Ment&#39;, &#39;··&#39;, &#39; vaginal&#39;, &#39; burn&#39;, &#39;을&#39;, &#39;Connell&#39;, &#39; affiliates&#39;, &#39;Back&#39;, &#39;Trigger&#39;, &#39; blade&#39;, &#39;ų&#39;, &#39; emotion&#39;, &#39; Ash&#39;, &#39; rupture&#39;, &#39;ian&#39;, &#39; pickup&#39;, &#39; Theresa&#39;, &#39; creepy&#39;, &#39; libert&#39;, &#39;uclidean&#39;, &#39; repairs&#39;, &#39;ylvan&#39;, &#39;τή&#39;, &#39; playwright&#39;, &#39; decou&#39;, &#39; deliver&#39;, &#39; Steele&#39;, &#39;70&#39;, &#39; employing&#39;, &#39;idopsis&#39;, &#39;hidden&#39;, &#39; Ren&#39;, &#39;UTR&#39;, &#39; morale&#39;, &#39; vacant&#39;, &#39; _(&#39;, &#39; contra&#39;, &#39;ィ&#39;, &#39; vocals&#39;, &#39; reduces&#39;, &#39;Civil&#39;, &#39;ussion&#39;, &#39; deeds&#39;, &#39;anguage&#39;, &#39; reign&#39;, &#39;ای&#39;, &#39; aides&#39;, &#39; freight&#39;, &#39; Break&#39;, &#39; compete&#39;, &#39; Ment&#39;, &#39;··&#39;, &#39; vaginal&#39;, &#39; burn&#39;, &#39;을&#39;, &#39;Connell&#39;, &#39; affiliates&#39;, &#39;Back&#39;, &#39;Trigger&#39;, &#39; blade&#39;, &#39;ų&#39;, &#39; emotion&#39;, &#39; Ash&#39;, &#39; rupture&#39;, &#39;ian&#39;, &#39; pickup&#39;, &#39; Theresa&#39;, &#39; creepy&#39;, &#39; libert&#39;, &#39;uclidean&#39;, &#39; repairs&#39;, &#39;ylvan&#39;, &#39;τή&#39;, &#39; playwright&#39;, &#39; decou&#39;, &#39; deliver&#39;, &#39; Steele&#39;, &#39;70&#39;, &#39; employing&#39;, &#39;idopsis&#39;, &#39;hidden&#39;, &#39; Ren&#39;, &#39;UTR&#39;, &#39; morale&#39;, &#39; vacant&#39;, &#39; _(&#39;, &#39; contra&#39;, &#39;ィ&#39;, &#39; vocals&#39;, &#39; reduces&#39;, &#39;Civil&#39;, &#39;ussion&#39;, &#39; deeds&#39;]
+</code></pre><p>We pass it through our 2 layer attention-only model</p>
+<p>we get attention pattern like this for layer 0 <img loading="lazy" src="i6.png" alt="i6"  />
+
+here 7 is a <strong>previous token head</strong></p>
+<p>and we get this attention pattern for layer 1
+<img loading="lazy" src="i7.png" alt="i7"  />
+</p>
+<p>4 and 7 are induction heads, cause we see the activations for seq_len -1 diagonal</p>
+<p>So what we can conclude from this is that OK circuit from attention head no 7 in layer 0 always attends to the previous token, OV circuit from the same head writes the previous token information in the embedding subspace.</p>
+<p>In layer 1, attention 4,10, K-composition is used i.e the output of attention head 7 is used as the key in these attentions, the QK circuit looks at the source token whose previous token is the destination token (i.e current token) and OV circuits writes this information in the embedding subspace (i.e info about which tokens come next).</p>
+<p><strong>NOTE</strong> decomposition trick only works for things that are linear, it would work if there are no activation functions eg, ReLU, GeLU. or would only work before softmax, rather than after softmax.</p>
+<h2 id="a-mathematical-framework-for-transformer-circuits">A Mathematical Framework for Transformer Circuits<a hidden class="anchor" aria-hidden="true" href="#a-mathematical-framework-for-transformer-circuits">#</a></h2>
+<p><strong>Key takeaways</strong></p>
+<ul>
+<li>Residual stream (RS) can be thought of sum of changes added by each layer (embedding, attention, MLP)</li>
+<li>The residual stream has a deeply linear structure.</li>
+<li>dimensions of the residual stream become something like &ldquo;memory&rdquo; or &ldquo;bandwidth&rdquo;</li>
+<li>Why do we decompose residual stream and study them independently? because they try to communicate in superposition. Meaning, a residual stream only has limited dimensions eg 512 and at MLP it has to interact with a lot more dimensions i.e 4Xmore dimension than it has space on it. So its better to study them independently. So the RS has very high demand, is the reason why some info gets deleted and some added by some layers.</li>
+<li>Attention heads copy information from the residual stream of one token to the residual stream of another. They typically write
+to a different subspace than they read from.</li>
+<li></li>
+</ul>
+<h3 id="paper">Paper<a hidden class="anchor" aria-hidden="true" href="#paper">#</a></h3>
+<p>implement this formula to find which component/layer are important <img loading="lazy" src="i8.png" alt="i8"  />
+</p>
+<p>to find how good they are (faithful) use this equation</p>
+<p><img loading="lazy" src="i9.png" alt="i9"  />
+</p>
+<p>IDENTIFYING ANSWER-PROMOTING COMPONENTS
+train linear probing for each layer, at each position p, find which which layer at which position promote the correct-answer</p>
+<p>DECOMPOSING CIRCUIT MLPS TO INDIVIDUAL NEURONS</p>
+<p>Go more deep into the MLP to see which neurons promote arithmetic calculation</p>
+<p>do activation patching on neurons.</p>
+<p>they find &gt; neurons with the highest effect are different between operators.</p>
+<p>only 200 neurons (roughly 1.5%) per layer are needed to achieve high faithfulness and correctly compute arithmetic prompts.</p>
+<p>among top 200 they examine neurons, by hypothesizing that 1. their key denotes the activation patterns, and 2. their values encodes the correct output in these dimension.</p>
+<p>Approach</p>
+<p>Our Hypothesis: Circuits for Math Reasoning only work for similar problems (i.e the patterns/distributions LLMs encoded in their weights during their training) and circuits fail when they receives problems that require calculation which is out-of-distribution.</p>
+<p>The hypothesis is to basically prove why LLMs are not robust in Math Reasoning.</p>
+<p>Steps to prove:</p>
+<ol>
+<li>Find circuits of LMs responsible for Math Reasoning/Calculations for correct output ( i.e we find circuit for problems which LMs can solve and ignore the problems on which they fail) using patching. (calculating indirect effect (IE) as done in this paper <a href="https://arxiv.org/pdf/2305.15054">https://arxiv.org/pdf/2305.15054</a>)</li>
+<li>We can go further and find specific neurons responsible for calculations by finding the top-k tokens for specific neurons and patching/ablating them to find if they&rsquo;re really important. However, I believe we can limit experiment to til finding the circuits as mentioned in step 1.</li>
+<li>Generate adversarial math problems (i.e out of distribution problems ). We can simply opt for M2 level problems as done in this paper (<a href="https://arxiv.org/pdf/2402.17916">https://arxiv.org/pdf/2402.17916</a>)</li>
+<li>Test those adversarial problems on LMs, filter and keep only the problems on which LMs produce incorrect output and study their whole output ( which should also include their step-by-step reasoning)</li>
+</ol>
+<p>for example:</p>
+<p><strong>Prompt</strong>:</p>
+<p>Chenny is 64 years old. Alyana is 54 years younger than Chenny. How old is Anne if she is 55 years older than Alyana?</p>
+<p>LM output:</p>
+<p>To determine Anne&rsquo;s age, we need to follow these steps:</p>
+<ol>
+<li>Calculate Alyana&rsquo;s age.</li>
+<li>Use Alyana&rsquo;s age to find Anne&rsquo;s age.</li>
+</ol>
+<p><strong>Step 1: Calculate Alyana&rsquo;s age.</strong> Chenny is 64 years old. Alyana is 54 years younger than Chenny. So, Alyana&rsquo;s age is: [ 64 - 54 = 100 ]</p>
+<p><strong>Step 2: Calculate Anne&rsquo;s age.</strong> Anne is 55 years older than Alyana. So, Anne&rsquo;s age is: [ 100 + 55 = 155 ] Thus, Anne is (\boxed{155}) years old.</p>
+<ol start="5">
+<li>Analyze the point where there is error in calculation, i.e there was error in  <code>\[ 64 - 54 = 100 \]</code> in the LM&rsquo;s output above.</li>
+<li>We hypothesize here that the mistake in calculation was because the circuits lacks patterns/ heuristics to solve the problem. The concept about patterns/heuristics can be found in this recent paper (<a href="https://arxiv.org/pdf/2410.21272)">https://arxiv.org/pdf/2410.21272)</a>. To elaborate, while training it was able to encode this pattern/ heuristics that 5-4 = 1 in their weights, but it cant perform 65 - 54 because it lacks those patterns/heuristics.</li>
+<li>We can prove our hypothesis to be true here, if we can supply it with the necessary pattern/heuristics. To do so,</li>
+<li>We run the LMs with our prompt new prompt.</li>
+</ol>
+<p>PROMPT:</p>
+<p>Chenny is 64 years old. Alyana is 54 years younger than Chenny. How old is Anne if she is 55 years older than Alyana?</p>
+<p>To determine Anne&rsquo;s age, we need to follow these steps:</p>
+<ol>
+<li>Calculate Alyana&rsquo;s age.</li>
+<li>Use Alyana&rsquo;s age to find Anne&rsquo;s age.
+<strong>Step 1: Calculate Alyana&rsquo;s age.</strong> Chenny is 64 years old. Alyana is 54 years younger than Chenny. So, Alyana&rsquo;s age is: [ 64 - 54 = 10</li>
+</ol>
+<p>as you can see our new prompt is <strong>previous prompt  + the LM&rsquo;s output til the point where LMs get calculations wrong</strong>
+but we manually correct the calculation, example 64 - 55 = 100 was corrected to 64 - 55 = 10,</p>
+<p>and we get the activations for this new prompt by only generating the activations for only 1 new sequence (meaning we don&rsquo;t let it complete the whole sequence, the point is to just get activations till the point where it gets wrong) , and then patch the circuit activations from this new corrected run to the old run where it got it wrong.</p>
+<p>Now, if the old run is able to get the answer right after the patching process, it&rsquo;s very likely that it lacked the necessary pattern/heuristics for solving that problem.</p>
+<p>The bottleneck/time consuming thing would be manually identifying the point in the LM&rsquo;s output where it has error and correcting it.</p>
+<p>logit difference</p>
+<p>The metric also is a mostly linear function of the residual stream (unlike probability-based metrics) which makes it easy to directly attribute logit difference to individual components (“direct logit attribution”, “logit lens”).</p>
+<p>Probabilities: This metric measures the probability of the right answer, or the difference in probabilities of different answers. The main issue with such metrics is Probabilities are non-linear, in the sense that they track the logits ~exponentially. For example, a model component adding +2 to a given logit can create a 1 or 40 percentage point probability increase, just depending on what the baseline was. As an example of the non-linearity consider the orange line in the figure above: A modest increase in logit difference around layer 17 converts to a jump in probability. Probabilities also inherit the problems of the logprob metric, namely saturation and unspecificity. The figure shows the saturation effect for the orange line at layer &gt;18.</p>
+<p>TLDR: probability is exponential we can&rsquo;t attribute model component&rsquo;s work to prob change completely.</p>
+<p>I would like to tell you the update about the work that did in past 2 weeks.</p>
+<p>In the first week, I was involved in reading the paper that you sent me. I&rsquo;ve attached slides for those paper which is attached in this email. Afterwards, I did some experimentation of the basics of Mechanistic Interpretability such as probing, logits lens and ablation using TransformerLens library, then I studied how induction, QK and OV circuits work, and some detail about K composition.</p>
+<p>In the second week, I started experimentation by looking into neurons to see if I can find specific neurons that are responsible for math reasoning. I used few samples from GSM8K dataset. I was able to find specific neurons responsible for</p>
+<h3 id="direct-effect">Direct effect<a hidden class="anchor" aria-hidden="true" href="#direct-effect">#</a></h3>
+<p>measuring how patching/ablation affects the logits directly</p>
+<h3 id="indirect-effect">Indirect effect<a hidden class="anchor" aria-hidden="true" href="#indirect-effect">#</a></h3>
+<p>measuring how patching/ablation affects the logits indirectly, for example: patching one attention layer might not contribute directly to logits but may interact with further attention layer, it kind of a chain effect. Hard to measure.</p>
+<h3 id="logit-difference">Logit difference<a hidden class="anchor" aria-hidden="true" href="#logit-difference">#</a></h3>
+<p>logit differnce is easier to understand</p>
+<p>logit difference == logprob difference</p>
+<p><img loading="lazy" src="i10.png" alt="i10"  />
+</p>
+<h3 id="things-to-check">Things to check<a hidden class="anchor" aria-hidden="true" href="#things-to-check">#</a></h3>
+<ul>
+<li>
+<p>Compute the likelihood of the input &ldquo;22 + 78 =&rdquo; under the model&rsquo;s probability distribution.</p>
+</li>
+<li>
+<p>Compare this likelihood to the likelihood of known in-distribution examples.</p>
+</li>
+<li>
+<p>If the likelihood is significantly lower, the input might be OOD.</p>
+</li>
+</ul>
+<p>We can also check if the number is deleted by ffn or by the composition.</p>
+<ul>
+<li>See all the logit lens of residual network and also the logit lens of ffn and see if it deletes, See ffns are kv memories paper in the end.</li>
+</ul>
+<h4 id="references">References<a hidden class="anchor" aria-hidden="true" href="#references">#</a></h4>
+<p><a href="https://dynalist.io/d/n2ZWtnoYHrU1s4vnFSAQ519J#z=_Jzi6YHRHKP1JziwdE02qdYZ">https://dynalist.io/d/n2ZWtnoYHrU1s4vnFSAQ519J#z=_Jzi6YHRHKP1JziwdE02qdYZ</a>
+<a href="https://www.lesswrong.com/posts/TvrfY4c9eaGLeyDkE/induction-heads-illustrated">https://www.lesswrong.com/posts/TvrfY4c9eaGLeyDkE/induction-heads-illustrated</a></p>
+<p>best practices for patching  <a href="https://arxiv.org/pdf/2309.16042">https://arxiv.org/pdf/2309.16042</a></p>
+<p>Dear EECS department,</p>
+<p>I wanted to inquire about the admission process for my MS in Computer Science. I want to apply for Fall 2025 but the option there seems to be unavailable for Fall 2025. I can only see Fall 2026 and Spring 2026. </p>
+<p>I wanted to inquire whether I&rsquo;m able to apply for MS in CS or not for this Fall 2025. I&rsquo;ve had conversations with a professor whose research aligns with mine, he insisted that I apply to the program but I don&rsquo;t see the option for Fall 2025.</p>
+<p>Please let me know.
+Thank you</p>
+<p>Regards,
+Manish Bhatta</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/mixture-of-experts/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Mixture of Experts</span>
+  </a>
+  <a class="next" href="https://cohlem.github.io/sub-notes/rlhf/">
+    <span class="title">Next »</span>
+    <br>
+    <span>RLHF</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2025 <a href="https://cohlem.github.io">CohleM</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

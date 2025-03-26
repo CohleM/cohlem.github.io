@@ -6,7 +6,7 @@
     <description>Recent content in Sub-notes on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 11 Feb 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 03 Mar 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Mixture of Experts</title>
       <link>https://cohlem.github.io/sub-notes/mixture-of-experts/</link>
@@ -17,6 +17,27 @@
 Basic MoE structure Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs. Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
 Down the line it could use multiple experts but at different blocks i.e (layers)
 A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.</description>
+    </item>
+    
+    <item>
+      <title>Interpretability</title>
+      <link>https://cohlem.github.io/sub-notes/interpretability/</link>
+      <pubDate>Mon, 03 Mar 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/interpretability/</guid>
+      <description>Induction circuits Induction behaviour The task of detecting and repeating subsequences in a text by finding some patterns.
+For example: If there exist a text containing name &amp;ldquo;James Bond&amp;rdquo; and later in the text when the model sees the word &amp;ldquo;James&amp;rdquo; it predicts/repeats the word &amp;ldquo;Bond&amp;rdquo; because it&amp;rsquo;s already seen the words &amp;ldquo;James Bond&amp;rdquo; and analyzes that &amp;ldquo;bond&amp;rdquo; should come after the word &amp;ldquo;James&amp;rdquo;. Also called &amp;ldquo;Strict Induction&amp;rdquo;
+Induction head A head which implements the induction behaviour.</description>
+    </item>
+    
+    <item>
+      <title>RLHF</title>
+      <link>https://cohlem.github.io/sub-notes/rlhf/</link>
+      <pubDate>Mon, 24 Feb 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/rlhf/</guid>
+      <description> How&amp;rsquo;s RLHF different from RL setup
+No state transition happen, generation of one state does not affect another. Switching from a reward function to a reward model. reward model could be any classification model. </description>
     </item>
     
     <item>

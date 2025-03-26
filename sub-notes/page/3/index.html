@@ -164,6 +164,32 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>RMSNorm
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Recap of LayerNorm let’s first recap by understanding why LayerNorm was used:
+We needed to balance the distribution of inputs (internal covariance shift) i.e we want inputs to be roughly gaussian (mean 0, std 1), it not maintained it would result in zeroing out the gradients. output of some blocks (transformer block) may produce large values or very small values that would result in either exploding or vanishing gradient problem, in order to have stable training, we needed to have stable range for those outputs....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-15 00:00:00 +0000 UTC'>January 15, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to RMSNorm" href="https://cohlem.github.io/sub-notes/rmsnorm/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>RoPE
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Recap of Absolute PE We previously used absolute positional embedding in our GPT-2 model.
+Disadvantages No notion of relative information between tokens doesn’t work for sequences larger than context length the model is trained with, because we run out of token embeddings for tokens that come at sequence larger than the context length. RoPE pre-requisites This is how we rotate a point by an angel theta in a two dimensional space and this is all we need in RoPE....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-15 00:00:00 +0000 UTC'>January 15, 2025</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to RoPE" href="https://cohlem.github.io/sub-notes/rope/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>GPUs
     </h2>
   </header>
@@ -200,34 +226,6 @@ Gradient Accumulation We simply accumulate the gradients. For instance, in order
   </div>
   <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Gradient Accumulation" href="https://cohlem.github.io/sub-notes/gradient-accumulation/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Training Speed Optimization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Precision The more the precision point the less operation (TFLOPS) is performed.
-FP64 used for scientific research purposes, where precision is a must. TF32 and BFLOAT16 are mostly used in NN training. INT8 is used for inference. Picture below shows specifications of A100 GPU.
-Using these precision points may have some difference in code. See pytorch’s docs
-torch.compile It works in a similar fashion like the GCC compiler. It works by reducing overheads introduced by the python interpreter and optimizing the GPU read and writes....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-02 00:00:00 +0000 UTC'>January 2, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Training Speed Optimization" href="https://cohlem.github.io/sub-notes/training-speed-optimization/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>skip-connections
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Skip connections are simply skipping the layers by adding the identity of input to it’s output as shown in the figure below.
-Why add the identity of input x to the output ? We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-30 00:00:00 +0000 UTC'>December 30, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to skip-connections" href="https://cohlem.github.io/sub-notes/skip-connections/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

@@ -8,6 +8,15 @@
     <language>en</language>
     <lastBuildDate>Fri, 03 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/notes/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Deep Learning Notes</title>
+      <link>https://cohlem.github.io/notes/deep-learning-notes/</link>
+      <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
+      
+      <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
+      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization RMSNorm Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization SwiGLU activation- not mine, but offers best explanation Architecture Implementation GPT implementation MoE RoPE KV Cache and Grouped Query Attention GPU Basic intro to GPU architecture </description>
+    </item>
+    
+    <item>
       <title>Essential blogs</title>
       <link>https://cohlem.github.io/notes/essential-blogs/</link>
       <pubDate>Fri, 03 Jan 2025 00:00:00 +0000</pubDate>
@@ -15,16 +24,10 @@
       <guid>https://cohlem.github.io/notes/essential-blogs/</guid>
       <description>Training Neural Networks Karpathy&amp;rsquo;s advice while training NN
 Deep Learning Concepts Contains simple explanation for DL concepts
-How to scale your LLM (Must read) https://jax-ml.github.io/scaling-book/</description>
-    </item>
-    
-    <item>
-      <title>Deep Learning Notes</title>
-      <link>https://cohlem.github.io/notes/deep-learning-notes/</link>
-      <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
-      
-      <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
-      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization RMSNorm Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization SwiGLU activation- not mine, but offers best explanation Architecture Implementation GPT implementation MoE RoPE KV Cache and Grouped Query Attention GPU Basic intro to GPU architecture </description>
+How to scale your LLM (Must read) https://jax-ml.github.io/scaling-book/
+The Ultra-Scale Playbook: Training LLMs on GPU Clusters https://huggingface.co/spaces/nanotron/ultrascale-playbook
+Good coding style https://medium.com/@NoamShazeer/shape-suffixes-good-coding-style-f836e72e24fd
+How to sample from LLM (top-k, top-p) https://huggingface.co/blog/how-to-generate</description>
     </item>
     
   </channel>

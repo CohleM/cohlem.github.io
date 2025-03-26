@@ -164,6 +164,36 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Diagnostic-tool-while-training-nn
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>source: Building makemore Part 3: Activations &amp; Gradients, BatchNorm
+Things to look out for while training NN Take a look at previous notes to understand this note better
+consider we have this simple 6 layer NN
+# Linear Layer g = torch.Generator().manual_seed(2147483647) # for reproducibility class Layer: def __init__(self,fan_in, fan_out, bias=False): self.w = torch.randn((fan_in, fan_out),generator = g) / (fan_in)**(0.5) # applying kaiming init self.bias = bias if bias: self.b = torch....</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-12-20 00:00:00 +0000 UTC'>December 20, 2024</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Diagnostic-tool-while-training-nn" href="https://cohlem.github.io/sub-notes/diagnostic-tool-while-training-nn/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>BatchNormalization
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>As we saw in our previous note how important it is to have the pre-activation values to be roughly gaussian (0 mean, and unit std). We saw how we can initialize our weights that make our pre-activation roughly gaussian by using Kaiming init. But, how do we always maintain our pre-activations to be roughly gaussian?
+Answer: BatchNormalization
+Benefits
+stable training preserves vanishing gradients BatchNormalization As the name suggests, batches are normalized (across batches), by normalizing across batches we preserve the gaussian property of our pre-activations....</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-12-19 00:00:00 +0000 UTC'>December 19, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to BatchNormalization" href="https://cohlem.github.io/sub-notes/batchnormalization/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>Maximum likelihood estimate as loss function
     </h2>
   </header>
@@ -201,31 +231,6 @@ So overall, the model tries to balance the Loss (L) as well as keep the weights 
   </div>
   <footer class="entry-footer"><span title='2024-12-08 21:57:23 +0545 +0545'>December 8, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Why we add regularization in loss function" href="https://cohlem.github.io/sub-notes/why-we-need-regularization/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p># We always start with a dataset to train on. Let&#39;s download the tiny shakespeare dataset !wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt with open(&#39;input.txt&#39;, &#39;r&#39;, encoding=&#39;utf-8&#39;) as f: data = f.read() from torch import nn import torch vocab = sorted(list(set(data))) len(data) stoi = {s:i for i,s in enumerate(vocab)} itos = {i:s for s,i in stoi.items()} encode = lambda x: [stoi[i] for i in x] decode = lambda x: &#39;&#39;.join([itos[i] for i in x]) type(data) str Xtr = data[:int(0....</p>
-  </div>
-  <footer class="entry-footer">40 min</footer>
-  <a class="entry-link" aria-label="post link to " href="https://cohlem.github.io/sub-notes/gpt-implementation/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>optimizing-loss-with-weight-initialization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Problem Consider a simple MLP that takes in combined 3 character embeddings as an input and we predicts a new character.
-# A simple MLP n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 200 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) b1 = torch....</p>
-  </div>
-  <footer class="entry-footer">7 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to optimizing-loss-with-weight-initialization" href="https://cohlem.github.io/sub-notes/optimizing-loss/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

@@ -6,7 +6,16 @@
     <description>Recent content on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 11 Feb 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 03 Mar 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Deep Learning Notes</title>
+      <link>https://cohlem.github.io/notes/deep-learning-notes/</link>
+      <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
+      
+      <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
+      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization RMSNorm Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization SwiGLU activation- not mine, but offers best explanation Architecture Implementation GPT implementation MoE RoPE KV Cache and Grouped Query Attention GPU Basic intro to GPU architecture </description>
+    </item>
+    
     <item>
       <title>Mixture of Experts</title>
       <link>https://cohlem.github.io/sub-notes/mixture-of-experts/</link>
@@ -17,6 +26,27 @@
 Basic MoE structure Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs. Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
 Down the line it could use multiple experts but at different blocks i.e (layers)
 A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.</description>
+    </item>
+    
+    <item>
+      <title>Interpretability</title>
+      <link>https://cohlem.github.io/sub-notes/interpretability/</link>
+      <pubDate>Mon, 03 Mar 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/interpretability/</guid>
+      <description>Induction circuits Induction behaviour The task of detecting and repeating subsequences in a text by finding some patterns.
+For example: If there exist a text containing name &amp;ldquo;James Bond&amp;rdquo; and later in the text when the model sees the word &amp;ldquo;James&amp;rdquo; it predicts/repeats the word &amp;ldquo;Bond&amp;rdquo; because it&amp;rsquo;s already seen the words &amp;ldquo;James Bond&amp;rdquo; and analyzes that &amp;ldquo;bond&amp;rdquo; should come after the word &amp;ldquo;James&amp;rdquo;. Also called &amp;ldquo;Strict Induction&amp;rdquo;
+Induction head A head which implements the induction behaviour.</description>
+    </item>
+    
+    <item>
+      <title>RLHF</title>
+      <link>https://cohlem.github.io/sub-notes/rlhf/</link>
+      <pubDate>Mon, 24 Feb 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/rlhf/</guid>
+      <description> How&amp;rsquo;s RLHF different from RL setup
+No state transition happen, generation of one state does not affect another. Switching from a reward function to a reward model. reward model could be any classification model. </description>
     </item>
     
     <item>
@@ -148,7 +178,10 @@ The way to do this in pytorch is to use DDP (take a look into their docs)</descr
       <guid>https://cohlem.github.io/notes/essential-blogs/</guid>
       <description>Training Neural Networks Karpathy&amp;rsquo;s advice while training NN
 Deep Learning Concepts Contains simple explanation for DL concepts
-How to scale your LLM (Must read) https://jax-ml.github.io/scaling-book/</description>
+How to scale your LLM (Must read) https://jax-ml.github.io/scaling-book/
+The Ultra-Scale Playbook: Training LLMs on GPU Clusters https://huggingface.co/spaces/nanotron/ultrascale-playbook
+Good coding style https://medium.com/@NoamShazeer/shape-suffixes-good-coding-style-f836e72e24fd
+How to sample from LLM (top-k, top-p) https://huggingface.co/blog/how-to-generate</description>
     </item>
     
     <item>
@@ -255,15 +288,6 @@ stable training preserves vanishing gradients BatchNormalization As the name sug
 Backpropagation on paper It implements backpropagation for two arithmetic operation (multiplication and addition) which are quite straightforward.
 Implementation is for this equation.
 a = Value(2.0, label=&amp;#39;a&amp;#39;) b = Value(-3.0, label=&amp;#39;b&amp;#39;) c = Value(10.0, label=&amp;#39;c&amp;#39;) e = a*b; e.label = &amp;#39;e&amp;#39; d = e + c; d.label = &amp;#39;d&amp;#39; f = Value(-2.0, label=&amp;#39;f&amp;#39;) L = d * f; L.label = &amp;#39;L&amp;#39; L The most important thing to note here is the gradient accumulation step (shown at the bottom-left).</description>
-    </item>
-    
-    <item>
-      <title>Deep Learning Notes</title>
-      <link>https://cohlem.github.io/notes/deep-learning-notes/</link>
-      <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
-      
-      <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
-      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization RMSNorm Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization SwiGLU activation- not mine, but offers best explanation Architecture Implementation GPT implementation MoE RoPE KV Cache and Grouped Query Attention GPU Basic intro to GPU architecture </description>
     </item>
     
     <item>

@@ -112,8 +112,8 @@ the current consensus within the research community seems to be that the optimal
   "keywords": [
     
   ],
-  "articleBody": "After training, we generally perform alignment i.e teaching the model how to behave/act in desired manner. Post training mainly consists 1) Supervised Fine-tuning 2) RLHF\nthe current consensus within the research community seems to be that the optimal approach to alignment is to i) perform SFT over a moderately-sized dataset of examples with very high quality and ii) invest remaining efforts into curating human preference data for fine-tuning via RLHF.\nSupervised Fine-tuning Similar to pretraining, we perform next token prediction, but on different high-quality dataset.\nWhy doesn’t pre-training work out of the box ? because the training objective is different, In pretraining we force the model to just predict the next token using data sampled from the internet, in one iteration the model could be learning about “how to make pizza” and in another iteration it could be learning “how half the species in Australia became extinct after humans arrived”. The data is sampled randomly. However, In SFT do the next token predict on highly curated instruction following dataset, so now we are making it to follow instructions again and again. As you can see the instruction following objective allows the model to learn instruction following with very small data.\nfigure: InstructGPT paper\nSupervised fine-tuning (SFT). We fine-tune GPT-3 on our labeler demonstrations using supervised learning. We trained for 16 epochs, using a cosine learning rate decay, and residual dropout of 0.2. We do our final SFT model selection based on the RM score on the validation set. Similarly to Wu et al. (2021), we find that our SFT models overfit on validation loss after 1 epoch; however, we find that training for more epochs helps both the RM score and human preference ratings, despite this overfitting - InstructGPT paper\nconversational open data: https://huggingface.co/datasets/OpenAssistant/oasst1/viewer/default/train?row=0\nsynthetic data https://github.com/thunlp/UltraChat?tab=readme-ov-file\nTo teach models to say certain things we either train it on sft datasets, or we put it in system message i.e put it in it’s context windows (usually hidden from users)\nolmo hard coded sft mixture data https://huggingface.co/datasets/allenai/olmo-2-hard-coded?row=2\n",
-  "wordCount" : "336",
+  "articleBody": "After training, we generally perform alignment i.e teaching the model how to behave/act in desired manner. Post training mainly consists 1) Supervised Fine-tuning 2) RLHF\nthe current consensus within the research community seems to be that the optimal approach to alignment is to i) perform SFT over a moderately-sized dataset of examples with very high quality and ii) invest remaining efforts into curating human preference data for fine-tuning via RLHF.\nSupervised Fine-tuning Similar to pretraining, we perform next token prediction, but on different high-quality dataset.\nWhy doesn’t pre-training work out of the box ? because the training objective is different, In pretraining we force the model to just predict the next token using data sampled from the internet, in one iteration the model could be learning about “how to make pizza” and in another iteration it could be learning “how half the species in Australia became extinct after humans arrived”. The data is sampled randomly. However, In SFT do the next token predict on highly curated instruction following dataset, so now we are making it to follow instructions again and again. As you can see the instruction following objective allows the model to learn instruction following with very small data.\nNOTE: in SFT we don’t consider the loss for the input tokens but only the output tokens\nfor instance, we only consider the loss for the tokens from “assistant” role, and not the ‘user’ role, which can be found here in llama2 paper: https://arxiv.org/pdf/2307.09288\nWe utilize an autoregressive objective and zero-out the loss on tokens from the user prompt, so as a result, we backpropagate only on answer tokens. Finally, we fine-tune the model for 2 epochs.\nfigure: InstructGPT paper\nSupervised fine-tuning (SFT). We fine-tune GPT-3 on our labeler demonstrations using supervised learning. We trained for 16 epochs, using a cosine learning rate decay, and residual dropout of 0.2. We do our final SFT model selection based on the RM score on the validation set. Similarly to Wu et al. (2021), we find that our SFT models overfit on validation loss after 1 epoch; however, we find that training for more epochs helps both the RM score and human preference ratings, despite this overfitting - InstructGPT paper\nDatasets For basic conversations: https://huggingface.co/datasets/HuggingFaceTB/everyday-conversations-llama3.1-2k\nfrom smolTalk\nkeep all of Everyday-Conversations filter math, coding dataset filter to 512 tokens\nmagic-pie ultra - he dataset contains challenging instructions and responses for a wide variety of tasks, such as Coding \u0026 debugging, Math, Data analysis, Creative Writing, advice seeking, or Brainstorming.\nTake magic-pie-ultra remove math and coding and debugging, limit upto two-turn conversation, and keep only rows with \u003c 512 tokens\ntake smoltalk, do the same, select Smol-Rewrite, smol-constraints, smol-summarization\nremove the system prompt, by combining it to user prompt\nselect 5k examples from each\ncombine it with filtered magpie\nmix it with all of everyday conversations\nsee here https://colab.research.google.com/drive/1QkIpkhaZVNvZwBoD69N5O-md5FjRSW_W?usp=sharing\ncolab train link: https://www.linkedin.com/in/mihirsinh-chauhan-5bb437239/\nremove columns with larger seq len than 512\nconversational open data: https://huggingface.co/datasets/OpenAssistant/oasst1/viewer/default/train?row=0\nsynthetic data https://github.com/thunlp/UltraChat?tab=readme-ov-file\nTo teach models to say certain things we either train it on sft datasets, or we put it in system message i.e put it in it’s context windows (usually hidden from users)\nolmo hard coded sft mixture data https://huggingface.co/datasets/allenai/olmo-2-hard-coded?row=2\nFirst, I remember that in supervised fine-tuning (SFT) for language models, especially in conversational settings, the standard practice is to train the model only on the assistant’s responses. This is because the model’s role is to generate appropriate responses given the user’s input, not to learn to predict the user’s messages.\n",
+  "wordCount" : "584",
   "inLanguage": "en",
   "datePublished": "2025-02-06T00:00:00Z",
   "dateModified": "2025-02-06T00:00:00Z",
@@ -208,7 +208,7 @@ the current consensus within the research community seems to be that the optimal
     <h1 class="post-title">
       Post Training Strategies
     </h1>
-    <div class="post-meta"><span title='2025-02-06 00:00:00 +0000 UTC'>February 6, 2025</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;CohleM
+    <div class="post-meta"><span title='2025-02-06 00:00:00 +0000 UTC'>February 6, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM
 
 </div>
   </header> <div class="toc">
@@ -219,7 +219,9 @@ the current consensus within the research community seems to be that the optimal
 
         <div class="inner"><ul>
                 <li>
-                    <a href="#supervised-fine-tuning" aria-label="Supervised Fine-tuning">Supervised Fine-tuning</a>
+                    <a href="#supervised-fine-tuning" aria-label="Supervised Fine-tuning">Supervised Fine-tuning</a></li>
+                <li>
+                    <a href="#datasets" aria-label="Datasets">Datasets</a>
                 </li>
             </ul>
         </div>
@@ -234,12 +236,35 @@ the current consensus within the research community seems to be that the optimal
 <p>Similar to pretraining, we perform next token prediction, but on different high-quality dataset.</p>
 <p>Why doesn&rsquo;t pre-training work out of the box ?
 because the training objective is different, In pretraining we force the model to just predict the next token using data sampled from the internet, in one iteration the model could be learning about &ldquo;how to make pizza&rdquo; and in another iteration it could be learning &ldquo;how half the species in Australia became extinct after humans arrived&rdquo;. The data is sampled randomly. However, In SFT do the next token predict on highly curated instruction following dataset, so now we are making it to follow instructions again and again. As you can see the instruction following objective allows the model to learn instruction following with very small data.</p>
+<p><strong>NOTE: in SFT we don&rsquo;t consider the loss for the input tokens but only the output tokens</strong></p>
+<p>for instance, we only consider the loss for the tokens from &ldquo;assistant&rdquo; role, and not the &lsquo;user&rsquo; role, which can be found here in llama2 paper: <a href="https://arxiv.org/pdf/2307.09288">https://arxiv.org/pdf/2307.09288</a></p>
+<blockquote>
+<p>We utilize an autoregressive objective and zero-out the loss on tokens from the user prompt, so as a result, we backpropagate only on answer tokens. Finally, we fine-tune the model for 2 epochs.</p>
+</blockquote>
 <p><img loading="lazy" src="pts1.png" alt="pts1"  />
 
 figure: <a href="https://arxiv.org/pdf/2203.02155">InstructGPT paper</a></p>
 <blockquote>
 <p>Supervised fine-tuning (SFT). We fine-tune GPT-3 on our labeler demonstrations using supervised learning. We trained for 16 epochs, using a cosine learning rate decay, and residual dropout of 0.2. We do our final SFT model selection based on the RM score on the validation set. Similarly to Wu et al. (2021), we find that our SFT models overfit on validation loss after 1 epoch; however, we find that training for more epochs helps both the RM score and human preference ratings, despite this overfitting - <a href="https://arxiv.org/pdf/2203.02155">InstructGPT paper</a></p>
 </blockquote>
+<h3 id="datasets">Datasets<a hidden class="anchor" aria-hidden="true" href="#datasets">#</a></h3>
+<p>For basic conversations:
+<a href="https://huggingface.co/datasets/HuggingFaceTB/everyday-conversations-llama3.1-2k">https://huggingface.co/datasets/HuggingFaceTB/everyday-conversations-llama3.1-2k</a></p>
+<p>from smolTalk</p>
+<p>keep all of Everyday-Conversations
+filter math, coding dataset
+filter to 512 tokens</p>
+<p>magic-pie ultra - he dataset contains challenging instructions and responses for a wide variety of tasks, such as Coding &amp; debugging, Math, Data analysis, Creative Writing, advice seeking, or Brainstorming.</p>
+<p>Take magic-pie-ultra remove math and coding and debugging, limit upto two-turn conversation, and keep only rows with &lt; 512 tokens</p>
+<p>take smoltalk, do the same, select Smol-Rewrite, smol-constraints, smol-summarization</p>
+<p>remove the system prompt, by combining it to user prompt</p>
+<p>select 5k examples from each</p>
+<p>combine it with filtered magpie</p>
+<p>mix it with all of everyday conversations</p>
+<p>see here
+<a href="https://colab.research.google.com/drive/1QkIpkhaZVNvZwBoD69N5O-md5FjRSW_W?usp=sharing">https://colab.research.google.com/drive/1QkIpkhaZVNvZwBoD69N5O-md5FjRSW_W?usp=sharing</a></p>
+<p>colab train link: <a href="https://www.linkedin.com/in/mihirsinh-chauhan-5bb437239/">https://www.linkedin.com/in/mihirsinh-chauhan-5bb437239/</a></p>
+<p>remove columns with larger seq len than 512</p>
 <p>conversational open data:
 <a href="https://huggingface.co/datasets/OpenAssistant/oasst1/viewer/default/train?row=0">https://huggingface.co/datasets/OpenAssistant/oasst1/viewer/default/train?row=0</a></p>
 <p>synthetic data
@@ -247,6 +272,7 @@ figure: <a href="https://arxiv.org/pdf/2203.02155">InstructGPT paper</a></p>
 <p>To teach models to say certain things we either train it on sft datasets, or we put it in system message i.e put it in it&rsquo;s context windows (usually hidden from users)</p>
 <p>olmo hard coded sft mixture data
 <a href="https://huggingface.co/datasets/allenai/olmo-2-hard-coded?row=2">https://huggingface.co/datasets/allenai/olmo-2-hard-coded?row=2</a></p>
+<p>First, I remember that in supervised fine-tuning (SFT) for language models, especially in conversational settings, the standard practice is to train the model only on the assistant&rsquo;s responses. This is because the model&rsquo;s role is to generate appropriate responses given the user&rsquo;s input, not to learn to predict the user&rsquo;s messages.</p>
 
 
   </div>

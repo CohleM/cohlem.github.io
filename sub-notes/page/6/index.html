@@ -164,6 +164,31 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p># We always start with a dataset to train on. Let&#39;s download the tiny shakespeare dataset !wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt with open(&#39;input.txt&#39;, &#39;r&#39;, encoding=&#39;utf-8&#39;) as f: data = f.read() from torch import nn import torch vocab = sorted(list(set(data))) len(data) stoi = {s:i for i,s in enumerate(vocab)} itos = {i:s for s,i in stoi.items()} encode = lambda x: [stoi[i] for i in x] decode = lambda x: &#39;&#39;.join([itos[i] for i in x]) type(data) str Xtr = data[:int(0....</p>
+  </div>
+  <footer class="entry-footer">40 min</footer>
+  <a class="entry-link" aria-label="post link to " href="https://cohlem.github.io/sub-notes/gpt-implementation/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>optimizing-loss-with-weight-initialization
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Problem Consider a simple MLP that takes in combined 3 character embeddings as an input and we predicts a new character.
+# A simple MLP n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 200 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) b1 = torch....</p>
+  </div>
+  <footer class="entry-footer">7 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to optimizing-loss-with-weight-initialization" href="https://cohlem.github.io/sub-notes/optimizing-loss/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>TITLE
     </h2>
   </header>

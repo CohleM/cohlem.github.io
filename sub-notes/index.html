@@ -179,6 +179,33 @@ A routing layer is set to choose experts depending on how many experts are selec
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Interpretability
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Induction circuits Induction behaviour The task of detecting and repeating subsequences in a text by finding some patterns.
+For example: If there exist a text containing name “James Bond” and later in the text when the model sees the word “James” it predicts/repeats the word “Bond” because it’s already seen the words “James Bond” and analyzes that “bond” should come after the word “James”. Also called “Strict Induction”
+Induction head A head which implements the induction behaviour....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-03-03 00:00:00 +0000 UTC'>March 3, 2025</span>&nbsp;·&nbsp;11 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Interpretability" href="https://cohlem.github.io/sub-notes/interpretability/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>RLHF
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> How’s RLHF different from RL setup
+No state transition happen, generation of one state does not affect another. Switching from a reward function to a reward model. reward model could be any classification model. </p>
+  </div>
+  <footer class="entry-footer"><span title='2025-02-24 00:00:00 +0000 UTC'>February 24, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to RLHF" href="https://cohlem.github.io/sub-notes/rlhf/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>Flops calculation
     </h2>
   </header>
@@ -198,37 +225,8 @@ A routing layer is set to choose experts depending on how many experts are selec
     <p>After training, we generally perform alignment i.e teaching the model how to behave/act in desired manner. Post training mainly consists 1) Supervised Fine-tuning 2) RLHF
 the current consensus within the research community seems to be that the optimal approach to alignment is to i) perform SFT over a moderately-sized dataset of examples with very high quality and ii) invest remaining efforts into curating human preference data for fine-tuning via RLHF....</p>
   </div>
-  <footer class="entry-footer"><span title='2025-02-06 00:00:00 +0000 UTC'>February 6, 2025</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;CohleM</footer>
+  <footer class="entry-footer"><span title='2025-02-06 00:00:00 +0000 UTC'>February 6, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Post Training Strategies" href="https://cohlem.github.io/sub-notes/post-training-strategies/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Notes-while-building-lilLM
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Pre-training Document packing while pretraining, different documents could be packed inside a sequence. For instance, a model with context_length 1024 can have 256 tokens from one doc and rest from the other. Demilited by EOS token.
-The samples may contaminate the attention, for which cross sample attention masking is used. But, it isn’t used by DeepSeek v3, lets not use it.
-while packing documents. we simply pack them as they appear in order and then add EOS token (used by GPT-2,3)....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-29 00:00:00 +0000 UTC'>January 29, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Notes-while-building-lilLM" href="https://cohlem.github.io/sub-notes/building-lillm/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Pytorch Commands I forget time to time/ commands that are essential
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>torch.stack(tensors, dim) stacks the tensors across dim
-#usage # data has to be tensor torch.stack([data[i:i&#43;some_number] for i in range(10)]) torch.from_numpy(numpy_array) shares the memory with the numpy_array but is tensor type
-a = np.array([1,2,3]) b = torch.tensor(a) # creates copy c = torch.from_numpy(a) # shares memory a[0] = 11 c # outputs: tensor([11, 2, 3]) torch.flatten(input, start,end=-1) flattens the input from dim start to end (-1 by default)
-t = torch.tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) torch....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-29 00:00:00 +0000 UTC'>January 29, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Pytorch Commands I forget time to time/ commands that are essential" href="https://cohlem.github.io/sub-notes/pytorch/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
