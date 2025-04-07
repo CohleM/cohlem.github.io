@@ -6,7 +6,7 @@
     <description>Recent content in Sub-notes on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Mon, 03 Mar 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 07 Apr 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/sub-notes/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Mixture of Experts</title>
       <link>https://cohlem.github.io/sub-notes/mixture-of-experts/</link>
@@ -17,6 +17,17 @@
 Basic MoE structure Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs. Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
 Down the line it could use multiple experts but at different blocks i.e (layers)
 A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.</description>
+    </item>
+    
+    <item>
+      <title>LoRA</title>
+      <link>https://cohlem.github.io/sub-notes/lora/</link>
+      <pubDate>Mon, 07 Apr 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/lora/</guid>
+      <description>LoRA Main idea is to approximate the change in weights dW by the use of low-rank matrices
+Eg: Usually the weight update is done by adding the change in weights dW to the original weight matrix W. dW is obtained through backpropagation, ex if W is 512 x 512 the parameter size of dW is 262,144.
+In LoRA, we approximate that dW but by breaking down into two low rank matrices B @ A where B = matrix of size 512 x r and A = matrix of size r x 512,</description>
     </item>
     
     <item>

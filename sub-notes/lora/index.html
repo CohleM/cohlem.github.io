@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>LoRA | CohleM</title>
+<meta name="keywords" content="">
+<meta name="description" content="LoRA Main idea is to approximate the change in weights dW by the use of low-rank matrices
+Eg: Usually the weight update is done by adding the change in weights dW to the original weight matrix W. dW is obtained through backpropagation, ex if W is 512 x 512 the parameter size of dW is 262,144.
+In LoRA, we approximate that dW but by breaking down into two low rank matrices B @ A where B = matrix of size 512 x r and A = matrix of size r x 512,">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/lora/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://cohlem.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://cohlem.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X6LV4QY2G2"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
+}
+</script>
+<meta property="og:title" content="LoRA" />
+<meta property="og:description" content="LoRA Main idea is to approximate the change in weights dW by the use of low-rank matrices
+Eg: Usually the weight update is done by adding the change in weights dW to the original weight matrix W. dW is obtained through backpropagation, ex if W is 512 x 512 the parameter size of dW is 262,144.
+In LoRA, we approximate that dW but by breaking down into two low rank matrices B @ A where B = matrix of size 512 x r and A = matrix of size r x 512," />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/lora/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2025-04-07T00:00:00+00:00" />
+<meta property="article:modified_time" content="2025-04-07T00:00:00+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="LoRA"/>
+<meta name="twitter:description" content="LoRA Main idea is to approximate the change in weights dW by the use of low-rank matrices
+Eg: Usually the weight update is done by adding the change in weights dW to the original weight matrix W. dW is obtained through backpropagation, ex if W is 512 x 512 the parameter size of dW is 262,144.
+In LoRA, we approximate that dW but by breaking down into two low rank matrices B @ A where B = matrix of size 512 x r and A = matrix of size r x 512,"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Sub-notes",
+      "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "LoRA",
+      "item": "https://cohlem.github.io/sub-notes/lora/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "LoRA",
+  "name": "LoRA",
+  "description": "LoRA Main idea is to approximate the change in weights dW by the use of low-rank matrices\nEg: Usually the weight update is done by adding the change in weights dW to the original weight matrix W. dW is obtained through backpropagation, ex if W is 512 x 512 the parameter size of dW is 262,144.\nIn LoRA, we approximate that dW but by breaking down into two low rank matrices B @ A where B = matrix of size 512 x r and A = matrix of size r x 512,",
+  "keywords": [
+    
+  ],
+  "articleBody": "LoRA Main idea is to approximate the change in weights dW by the use of low-rank matrices\nEg: Usually the weight update is done by adding the change in weights dW to the original weight matrix W. dW is obtained through backpropagation, ex if W is 512 x 512 the parameter size of dW is 262,144.\nIn LoRA, we approximate that dW but by breaking down into two low rank matrices B @ A where B = matrix of size 512 x r and A = matrix of size r x 512,\npreviously if the forward pass was like this\nout = X @ W\nwe change the forward pass: out = X @ W + X @ B@A\nwe freeze all the other parameters (W in this case), and only find gradients for B,A and update only these weights.\nFirst lets implement toy example that approximates sin function, we implement manual backpropagation so that It’ll be easier to understand what gets updated in our LoRA implementation.\n# import torch import torch.nn as nn import numpy as np import matplotlib.pyplot as plt # Generate synthetic data (sine wave) X = np.linspace(0, 2*np.pi, 100).reshape(-1, 1) y = np.sin(X) # Convert to PyTorch tensors X_tensor = torch.tensor(X, dtype=torch.float32) y_tensor = torch.tensor(y, dtype=torch.float32) # Define a small MLP class MLP(nn.Module): def __init__(self): super().__init__() self.layers = nn.Sequential( nn.Linear(1, 20, bias = True), # 1 input → 10 hidden nn.ReLU(), nn.Linear(20, 1, bias = False) # 10 hidden → 1 output ) def forward(self, x): return self.layers(x) # Initialize model, loss, and optimizer model = MLP() criterion = nn.MSELoss() # optimizer = torch.optim.Adam(model.parameters(), lr=0.01) # Training loop epochs = 5000 for epoch in range(epochs): optimizer.zero_grad() #Instead of this forward pass # outputs = model(X_tensor) # Implement this forward to manually do the forward pass o1 = X_tensor @ model.layers[0].weight.T o2 = o1 + model.layers[0].bias o3 = model.layers[1](o2) # relu layer outputs = o3 @ model.layers[2].weight.T diff = outputs - y_tensor squared_diff = diff**2 o_seven = squared_diff.sum(0) loss = o_seven/len(squared_diff) #clear all the gradients for p in model.parameters(): p.requires_grad = True p.grad = None for p in [loss, o_seven, squared_diff, diff, outputs, o3, o2, o1, X_tensor]: if not p.requires_grad: p.requires_grad = True p.retain_grad() loss.backward() ### Manual backpropagation dL = torch.tensor(1.0) do_seven = dL*1/(len(squared_diff)) dsquared_diff = do_seven*torch.ones_like(squared_diff) ddiff = dsquared_diff * 2*diff doutputs = ddiff*1 do3 = doutputs@ model.layers[2].weight dl2w = o3.T @ doutputs mo2 = o2 \u003e 0 do2 = do3 * mo2 do1 = do2 dl0bias = do2.sum(0) dl0w = X_tensor.T @ do1 # # cmp('dL', dL, loss) # cmp('do_seven', do_seven, o_seven) # cmp('dsquared_diff', dsquared_diff, squared_diff) # cmp('ddiff', ddiff, diff) # cmp('doutputs', doutputs, outputs) # cmp('do3', do3, o3) # cmp('dl2w', dl2w.T, model.layers[2].weight) # cmp('do2', do2, o2) # cmp('dl0bias', dl0bias, model.layers[0].bias) # cmp('do1', do1, o1) # cmp('dl0w', dl0w.T, model.layers[0].weight ) with torch.no_grad(): lr=0.01 model.layers[0].weight.data -= lr*dl0w.T model.layers[0].bias.data -= lr*dl0bias model.layers[2].weight.data -= lr*dl2w.T # optimizer.step() if epoch % 100 == 0: print(f'Epoch {epoch}, Loss: {loss.item():.4f}') # Plot results with torch.no_grad(): predictions = model(X_tensor).numpy() plt.scatter(X, y, label='True') plt.scatter(X, predictions, label='Predicted', color='red') plt.legend() plt.show() Now, we implement LoRA. Here we,\nconstruct parameters A, B when B@A the resulting matrix size matches layer 0’s weight matrix modify forward pass by adding lora_w continue other forward passes as they were previously, We don’t find the gradients for weights and don’t update those matrices, which is essentially freezing through intermediate gradients find the gradients for B and A and only update those weights. that’s it!!!! # Training loop epochs = 100000 # lets only train only the lora parameters for layer0's weight d,k = model.layers[0].weight.T.data.shape r = 8 B = nn.Parameter(torch.zeros((d,r))) A = nn.Parameter(torch.randn((r,k))) scale = 2 for epoch in range(epochs): # Implement this forward to manually do the forward pass o1 = X_tensor @ model.layers[0].weight.T ## add lora part for the layer0's model weight here lora_w = scale*B@A lora_o1 = X_tensor @ lora_w # size of B@A should match model.layers[0].weight.T i.e (1,20) h = o1 + lora_o1 o2 = h + model.layers[0].bias o3 = model.layers[1](o2) # relu layer outputs = o3 @ model.layers[2].weight.T diff = outputs - y_tensor squared_diff = diff**2 o_seven = squared_diff.sum(0) loss = o_seven/len(squared_diff) #Freeze all the model parameters for p in model.parameters(): p.requires_grad = False p.grad = None A.grad = None B.grad = None for p in [loss, o_seven, squared_diff, diff, outputs, o3, o2, o1, X_tensor, h, lora_o1, lora_w]: if not p.requires_grad: p.requires_grad = True p.retain_grad() loss.backward() ### Manual backpropagation dL = torch.tensor(1.0) do_seven = dL*1/(len(squared_diff)) dsquared_diff = do_seven*torch.ones_like(squared_diff) ddiff = dsquared_diff * 2*diff doutputs = ddiff*1 do3 = doutputs@ model.layers[2].weight # We freeze this weight # dl2w = o3.T @ doutputs mo2 = o2 \u003e 0 do2 = do3 * mo2 dh = do2 do1 = dh dlora_o1 = dh dlora_w = X_tensor.T @ dlora_o1 dB = scale * dlora_w@A.T dA = scale * B.T@dlora_w # And we freeze these weights too # dl0bias = do2.sum(0) # dl0w = X_tensor.T @ do1 # cmp('dL', dL, loss) # cmp('do_seven', do_seven, o_seven) # cmp('dsquared_diff', dsquared_diff, squared_diff) # cmp('ddiff', ddiff, diff) # cmp('doutputs', doutputs, outputs) # cmp('do3', do3, o3) # # cmp('dl2w', dl2w.T, model.layers[2].weight) # cmp('do2', do2, o2) # cmp('dh', dh, h) # cmp('do1', do1, o1) # cmp('dlora_o1', dlora_o1, lora_o1) # cmp('dlora_w', dlora_w, lora_w) # cmp('dB', dB, B) # cmp('dA', dA, A) # cmp('dl0w', dl0w.T, model.layers[0].weight ) with torch.no_grad(): lr=0.001 A.data -= lr * dA B.data -= lr * dB # optimizer.step() if epoch % 100 == 0: print(f'Epoch {epoch}, Loss: {loss.item():.4f}') # Plot results with torch.no_grad(): predictions = model(X_tensor).numpy() plt.scatter(X, y, label='True') plt.scatter(X, predictions, label='Predicted', color='red') plt.legend() plt.show() ",
+  "wordCount" : "920",
+  "inLanguage": "en",
+  "datePublished": "2025-04-07T00:00:00Z",
+  "dateModified": "2025-04-07T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/lora/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://cohlem.github.io" accesskey="h" title="CohleM (Alt + H)">CohleM</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://cohlem.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/archives/" title="Archive">
+                    <span>Archive</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/notes/" title="Notes">
+                    <span>Notes</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      LoRA
+    </h1>
+    <div class="post-meta"><span title='2025-04-07 00:00:00 +0000 UTC'>April 7, 2025</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;CohleM
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#lora" aria-label="LoRA">LoRA</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h3 id="lora">LoRA<a hidden class="anchor" aria-hidden="true" href="#lora">#</a></h3>
+<p>Main idea is to approximate the change in weights dW by the use of low-rank matrices</p>
+<p>Eg: Usually the weight update is done by adding the change in weights dW to the original weight matrix W. dW is obtained through backpropagation, ex if W is 512 x 512 the parameter size of dW is 262,144.</p>
+<p>In LoRA, we approximate that dW but by breaking down into two low rank matrices B @ A where B = matrix of size 512 x r and A = matrix of size r x 512,</p>
+<p>previously if the forward pass was like this</p>
+<p>out = X @ W</p>
+<p>we change the forward pass:
+out = X @ W + X @ B@A</p>
+<p>we freeze all the other parameters (W in this case), and only find gradients for B,A and update only these weights.</p>
+<p>First lets implement toy example that approximates sin function, we implement manual backpropagation so that It&rsquo;ll be easier to understand what gets updated in our LoRA implementation.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># import torch</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> torch.nn <span style="color:#66d9ef">as</span> nn
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> numpy <span style="color:#66d9ef">as</span> np
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#66d9ef">as</span> plt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Generate synthetic data (sine wave)</span>
+</span></span><span style="display:flex;"><span>X <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>linspace(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">2</span><span style="color:#f92672">*</span>np<span style="color:#f92672">.</span>pi, <span style="color:#ae81ff">100</span>)<span style="color:#f92672">.</span>reshape(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>y <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>sin(X)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Convert to PyTorch tensors</span>
+</span></span><span style="display:flex;"><span>X_tensor <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>tensor(X, dtype<span style="color:#f92672">=</span>torch<span style="color:#f92672">.</span>float32)
+</span></span><span style="display:flex;"><span>y_tensor <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>tensor(y, dtype<span style="color:#f92672">=</span>torch<span style="color:#f92672">.</span>float32)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Define a small MLP</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MLP</span>(nn<span style="color:#f92672">.</span>Module):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__()
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>layers <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Sequential(
+</span></span><span style="display:flex;"><span>            nn<span style="color:#f92672">.</span>Linear(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">20</span>, bias <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>),  <span style="color:#75715e"># 1 input → 10 hidden</span>
+</span></span><span style="display:flex;"><span>            nn<span style="color:#f92672">.</span>ReLU(),
+</span></span><span style="display:flex;"><span>            nn<span style="color:#f92672">.</span>Linear(<span style="color:#ae81ff">20</span>, <span style="color:#ae81ff">1</span>, bias <span style="color:#f92672">=</span> <span style="color:#66d9ef">False</span>)    <span style="color:#75715e"># 10 hidden → 1 output</span>
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">forward</span>(self, x):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>layers(x)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize model, loss, and optimizer</span>
+</span></span><span style="display:flex;"><span>model <span style="color:#f92672">=</span> MLP()
+</span></span><span style="display:flex;"><span>criterion <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>MSELoss()
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># optimizer = torch.optim.Adam(model.parameters(), lr=0.01)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Training loop</span>
+</span></span><span style="display:flex;"><span>epochs <span style="color:#f92672">=</span> <span style="color:#ae81ff">5000</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> epoch <span style="color:#f92672">in</span> range(epochs):
+</span></span><span style="display:flex;"><span>    optimizer<span style="color:#f92672">.</span>zero_grad()
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#Instead of this forward pass</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     outputs = model(X_tensor)</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Implement this forward to manually do the forward pass</span>
+</span></span><span style="display:flex;"><span>    o1 <span style="color:#f92672">=</span> X_tensor <span style="color:#f92672">@</span> model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>weight<span style="color:#f92672">.</span>T
+</span></span><span style="display:flex;"><span>    o2 <span style="color:#f92672">=</span> o1 <span style="color:#f92672">+</span> model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>bias
+</span></span><span style="display:flex;"><span>    o3 <span style="color:#f92672">=</span> model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">1</span>](o2) <span style="color:#75715e"># relu layer</span>
+</span></span><span style="display:flex;"><span>    outputs <span style="color:#f92672">=</span> o3 <span style="color:#f92672">@</span> model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">2</span>]<span style="color:#f92672">.</span>weight<span style="color:#f92672">.</span>T
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    diff <span style="color:#f92672">=</span> outputs <span style="color:#f92672">-</span> y_tensor
+</span></span><span style="display:flex;"><span>    squared_diff <span style="color:#f92672">=</span> diff<span style="color:#f92672">**</span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    o_seven <span style="color:#f92672">=</span> squared_diff<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    loss <span style="color:#f92672">=</span> o_seven<span style="color:#f92672">/</span>len(squared_diff)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#clear all the gradients</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> model<span style="color:#f92672">.</span>parameters():
+</span></span><span style="display:flex;"><span>        p<span style="color:#f92672">.</span>requires_grad <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>        p<span style="color:#f92672">.</span>grad <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> [loss, o_seven, squared_diff, diff, outputs, o3, o2, o1, X_tensor]:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> p<span style="color:#f92672">.</span>requires_grad:
+</span></span><span style="display:flex;"><span>            p<span style="color:#f92672">.</span>requires_grad <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>        p<span style="color:#f92672">.</span>retain_grad()
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    loss<span style="color:#f92672">.</span>backward()
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">### Manual backpropagation</span>
+</span></span><span style="display:flex;"><span>    dL <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>tensor(<span style="color:#ae81ff">1.0</span>)
+</span></span><span style="display:flex;"><span>    do_seven <span style="color:#f92672">=</span> dL<span style="color:#f92672">*</span><span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>(len(squared_diff))
+</span></span><span style="display:flex;"><span>    dsquared_diff <span style="color:#f92672">=</span> do_seven<span style="color:#f92672">*</span>torch<span style="color:#f92672">.</span>ones_like(squared_diff)
+</span></span><span style="display:flex;"><span>    ddiff <span style="color:#f92672">=</span> dsquared_diff <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span><span style="color:#f92672">*</span>diff
+</span></span><span style="display:flex;"><span>    doutputs <span style="color:#f92672">=</span> ddiff<span style="color:#f92672">*</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    do3 <span style="color:#f92672">=</span> doutputs<span style="color:#f92672">@</span> model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">2</span>]<span style="color:#f92672">.</span>weight
+</span></span><span style="display:flex;"><span>    dl2w <span style="color:#f92672">=</span> o3<span style="color:#f92672">.</span>T <span style="color:#f92672">@</span> doutputs
+</span></span><span style="display:flex;"><span>    mo2 <span style="color:#f92672">=</span> o2 <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    do2 <span style="color:#f92672">=</span> do3 <span style="color:#f92672">*</span> mo2
+</span></span><span style="display:flex;"><span>    do1 <span style="color:#f92672">=</span> do2
+</span></span><span style="display:flex;"><span>    dl0bias <span style="color:#f92672">=</span> do2<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    dl0w <span style="color:#f92672">=</span> X_tensor<span style="color:#f92672">.</span>T <span style="color:#f92672">@</span> do1
+</span></span><span style="display:flex;"><span>     
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># #     cmp(&#39;dL&#39;, dL, loss)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;do_seven&#39;, do_seven, o_seven)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dsquared_diff&#39;, dsquared_diff, squared_diff)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;ddiff&#39;, ddiff, diff)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;doutputs&#39;, doutputs, outputs)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;do3&#39;, do3, o3)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dl2w&#39;, dl2w.T, model.layers[2].weight)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;do2&#39;, do2, o2)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dl0bias&#39;, dl0bias, model.layers[0].bias)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;do1&#39;, do1, o1)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dl0w&#39;, dl0w.T, model.layers[0].weight )</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">with</span> torch<span style="color:#f92672">.</span>no_grad():
+</span></span><span style="display:flex;"><span>        lr<span style="color:#f92672">=</span><span style="color:#ae81ff">0.01</span>
+</span></span><span style="display:flex;"><span>        model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>weight<span style="color:#f92672">.</span>data <span style="color:#f92672">-=</span> lr<span style="color:#f92672">*</span>dl0w<span style="color:#f92672">.</span>T
+</span></span><span style="display:flex;"><span>        model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>bias<span style="color:#f92672">.</span>data <span style="color:#f92672">-=</span> lr<span style="color:#f92672">*</span>dl0bias
+</span></span><span style="display:flex;"><span>        model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">2</span>]<span style="color:#f92672">.</span>weight<span style="color:#f92672">.</span>data <span style="color:#f92672">-=</span> lr<span style="color:#f92672">*</span>dl2w<span style="color:#f92672">.</span>T
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     optimizer.step()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> epoch <span style="color:#f92672">%</span> <span style="color:#ae81ff">100</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;Epoch </span><span style="color:#e6db74">{</span>epoch<span style="color:#e6db74">}</span><span style="color:#e6db74">, Loss: </span><span style="color:#e6db74">{</span>loss<span style="color:#f92672">.</span>item()<span style="color:#e6db74">:</span><span style="color:#e6db74">.4f</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Plot results</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> torch<span style="color:#f92672">.</span>no_grad():
+</span></span><span style="display:flex;"><span>    predictions <span style="color:#f92672">=</span> model(X_tensor)<span style="color:#f92672">.</span>numpy()
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>scatter(X, y, label<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;True&#39;</span>)
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>scatter(X, predictions, label<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;Predicted&#39;</span>, color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;red&#39;</span>)
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>legend()
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>show()
+</span></span></code></pre></div><p>Now, we implement LoRA.
+Here we,</p>
+<ul>
+<li>construct parameters A, B when B@A the resulting matrix size matches layer 0&rsquo;s weight matrix</li>
+<li>modify forward pass by adding <code>lora_w</code></li>
+<li>continue other forward passes as they were previously,</li>
+<li>We don&rsquo;t find the gradients for weights and don&rsquo;t update those matrices, which is essentially freezing</li>
+<li>through intermediate gradients find the gradients for B and A and only update those weights.</li>
+<li>that&rsquo;s it!!!!</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Training loop</span>
+</span></span><span style="display:flex;"><span>epochs <span style="color:#f92672">=</span> <span style="color:#ae81ff">100000</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># lets only train only the lora parameters for layer0&#39;s weight</span>
+</span></span><span style="display:flex;"><span>d,k <span style="color:#f92672">=</span> model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>weight<span style="color:#f92672">.</span>T<span style="color:#f92672">.</span>data<span style="color:#f92672">.</span>shape
+</span></span><span style="display:flex;"><span>r <span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Parameter(torch<span style="color:#f92672">.</span>zeros((d,r)))
+</span></span><span style="display:flex;"><span>A <span style="color:#f92672">=</span> nn<span style="color:#f92672">.</span>Parameter(torch<span style="color:#f92672">.</span>randn((r,k)))
+</span></span><span style="display:flex;"><span>scale <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> epoch <span style="color:#f92672">in</span> range(epochs):
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Implement this forward to manually do the forward pass</span>
+</span></span><span style="display:flex;"><span>    o1 <span style="color:#f92672">=</span> X_tensor <span style="color:#f92672">@</span> model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>weight<span style="color:#f92672">.</span>T
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## add lora part for the layer0&#39;s model weight here</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    lora_w <span style="color:#f92672">=</span> scale<span style="color:#f92672">*</span>B<span style="color:#a6e22e">@A</span>
+</span></span><span style="display:flex;"><span>    lora_o1 <span style="color:#f92672">=</span> X_tensor <span style="color:#f92672">@</span> lora_w <span style="color:#75715e"># size of B@A should match model.layers[0].weight.T i.e (1,20)</span>
+</span></span><span style="display:flex;"><span>    h <span style="color:#f92672">=</span> o1 <span style="color:#f92672">+</span> lora_o1
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    o2 <span style="color:#f92672">=</span> h <span style="color:#f92672">+</span> model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>bias
+</span></span><span style="display:flex;"><span>    o3 <span style="color:#f92672">=</span> model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">1</span>](o2) <span style="color:#75715e"># relu layer</span>
+</span></span><span style="display:flex;"><span>    outputs <span style="color:#f92672">=</span> o3 <span style="color:#f92672">@</span> model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">2</span>]<span style="color:#f92672">.</span>weight<span style="color:#f92672">.</span>T
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    diff <span style="color:#f92672">=</span> outputs <span style="color:#f92672">-</span> y_tensor
+</span></span><span style="display:flex;"><span>    squared_diff <span style="color:#f92672">=</span> diff<span style="color:#f92672">**</span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    o_seven <span style="color:#f92672">=</span> squared_diff<span style="color:#f92672">.</span>sum(<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    loss <span style="color:#f92672">=</span> o_seven<span style="color:#f92672">/</span>len(squared_diff)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#Freeze all the model parameters</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> model<span style="color:#f92672">.</span>parameters():
+</span></span><span style="display:flex;"><span>        p<span style="color:#f92672">.</span>requires_grad <span style="color:#f92672">=</span> <span style="color:#66d9ef">False</span>
+</span></span><span style="display:flex;"><span>        p<span style="color:#f92672">.</span>grad <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>        A<span style="color:#f92672">.</span>grad <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>        B<span style="color:#f92672">.</span>grad <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> [loss, o_seven, squared_diff, diff, outputs, o3, o2, o1, X_tensor, h, lora_o1, lora_w]:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> p<span style="color:#f92672">.</span>requires_grad:
+</span></span><span style="display:flex;"><span>            p<span style="color:#f92672">.</span>requires_grad <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>        p<span style="color:#f92672">.</span>retain_grad()
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    loss<span style="color:#f92672">.</span>backward()
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">### Manual backpropagation</span>
+</span></span><span style="display:flex;"><span>    dL <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>tensor(<span style="color:#ae81ff">1.0</span>)
+</span></span><span style="display:flex;"><span>    do_seven <span style="color:#f92672">=</span> dL<span style="color:#f92672">*</span><span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>(len(squared_diff))
+</span></span><span style="display:flex;"><span>    dsquared_diff <span style="color:#f92672">=</span> do_seven<span style="color:#f92672">*</span>torch<span style="color:#f92672">.</span>ones_like(squared_diff)
+</span></span><span style="display:flex;"><span>    ddiff <span style="color:#f92672">=</span> dsquared_diff <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span><span style="color:#f92672">*</span>diff
+</span></span><span style="display:flex;"><span>    doutputs <span style="color:#f92672">=</span> ddiff<span style="color:#f92672">*</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    do3 <span style="color:#f92672">=</span> doutputs<span style="color:#f92672">@</span> model<span style="color:#f92672">.</span>layers[<span style="color:#ae81ff">2</span>]<span style="color:#f92672">.</span>weight
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># We freeze this weight</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     dl2w = o3.T @ doutputs </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    mo2 <span style="color:#f92672">=</span> o2 <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    do2 <span style="color:#f92672">=</span> do3 <span style="color:#f92672">*</span> mo2
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    dh <span style="color:#f92672">=</span> do2
+</span></span><span style="display:flex;"><span>    do1 <span style="color:#f92672">=</span> dh
+</span></span><span style="display:flex;"><span>    dlora_o1 <span style="color:#f92672">=</span> dh
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    dlora_w <span style="color:#f92672">=</span> X_tensor<span style="color:#f92672">.</span>T <span style="color:#f92672">@</span> dlora_o1
+</span></span><span style="display:flex;"><span>    dB <span style="color:#f92672">=</span> scale <span style="color:#f92672">*</span> dlora_w<span style="color:#a6e22e">@A.T</span>
+</span></span><span style="display:flex;"><span>    dA <span style="color:#f92672">=</span> scale <span style="color:#f92672">*</span> B<span style="color:#f92672">.</span>T<span style="color:#a6e22e">@dlora_w</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># And we freeze these weights too</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     dl0bias = do2.sum(0)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     dl0w = X_tensor.T @ do1</span>
+</span></span><span style="display:flex;"><span>     
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dL&#39;, dL, loss)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;do_seven&#39;, do_seven, o_seven)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dsquared_diff&#39;, dsquared_diff, squared_diff)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;ddiff&#39;, ddiff, diff)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;doutputs&#39;, doutputs, outputs)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;do3&#39;, do3, o3)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># #     cmp(&#39;dl2w&#39;, dl2w.T, model.layers[2].weight)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;do2&#39;, do2, o2)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dh&#39;, dh, h)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;do1&#39;, do1, o1)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dlora_o1&#39;, dlora_o1, lora_o1)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dlora_w&#39;, dlora_w, lora_w)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dB&#39;, dB, B)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dA&#39;, dA, A)</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     cmp(&#39;dl0w&#39;, dl0w.T, model.layers[0].weight )</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">with</span> torch<span style="color:#f92672">.</span>no_grad():
+</span></span><span style="display:flex;"><span>        lr<span style="color:#f92672">=</span><span style="color:#ae81ff">0.001</span>
+</span></span><span style="display:flex;"><span>        A<span style="color:#f92672">.</span>data <span style="color:#f92672">-=</span> lr <span style="color:#f92672">*</span> dA
+</span></span><span style="display:flex;"><span>        B<span style="color:#f92672">.</span>data <span style="color:#f92672">-=</span> lr <span style="color:#f92672">*</span> dB
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     optimizer.step()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> epoch <span style="color:#f92672">%</span> <span style="color:#ae81ff">100</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;Epoch </span><span style="color:#e6db74">{</span>epoch<span style="color:#e6db74">}</span><span style="color:#e6db74">, Loss: </span><span style="color:#e6db74">{</span>loss<span style="color:#f92672">.</span>item()<span style="color:#e6db74">:</span><span style="color:#e6db74">.4f</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Plot results</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> torch<span style="color:#f92672">.</span>no_grad():
+</span></span><span style="display:flex;"><span>    predictions <span style="color:#f92672">=</span> model(X_tensor)<span style="color:#f92672">.</span>numpy()
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>scatter(X, y, label<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;True&#39;</span>)
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>scatter(X, predictions, label<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;Predicted&#39;</span>, color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;red&#39;</span>)
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>legend()
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>show()
+</span></span></code></pre></div>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/mixture-of-experts/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Mixture of Experts</span>
+  </a>
+  <a class="next" href="https://cohlem.github.io/sub-notes/interpretability/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Interpretability</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2025 <a href="https://cohlem.github.io">CohleM</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

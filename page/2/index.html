@@ -159,6 +159,19 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Post Training Strategies
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>After training, we generally perform alignment i.e teaching the model how to behave/act in desired manner. Post training mainly consists 1) Supervised Fine-tuning 2) RLHF
+the current consensus within the research community seems to be that the optimal approach to alignment is to i) perform SFT over a moderately-sized dataset of examples with very high quality and ii) invest remaining efforts into curating human preference data for fine-tuning via RLHF....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-02-06 00:00:00 +0000 UTC'>February 6, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Post Training Strategies" href="https://cohlem.github.io/sub-notes/post-training-strategies/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>Notes-while-building-lilLM
     </h2>
   </header>
@@ -209,19 +222,6 @@ LLaMA: Open and Efficient Foundation Language Models Trained on 1.4T tokens. Wik
   </div>
   <footer class="entry-footer"><span title='2025-01-21 00:00:00 +0000 UTC'>January 21, 2025</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Papers Summaries" href="https://cohlem.github.io/sub-notes/paper-summaries/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>KV cache and Grouped Query Attention
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>KV Cache KV cache visual operation In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.
-We don’t make use of KV cache while training because we already have data filled for each sequence length, we don’t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-18 00:00:00 +0000 UTC'>January 18, 2025</span>&nbsp;·&nbsp;11 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to KV cache and Grouped Query Attention" href="https://cohlem.github.io/sub-notes/kv-cache-gqa/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

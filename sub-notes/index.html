@@ -179,6 +179,20 @@ A routing layer is set to choose experts depending on how many experts are selec
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>LoRA
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>LoRA Main idea is to approximate the change in weights dW by the use of low-rank matrices
+Eg: Usually the weight update is done by adding the change in weights dW to the original weight matrix W. dW is obtained through backpropagation, ex if W is 512 x 512 the parameter size of dW is 262,144.
+In LoRA, we approximate that dW but by breaking down into two low rank matrices B @ A where B = matrix of size 512 x r and A = matrix of size r x 512,...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-04-07 00:00:00 +0000 UTC'>April 7, 2025</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to LoRA" href="https://cohlem.github.io/sub-notes/lora/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>Interpretability
     </h2>
   </header>
@@ -214,19 +228,6 @@ No state transition happen, generation of one state does not affect another. Swi
   </div>
   <footer class="entry-footer"><span title='2025-02-11 00:00:00 +0000 UTC'>February 11, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Flops calculation" href="https://cohlem.github.io/sub-notes/flops-calculation/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Post Training Strategies
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>After training, we generally perform alignment i.e teaching the model how to behave/act in desired manner. Post training mainly consists 1) Supervised Fine-tuning 2) RLHF
-the current consensus within the research community seems to be that the optimal approach to alignment is to i) perform SFT over a moderately-sized dataset of examples with very high quality and ii) invest remaining efforts into curating human preference data for fine-tuning via RLHF....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-02-06 00:00:00 +0000 UTC'>February 6, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Post Training Strategies" href="https://cohlem.github.io/sub-notes/post-training-strategies/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

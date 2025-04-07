@@ -164,6 +164,19 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>KV cache and Grouped Query Attention
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>KV Cache KV cache visual operation In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.
+We don’t make use of KV cache while training because we already have data filled for each sequence length, we don’t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-18 00:00:00 +0000 UTC'>January 18, 2025</span>&nbsp;·&nbsp;11 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to KV cache and Grouped Query Attention" href="https://cohlem.github.io/sub-notes/kv-cache-gqa/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>RMSNorm
     </h2>
   </header>
@@ -213,19 +226,6 @@ The way to do this in pytorch is to use DDP (take a look into their docs)...</p>
   </div>
   <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to DDP and gradient sync" href="https://cohlem.github.io/sub-notes/ddp/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Gradient Accumulation
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Gradient Accumulation When we want to train a neural network with some predefined set of tokens, but don’t have enough GPU resources, what do we do?
-Gradient Accumulation We simply accumulate the gradients. For instance, in order to reproduce GPT-2 124B, we need to train the model with 0.5 Million tokens in a single run with 1024 context length, we would need 0.5e6/ 1024 = 488 batches i.e B,T = (488,1024) to calculate the gradients and update them....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Gradient Accumulation" href="https://cohlem.github.io/sub-notes/gradient-accumulation/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
