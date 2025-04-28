@@ -34,9 +34,7 @@ A routing layer is set to choose experts depending on how many experts are selec
       <pubDate>Mon, 28 Apr 2025 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/sub-notes/multi-head-latent-attention/</guid>
-      <description>Scaled-dot product Attention Q1 Given the attention equation $$ \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(xWq)(xWk)^\top}{\sqrt{d_k}}\right)(xWv)W_O
-$$ Why don&amp;rsquo;t we train by combining $WqWk^\top$ and $WvWo$? because mathematically they seem equivalent $$ \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{x(WqWk^\top)x^\top}{\sqrt{d_k}}\right)x(WvW_O)
-$$ I initially thought if we could combine those weights, we don&amp;rsquo;t need to calculate $Q,K,V$ meaning there will be less number of matrix multiplication.
+      <description>Scaled-dot product Attention Q1 Given the attention equation $$ \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(xWq)(xWk)^\top}{\sqrt{d_k}}\right)(xWv)W_O $$ Why don&amp;rsquo;t we train by combining $WqWk^\top$ and $WvWo$? because mathematically they seem equivalent $$ \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{x(WqWk^\top)x^\top}{\sqrt{d_k}}\right)x(WvW_O) $$ I initially thought if we could combine those weights, we don&amp;rsquo;t need to calculate $Q,K,V$ meaning there will be less number of matrix multiplication.
 Answer We lose the objective of $Q,K,V,O$, they are meant to operate independently.</description>
     </item>
     
