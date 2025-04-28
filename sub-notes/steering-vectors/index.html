@@ -5,18 +5,21 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="index, follow">
-<title>Essential blogs | CohleM</title>
+<title>Steering Vectors | CohleM</title>
 <meta name="keywords" content="">
-<meta name="description" content="Training Neural Networks Karpathy&rsquo;s advice while training NN
-Deep Learning Concepts Contains simple explanation for DL concepts
-How to scale your LLM (Must read) https://jax-ml.github.io/scaling-book/
-The Ultra-Scale Playbook: Training LLMs on GPU Clusters https://huggingface.co/spaces/nanotron/ultrascale-playbook
-Good coding style https://medium.com/@NoamShazeer/shape-suffixes-good-coding-style-f836e72e24fd
-How to sample from LLM (top-k, top-p) https://huggingface.co/blog/how-to-generate
-KL Divergence https://www.youtube.com/watch?v=q0AkK8aYbLY
-The meaning of Loss functions https://jiha-kim.github.io/posts/the-mean-ing-of-loss-functions/">
+<meta name="description" content="LoReFT equation
+ΦLoReFT​(h)=h&#43;R⊤(Wh&#43;b−Rh)
+Analogy
+hh: The original photo (pixels, colors, brightness).
+RR: A filter that only adjusts &ldquo;warmth&rdquo; and &ldquo;contrast&rdquo; (ignores other settings).
+Wh&#43;bWh&#43;b: The ideal warmth/contrast (e.g., &ldquo;make it sunset-like&rdquo;).
+RhRh: Current warmth/contrast (e.g., too cold and flat).
+Difference: &ldquo;Increase warmth by &#43;20, contrast by &#43;15&rdquo;.
+R⊤R⊤: Applies those changes only to warmth/contrast (leaves sharpness unchanged).
+New hh: A warmer, more vibrant photo!
+Why it fits: LoReFT surgically edits specific features without altering the whole image.">
 <meta name="author" content="CohleM">
-<link rel="canonical" href="https://cohlem.github.io/notes/essential-blogs/">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/steering-vectors/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
 <script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
     onload="hljs.initHighlightingOnLoad();"></script>
@@ -74,30 +77,36 @@ if (!doNotTrack) {
 	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
 }
 </script>
-<meta property="og:title" content="Essential blogs" />
-<meta property="og:description" content="Training Neural Networks Karpathy&rsquo;s advice while training NN
-Deep Learning Concepts Contains simple explanation for DL concepts
-How to scale your LLM (Must read) https://jax-ml.github.io/scaling-book/
-The Ultra-Scale Playbook: Training LLMs on GPU Clusters https://huggingface.co/spaces/nanotron/ultrascale-playbook
-Good coding style https://medium.com/@NoamShazeer/shape-suffixes-good-coding-style-f836e72e24fd
-How to sample from LLM (top-k, top-p) https://huggingface.co/blog/how-to-generate
-KL Divergence https://www.youtube.com/watch?v=q0AkK8aYbLY
-The meaning of Loss functions https://jiha-kim.github.io/posts/the-mean-ing-of-loss-functions/" />
+<meta property="og:title" content="Steering Vectors" />
+<meta property="og:description" content="LoReFT equation
+ΦLoReFT​(h)=h&#43;R⊤(Wh&#43;b−Rh)
+Analogy
+hh: The original photo (pixels, colors, brightness).
+RR: A filter that only adjusts &ldquo;warmth&rdquo; and &ldquo;contrast&rdquo; (ignores other settings).
+Wh&#43;bWh&#43;b: The ideal warmth/contrast (e.g., &ldquo;make it sunset-like&rdquo;).
+RhRh: Current warmth/contrast (e.g., too cold and flat).
+Difference: &ldquo;Increase warmth by &#43;20, contrast by &#43;15&rdquo;.
+R⊤R⊤: Applies those changes only to warmth/contrast (leaves sharpness unchanged).
+New hh: A warmer, more vibrant photo!
+Why it fits: LoReFT surgically edits specific features without altering the whole image." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://cohlem.github.io/notes/essential-blogs/" /><meta property="article:section" content="notes" />
-<meta property="article:published_time" content="2025-01-03T00:00:00+00:00" />
-<meta property="article:modified_time" content="2025-01-03T00:00:00+00:00" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/steering-vectors/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2025-04-08T00:00:00+00:00" />
+<meta property="article:modified_time" content="2025-04-08T00:00:00+00:00" />
 
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Essential blogs"/>
-<meta name="twitter:description" content="Training Neural Networks Karpathy&rsquo;s advice while training NN
-Deep Learning Concepts Contains simple explanation for DL concepts
-How to scale your LLM (Must read) https://jax-ml.github.io/scaling-book/
-The Ultra-Scale Playbook: Training LLMs on GPU Clusters https://huggingface.co/spaces/nanotron/ultrascale-playbook
-Good coding style https://medium.com/@NoamShazeer/shape-suffixes-good-coding-style-f836e72e24fd
-How to sample from LLM (top-k, top-p) https://huggingface.co/blog/how-to-generate
-KL Divergence https://www.youtube.com/watch?v=q0AkK8aYbLY
-The meaning of Loss functions https://jiha-kim.github.io/posts/the-mean-ing-of-loss-functions/"/>
+<meta name="twitter:title" content="Steering Vectors"/>
+<meta name="twitter:description" content="LoReFT equation
+ΦLoReFT​(h)=h&#43;R⊤(Wh&#43;b−Rh)
+Analogy
+hh: The original photo (pixels, colors, brightness).
+RR: A filter that only adjusts &ldquo;warmth&rdquo; and &ldquo;contrast&rdquo; (ignores other settings).
+Wh&#43;bWh&#43;b: The ideal warmth/contrast (e.g., &ldquo;make it sunset-like&rdquo;).
+RhRh: Current warmth/contrast (e.g., too cold and flat).
+Difference: &ldquo;Increase warmth by &#43;20, contrast by &#43;15&rdquo;.
+R⊤R⊤: Applies those changes only to warmth/contrast (leaves sharpness unchanged).
+New hh: A warmer, more vibrant photo!
+Why it fits: LoReFT surgically edits specific features without altering the whole image."/>
 
 
 <script type="application/ld+json">
@@ -108,14 +117,14 @@ The meaning of Loss functions https://jiha-kim.github.io/posts/the-mean-ing-of-l
     {
       "@type": "ListItem",
       "position":  2 ,
-      "name": "Notes",
-      "item": "https://cohlem.github.io/notes/"
+      "name": "Sub-notes",
+      "item": "https://cohlem.github.io/sub-notes/"
     }, 
     {
       "@type": "ListItem",
       "position":  3 ,
-      "name": "Essential blogs",
-      "item": "https://cohlem.github.io/notes/essential-blogs/"
+      "name": "Steering Vectors",
+      "item": "https://cohlem.github.io/sub-notes/steering-vectors/"
     }
   ]
 }
@@ -124,24 +133,24 @@ The meaning of Loss functions https://jiha-kim.github.io/posts/the-mean-ing-of-l
 {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "Essential blogs",
-  "name": "Essential blogs",
-  "description": "Training Neural Networks Karpathy\u0026rsquo;s advice while training NN\nDeep Learning Concepts Contains simple explanation for DL concepts\nHow to scale your LLM (Must read) https://jax-ml.github.io/scaling-book/\nThe Ultra-Scale Playbook: Training LLMs on GPU Clusters https://huggingface.co/spaces/nanotron/ultrascale-playbook\nGood coding style https://medium.com/@NoamShazeer/shape-suffixes-good-coding-style-f836e72e24fd\nHow to sample from LLM (top-k, top-p) https://huggingface.co/blog/how-to-generate\nKL Divergence https://www.youtube.com/watch?v=q0AkK8aYbLY\nThe meaning of Loss functions https://jiha-kim.github.io/posts/the-mean-ing-of-loss-functions/",
+  "headline": "Steering Vectors",
+  "name": "Steering Vectors",
+  "description": "LoReFT equation\nΦLoReFT​(h)=h+R⊤(Wh+b−Rh)\nAnalogy\nhh: The original photo (pixels, colors, brightness).\nRR: A filter that only adjusts \u0026ldquo;warmth\u0026rdquo; and \u0026ldquo;contrast\u0026rdquo; (ignores other settings).\nWh+bWh+b: The ideal warmth/contrast (e.g., \u0026ldquo;make it sunset-like\u0026rdquo;).\nRhRh: Current warmth/contrast (e.g., too cold and flat).\nDifference: \u0026ldquo;Increase warmth by +20, contrast by +15\u0026rdquo;.\nR⊤R⊤: Applies those changes only to warmth/contrast (leaves sharpness unchanged).\nNew hh: A warmer, more vibrant photo!\nWhy it fits: LoReFT surgically edits specific features without altering the whole image.",
   "keywords": [
     
   ],
-  "articleBody": "Training Neural Networks Karpathy’s advice while training NN\nDeep Learning Concepts Contains simple explanation for DL concepts\nHow to scale your LLM (Must read) https://jax-ml.github.io/scaling-book/\nThe Ultra-Scale Playbook: Training LLMs on GPU Clusters https://huggingface.co/spaces/nanotron/ultrascale-playbook\nGood coding style https://medium.com/@NoamShazeer/shape-suffixes-good-coding-style-f836e72e24fd\nHow to sample from LLM (top-k, top-p) https://huggingface.co/blog/how-to-generate\nKL Divergence https://www.youtube.com/watch?v=q0AkK8aYbLY\nThe meaning of Loss functions https://jiha-kim.github.io/posts/the-mean-ing-of-loss-functions/\n",
-  "wordCount" : "55",
+  "articleBody": "LoReFT equation\nΦLoReFT​(h)=h+R⊤(Wh+b−Rh)\nAnalogy\nhh: The original photo (pixels, colors, brightness).\nRR: A filter that only adjusts “warmth” and “contrast” (ignores other settings).\nWh+bWh+b: The ideal warmth/contrast (e.g., “make it sunset-like”).\nRhRh: Current warmth/contrast (e.g., too cold and flat).\nDifference: “Increase warmth by +20, contrast by +15”.\nR⊤R⊤: Applies those changes only to warmth/contrast (leaves sharpness unchanged).\nNew hh: A warmer, more vibrant photo!\nWhy it fits: LoReFT surgically edits specific features without altering the whole image.\nPotential directions Steering for Robust Reasoning Chains using steering vectors to guide LLMs toward robust chain-of-thought reasoning, even when initial inputs are noisy or adversarially crafted or maybe.\nRobustness Diagnostics Using Steering Vectors Objective: Use steering vectors as tools to diagnose robustness issues in LLMs, identifying weaknesses in specific tasks or contexts.\nApproach: Design diagnostic steering vectors that amplify certain failure modes, enabling researchers to better understand and address vulnerabilities.\n",
+  "wordCount" : "147",
   "inLanguage": "en",
-  "datePublished": "2025-01-03T00:00:00Z",
-  "dateModified": "2025-01-03T00:00:00Z",
+  "datePublished": "2025-04-08T00:00:00Z",
+  "dateModified": "2025-04-08T00:00:00Z",
   "author":[{
     "@type": "Person",
     "name": "CohleM"
   }],
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "https://cohlem.github.io/notes/essential-blogs/"
+    "@id": "https://cohlem.github.io/sub-notes/steering-vectors/"
   },
   "publisher": {
     "@type": "Organization",
@@ -222,11 +231,11 @@ The meaning of Loss functions https://jiha-kim.github.io/posts/the-mean-ing-of-l
 
 <article class="post-single">
   <header class="post-header">
-    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/notes/">Notes</a></div>
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
     <h1 class="post-title">
-      Essential blogs
+      Steering Vectors
     </h1>
-    <div class="post-meta"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM
+    <div class="post-meta"><span title='2025-04-08 00:00:00 +0000 UTC'>April 8, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM
 
 </div>
   </header> <div class="toc">
@@ -237,43 +246,54 @@ The meaning of Loss functions https://jiha-kim.github.io/posts/the-mean-ing-of-l
 
         <div class="inner"><ul>
                 <li>
-                    <a href="#training-neural-networks" aria-label="Training Neural Networks">Training Neural Networks</a></li>
+                    <a href="#potential-directions" aria-label="Potential directions">Potential directions</a></li>
                 <li>
-                    <a href="#deep-learning-concepts" aria-label="Deep Learning Concepts">Deep Learning Concepts</a></li>
-                <li>
-                    <a href="#how-to-scale-your-llm-must-read" aria-label="How to scale your LLM (Must read)">How to scale your LLM (Must read)</a></li>
-                <li>
-                    <a href="#the-ultra-scale-playbook---training-llms-on-gpu-clusters" aria-label="The Ultra-Scale Playbook:   Training LLMs on GPU Clusters">The Ultra-Scale Playbook:   Training LLMs on GPU Clusters</a></li>
-                <li>
-                    <a href="#good-coding-style" aria-label="Good coding style">Good coding style</a></li>
-                <li>
-                    <a href="#how-to-sample-from-llm-top-k-top-p" aria-label="How to sample from LLM (top-k, top-p)">How to sample from LLM (top-k, top-p)</a></li>
-                <li>
-                    <a href="#kl-divergence" aria-label="KL Divergence">KL Divergence</a></li>
-                <li>
-                    <a href="#the-meaning-of-loss-functions" aria-label="The meaning of Loss functions">The meaning of Loss functions</a>
+                    <a href="#robustness-diagnostics-using-steering-vectors" aria-label="Robustness Diagnostics Using Steering Vectors"><strong>Robustness Diagnostics Using Steering Vectors</strong></a>
                 </li>
             </ul>
         </div>
     </details>
 </div>
 
-  <div class="post-content"><h3 id="training-neural-networks">Training Neural Networks<a hidden class="anchor" aria-hidden="true" href="#training-neural-networks">#</a></h3>
-<p><a href="https://karpathy.github.io/2019/04/25/recipe/?fbclid=IwY2xjawHkVv1leHRuA2FlbQIxMAABHTrGaXyAZjMFoWuV2t5BnkW7E5ocZAJMQTAJF1pwrQclF4qW_dOxfm2rng_aem_8-b-rlgNm3QvsgZt5k71Yw">Karpathy&rsquo;s advice while training NN</a></p>
-<h3 id="deep-learning-concepts">Deep Learning Concepts<a hidden class="anchor" aria-hidden="true" href="#deep-learning-concepts">#</a></h3>
-<p><a href="https://kikaben.com">Contains simple explanation for DL concepts</a></p>
-<h3 id="how-to-scale-your-llm-must-read">How to scale your LLM (Must read)<a hidden class="anchor" aria-hidden="true" href="#how-to-scale-your-llm-must-read">#</a></h3>
-<p><a href="https://jax-ml.github.io/scaling-book/">https://jax-ml.github.io/scaling-book/</a></p>
-<h3 id="the-ultra-scale-playbook---training-llms-on-gpu-clusters">The Ultra-Scale Playbook:   Training LLMs on GPU Clusters<a hidden class="anchor" aria-hidden="true" href="#the-ultra-scale-playbook---training-llms-on-gpu-clusters">#</a></h3>
-<p><a href="https://huggingface.co/spaces/nanotron/ultrascale-playbook">https://huggingface.co/spaces/nanotron/ultrascale-playbook</a></p>
-<h3 id="good-coding-style">Good coding style<a hidden class="anchor" aria-hidden="true" href="#good-coding-style">#</a></h3>
-<p><a href="https://medium.com/@NoamShazeer/shape-suffixes-good-coding-style-f836e72e24fd">https://medium.com/@NoamShazeer/shape-suffixes-good-coding-style-f836e72e24fd</a></p>
-<h3 id="how-to-sample-from-llm-top-k-top-p">How to sample from LLM (top-k, top-p)<a hidden class="anchor" aria-hidden="true" href="#how-to-sample-from-llm-top-k-top-p">#</a></h3>
-<p><a href="https://huggingface.co/blog/how-to-generate">https://huggingface.co/blog/how-to-generate</a></p>
-<h3 id="kl-divergence">KL Divergence<a hidden class="anchor" aria-hidden="true" href="#kl-divergence">#</a></h3>
-<p><a href="https://www.youtube.com/watch?v=q0AkK8aYbLY">https://www.youtube.com/watch?v=q0AkK8aYbLY</a></p>
-<h3 id="the-meaning-of-loss-functions">The meaning of Loss functions<a hidden class="anchor" aria-hidden="true" href="#the-meaning-of-loss-functions">#</a></h3>
-<p><a href="https://jiha-kim.github.io/posts/the-mean-ing-of-loss-functions/">https://jiha-kim.github.io/posts/the-mean-ing-of-loss-functions/</a></p>
+  <div class="post-content"><p>LoReFT equation</p>
+<p>ΦLoReFT​(h)=h+R⊤(Wh+b−Rh)</p>
+<p>Analogy</p>
+<ul>
+<li>
+<p><strong>hh</strong>: The original photo (pixels, colors, brightness).</p>
+</li>
+<li>
+<p><strong>RR</strong>: A filter that only adjusts &ldquo;warmth&rdquo; and &ldquo;contrast&rdquo; (ignores other settings).</p>
+</li>
+<li>
+<p><strong>Wh+bWh+b</strong>: The ideal warmth/contrast (e.g., &ldquo;make it sunset-like&rdquo;).</p>
+</li>
+<li>
+<p><strong>RhRh</strong>: Current warmth/contrast (e.g., too cold and flat).</p>
+</li>
+<li>
+<p><strong>Difference</strong>: &ldquo;Increase warmth by +20, contrast by +15&rdquo;.</p>
+</li>
+<li>
+<p><strong>R⊤R⊤</strong>: Applies those changes <em>only</em> to warmth/contrast (leaves sharpness unchanged).</p>
+</li>
+<li>
+<p><strong>New hh</strong>: A warmer, more vibrant photo!</p>
+</li>
+</ul>
+<p><strong>Why it fits</strong>: LoReFT surgically edits specific features without altering the whole image.</p>
+<h3 id="potential-directions">Potential directions<a hidden class="anchor" aria-hidden="true" href="#potential-directions">#</a></h3>
+<p><strong>Steering for Robust Reasoning Chains</strong>
+using steering vectors to guide LLMs toward robust chain-of-thought reasoning, even when initial inputs are noisy or adversarially crafted or maybe.</p>
+<h3 id="robustness-diagnostics-using-steering-vectors"><strong>Robustness Diagnostics Using Steering Vectors</strong><a hidden class="anchor" aria-hidden="true" href="#robustness-diagnostics-using-steering-vectors">#</a></h3>
+<ul>
+<li>
+<p><strong>Objective:</strong> Use steering vectors as tools to diagnose robustness issues in LLMs, identifying weaknesses in specific tasks or contexts.</p>
+</li>
+<li>
+<p><strong>Approach:</strong> Design diagnostic steering vectors that amplify certain failure modes, enabling researchers to better understand and address vulnerabilities.</p>
+</li>
+</ul>
 
 
   </div>
@@ -281,6 +301,18 @@ The meaning of Loss functions https://jiha-kim.github.io/posts/the-mean-ing-of-l
   <footer class="post-footer">
     <ul class="post-tags">
     </ul>
+<nav class="paginav">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/math-reasoning/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>math reasoning</span>
+  </a>
+  <a class="next" href="https://cohlem.github.io/sub-notes/lora/">
+    <span class="title">Next »</span>
+    <br>
+    <span>LoRA</span>
+  </a>
+</nav>
 
   </footer>
 </article>

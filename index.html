@@ -211,6 +211,56 @@ A routing layer is set to choose experts depending on how many experts are selec
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Multi-head latent attention
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Scaled-dot product Attention Q1 Given the attention equation $$ \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(xWq)(xWk)^\top}{\sqrt{d_k}}\right)(xWv)W_O
+$$ Why don’t we train by combining $WqWk^\top$ and $WvWo$? because mathematically they seem equivalent $$ \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{x(WqWk^\top)x^\top}{\sqrt{d_k}}\right)x(WvW_O)
+$$ I initially thought if we could combine those weights, we don’t need to calculate $Q,K,V$ meaning there will be less number of matrix multiplication.
+Answer We lose the objective of $Q,K,V,O$, they are meant to operate independently....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-04-28 00:00:00 +0000 UTC'>April 28, 2025</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Multi-head latent attention" href="https://cohlem.github.io/sub-notes/multi-head-latent-attention/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>math reasoning
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>behaviors:
+Error recognition and Correction Knowledge Tom plays 6 rounds of golf. He takes an average of 7 strokes per hole. The par value per hole is 5. How many strokes over par was he?&lt;｜Assistant｜&gt; Okay, so Tom is playing golf, and he’s done 6 rounds. Hmm, that’s a lot, but I guess that’s how it goes. Anyway, he takes an average of 7 strokes per hole. Wait, average strokes per hole?...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-04-22 00:00:00 +0000 UTC'>April 22, 2025</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to math reasoning" href="https://cohlem.github.io/sub-notes/math-reasoning/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>Steering Vectors
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>LoReFT equation
+ΦLoReFT​(h)=h&#43;R⊤(Wh&#43;b−Rh)
+Analogy
+hh: The original photo (pixels, colors, brightness).
+RR: A filter that only adjusts “warmth” and “contrast” (ignores other settings).
+Wh&#43;bWh&#43;b: The ideal warmth/contrast (e.g., “make it sunset-like”).
+RhRh: Current warmth/contrast (e.g., too cold and flat).
+Difference: “Increase warmth by &#43;20, contrast by &#43;15”.
+R⊤R⊤: Applies those changes only to warmth/contrast (leaves sharpness unchanged).
+New hh: A warmer, more vibrant photo!
+Why it fits: LoReFT surgically edits specific features without altering the whole image....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-04-08 00:00:00 +0000 UTC'>April 8, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Steering Vectors" href="https://cohlem.github.io/sub-notes/steering-vectors/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>LoRA
     </h2>
   </header>
@@ -221,45 +271,6 @@ In LoRA, we approximate that dW but by breaking down into two low rank matrices 
   </div>
   <footer class="entry-footer"><span title='2025-04-07 00:00:00 +0000 UTC'>April 7, 2025</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to LoRA" href="https://cohlem.github.io/sub-notes/lora/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Interpretability
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Induction circuits Induction behaviour The task of detecting and repeating subsequences in a text by finding some patterns.
-For example: If there exist a text containing name “James Bond” and later in the text when the model sees the word “James” it predicts/repeats the word “Bond” because it’s already seen the words “James Bond” and analyzes that “bond” should come after the word “James”. Also called “Strict Induction”
-Induction head A head which implements the induction behaviour....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-03-03 00:00:00 +0000 UTC'>March 3, 2025</span>&nbsp;·&nbsp;11 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Interpretability" href="https://cohlem.github.io/sub-notes/interpretability/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>RLHF
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> How’s RLHF different from RL setup
-No state transition happen, generation of one state does not affect another. Switching from a reward function to a reward model. reward model could be any classification model. </p>
-  </div>
-  <footer class="entry-footer"><span title='2025-02-24 00:00:00 +0000 UTC'>February 24, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to RLHF" href="https://cohlem.github.io/sub-notes/rlhf/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Flops calculation
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Calculation of FLOPs multiply accumulate cost: 2FLOPS i.e 1 for multiplication and 1 for accumulation (addition) if we multiply two matrices with sizes (a x b) and (b x c), the flops involved is b Multiply-add operation per the output size (a x c) i.e 2 x b x (a x c) Embedding lookup we initially have tokens with (seq_len,vocab_size) one-hot representation and embedding lookup matrix is (vocab_size, d_model), it will take...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-02-11 00:00:00 +0000 UTC'>February 11, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Flops calculation" href="https://cohlem.github.io/sub-notes/flops-calculation/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

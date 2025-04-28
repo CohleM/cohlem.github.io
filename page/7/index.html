@@ -159,77 +159,32 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2>RoPE
+    <h2>optimizing-loss-with-weight-initialization
     </h2>
   </header>
   <div class="entry-content">
-    <p>Recap of Absolute PE We previously used absolute positional embedding in our GPT-2 model.
-Disadvantages No notion of relative information between tokens doesn’t work for sequences larger than context length the model is trained with, because we run out of token embeddings for tokens that come at sequence larger than the context length. RoPE pre-requisites This is how we rotate a point by an angel theta in a two dimensional space and this is all we need in RoPE....</p>
+    <p>Problem Consider a simple MLP that takes in combined 3 character embeddings as an input and we predicts a new character.
+# A simple MLP n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 200 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) b1 = torch....</p>
   </div>
-  <footer class="entry-footer"><span title='2025-01-15 00:00:00 +0000 UTC'>January 15, 2025</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to RoPE" href="https://cohlem.github.io/sub-notes/rope/"></a>
+  <footer class="entry-footer">7 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to optimizing-loss-with-weight-initialization" href="https://cohlem.github.io/sub-notes/optimizing-loss/"></a>
 </article>
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2>GPUs
+    <h2>TITLE
     </h2>
   </header>
   <div class="entry-content">
-    <p>GPU physcial structure let’s first understand the structure of GPU.
-Inside a GPU it has a chip named GA102 (depends on architecture, this is for ampere architecture) built from 28.3million transistors (semiconductor device that can switch or amplify electrical signals) and majority area covered by processing cores. processing core is divide into seven Graphics processing clusters (GPCs)
-among each GPC there are 12 Streaming Multiprocessors. Inside each SM there are 4 warps and 1 Raytracing core inside a warp there are 32 Cudas and 1 Tensor Core....</p>
+    <p></p>
   </div>
-  <footer class="entry-footer"><span title='2025-01-08 00:00:00 +0000 UTC'>January 8, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to GPUs" href="https://cohlem.github.io/sub-notes/gpus/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>DDP and gradient sync
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>When we have enough resources we would want to train our neural networks in parallel, the way to do this is to train our NN with different data (different batches of data) in each GPU in parallel. For instance, if we have 8X A100 we run 8 different batches of data on each A100 GPU.
-The way to do this in pytorch is to use DDP (take a look into their docs)...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to DDP and gradient sync" href="https://cohlem.github.io/sub-notes/ddp/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Gradient Accumulation
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Gradient Accumulation When we want to train a neural network with some predefined set of tokens, but don’t have enough GPU resources, what do we do?
-Gradient Accumulation We simply accumulate the gradients. For instance, in order to reproduce GPT-2 124B, we need to train the model with 0.5 Million tokens in a single run with 1024 context length, we would need 0.5e6/ 1024 = 488 batches i.e B,T = (488,1024) to calculate the gradients and update them....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-03 00:00:00 +0000 UTC'>January 3, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Gradient Accumulation" href="https://cohlem.github.io/sub-notes/gradient-accumulation/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Training Speed Optimization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Precision The more the precision point the less operation (TFLOPS) is performed.
-FP64 used for scientific research purposes, where precision is a must. TF32 and BFLOAT16 are mostly used in NN training. INT8 is used for inference. Picture below shows specifications of A100 GPU.
-Using these precision points may have some difference in code. See pytorch’s docs
-torch.compile It works in a similar fashion like the GCC compiler. It works by reducing overheads introduced by the python interpreter and optimizing the GPU read and writes....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-02 00:00:00 +0000 UTC'>January 2, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Training Speed Optimization" href="https://cohlem.github.io/sub-notes/training-speed-optimization/"></a>
+  <footer class="entry-footer">0 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to TITLE" href="https://cohlem.github.io/sub-notes/template/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
-    <a class="prev" href="https://cohlem.github.io/page/3/">
+    <a class="prev" href="https://cohlem.github.io/page/6/">
       «&nbsp;Prev&nbsp;
-    </a>
-    <a class="next" href="https://cohlem.github.io/page/5/">Next&nbsp;&nbsp;»
     </a>
   </nav>
 </footer>

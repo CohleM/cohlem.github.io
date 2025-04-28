@@ -28,7 +28,8 @@ How to scale your LLM (Must read) https://jax-ml.github.io/scaling-book/
 The Ultra-Scale Playbook: Training LLMs on GPU Clusters https://huggingface.co/spaces/nanotron/ultrascale-playbook
 Good coding style https://medium.com/@NoamShazeer/shape-suffixes-good-coding-style-f836e72e24fd
 How to sample from LLM (top-k, top-p) https://huggingface.co/blog/how-to-generate
-KL Divergence https://www.youtube.com/watch?v=q0AkK8aYbLY</description>
+KL Divergence https://www.youtube.com/watch?v=q0AkK8aYbLY
+The meaning of Loss functions https://jiha-kim.github.io/posts/the-mean-ing-of-loss-functions/</description>
     </item>
     
   </channel>
