@@ -7,8 +7,8 @@
 <meta name="robots" content="index, follow">
 <title>RLHF | CohleM</title>
 <meta name="keywords" content="">
-<meta name="description" content=" How&rsquo;s RLHF different from RL setup
-No state transition happen, generation of one state does not affect another. Switching from a reward function to a reward model. reward model could be any classification model. ">
+<meta name="description" content="NOTE: This is a my own summary of Nathan Lambert&rsquo;s RLHF book
+General RL setting $$ J(\pi) = \mathbb{E}{\tau \sim \pi} \left[ \sum{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)} $$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$.">
 <meta name="author" content="CohleM">
 <link rel="canonical" href="https://cohlem.github.io/sub-notes/rlhf/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
@@ -88,8 +88,8 @@ if (!doNotTrack) {
 }
 </script>
 <meta property="og:title" content="RLHF" />
-<meta property="og:description" content=" How&rsquo;s RLHF different from RL setup
-No state transition happen, generation of one state does not affect another. Switching from a reward function to a reward model. reward model could be any classification model. " />
+<meta property="og:description" content="NOTE: This is a my own summary of Nathan Lambert&rsquo;s RLHF book
+General RL setting $$ J(\pi) = \mathbb{E}{\tau \sim \pi} \left[ \sum{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)} $$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://cohlem.github.io/sub-notes/rlhf/" /><meta property="article:section" content="sub-notes" />
 <meta property="article:published_time" content="2025-02-24T00:00:00+00:00" />
@@ -97,8 +97,8 @@ No state transition happen, generation of one state does not affect another. Swi
 
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="RLHF"/>
-<meta name="twitter:description" content=" How&rsquo;s RLHF different from RL setup
-No state transition happen, generation of one state does not affect another. Switching from a reward function to a reward model. reward model could be any classification model. "/>
+<meta name="twitter:description" content="NOTE: This is a my own summary of Nathan Lambert&rsquo;s RLHF book
+General RL setting $$ J(\pi) = \mathbb{E}{\tau \sim \pi} \left[ \sum{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)} $$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$."/>
 
 
 <script type="application/ld+json">
@@ -127,12 +127,12 @@ No state transition happen, generation of one state does not affect another. Swi
   "@type": "BlogPosting",
   "headline": "RLHF",
   "name": "RLHF",
-  "description": " How\u0026rsquo;s RLHF different from RL setup\nNo state transition happen, generation of one state does not affect another. Switching from a reward function to a reward model. reward model could be any classification model. ",
+  "description": "NOTE: This is a my own summary of Nathan Lambert\u0026rsquo;s RLHF book\nGeneral RL setting $$ J(\\pi) = \\mathbb{E}{\\tau \\sim \\pi} \\left[ \\sum{t=0}^{\\infty} \\gamma^t r(s_t, a_t) \\right],\\qquad{(1)} $$ In RL setting we aim to optimize the objective function $J(\\pi)$ by updating the policy $\\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\\pi(a|s)$. We find the expected(average) reward over all the trajectories $\\tau$.",
   "keywords": [
     
   ],
-  "articleBody": " How’s RLHF different from RL setup\nNo state transition happen, generation of one state does not affect another. Switching from a reward function to a reward model. reward model could be any classification model. ",
-  "wordCount" : "34",
+  "articleBody": "NOTE: This is a my own summary of Nathan Lambert’s RLHF book\nGeneral RL setting $$ J(\\pi) = \\mathbb{E}{\\tau \\sim \\pi} \\left[ \\sum{t=0}^{\\infty} \\gamma^t r(s_t, a_t) \\right],\\qquad{(1)} $$ In RL setting we aim to optimize the objective function $J(\\pi)$ by updating the policy $\\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\\pi(a|s)$. We find the expected(average) reward over all the trajectories $\\tau$. $\\gamma$ is the discount factor from 0 to 1 that balances the desirability of of near vs future-rewards.\nAn example: If our RL setup is confined to finding a maze, a reward function could be $r(s,a)=-\\text{distance to goal}$\nRLHF RLHF reduces the equation 1 by removing this discounted factor $$ J(\\pi) = \\mathbb{E}{\\tau \\sim \\pi} \\left[ \\sum{t=0}^{\\infty} r(s_t, a_t) \\right],\\qquad{(2)} $$ We aim to maximize our objective function by optimizing the policy. The reward function is designed such that the actions must align with the human preferences.\nThe most common reward model predicts the probability that a piece of text was close to a “preferred” piece of text from the training comparisons.\nReward Models Given two prompts $y1$ and $y2$ we want to have a reward model that gives high score to $y1$ and low score to $y2$ meaning $y1$ is always preferred over $y2$. Their relative preference is given by the Bradly Terry model.\n$$ P(i \u003e j) = \\frac{p_i}{p_i + p_j}\\qquad{(3)} $$ It gives the probability of i being preferred over j where $p_{i}$ and $p_{j}$ represent “strengths” for those prompts.\nWe want our model to maximize this probability because later $i$ would represent the text we want (aligned) and $j$ would represent the text we don’t want (not aligned). The training objective can be derived from the equation above. The “strengths” are exponential because we want them to be strictly positive.\n$$ P(y_1 \u003e y_2) = \\frac{\\exp(r(y_1))}{\\exp(r(y_1)) + \\exp(r(y_2))}\\qquad{(4)} $$\n$$ \\begin{aligned} \\theta^* = \\arg\\max_\\theta P(y_w \u003e y_l) \u0026= \\arg\\max_\\theta \\frac{\\exp(r_\\theta(y_w))}{\\exp(r_\\theta(y_w)) + \\exp(r_\\theta(y_l))} \\ \u0026= \\arg\\max_\\theta \\frac{\\exp(r_\\theta(y_w))}{\\exp(r_\\theta(y_w))\\left(1 + \\frac{\\exp(r_\\theta(y_l))}{\\exp(r_\\theta(y_w))}\\right)} \\ \u0026= \\arg\\max_\\theta \\frac{1}{1 + \\frac{\\exp(r_\\theta(y_l))}{\\exp(r_\\theta(y_w))}} \\ \u0026= \\arg\\max_\\theta \\frac{1}{1 + \\exp(-(r_\\theta(y_w) - r_\\theta(y_l)))} \\ \u0026= \\arg\\max_\\theta \\sigma \\left( r_\\theta(y_w) - r_\\theta(y_l) \\right) \\ \u0026= \\arg\\min_\\theta - \\log \\left( \\sigma \\left(r_\\theta(y_w) - r_\\theta(y_l)\\right) \\right) \\end{aligned} \\qquad{(5)} $$ The loss function becomes\n$$ \\mathcal{L}(\\theta) = - \\log \\left( \\sigma \\left( r_{\\theta}(x, y_w) - r_{\\theta}(x, y_l) \\right) \\right)\\qquad{(6)} $$ Our existing model can be configured to output just one value by adding a linear head to the model.\n——-Skipping other reward models for now——-\nRegularization We want aligned reward models but would still “not go off the rails” meaning it stays within the limitation of our reference model. It allows the policy being trained to stay close to the reference policy.\n$$ r = r_\\theta - \\lambda r_{\\text{reg.}} \\qquad{(1)} $$ $$ r = r_\\theta - \\lambda_{\\text{KL}} \\mathcal{D}_{\\text{KL}} \\left( \\pi^{\\text{RL}}(y \\mid x) , | , \\pi^{\\text{Ref.}}(y \\mid x) \\right) \\qquad{(2)} $$\nKL divergence is calculated as\n$$ D_{\\text{KL}}(P ,||, Q) = \\mathbb{E}_{x \\sim P} \\left[ \\log P(x) - \\log Q(x) \\right]. \\qquad{(3)} $$\nRejection Sampling This process is kind of a filtering process. We first sample outputs from our base language model that we’ll be training next. For example, we generate 5 example outputs for a sample prompt. We then provide a score to each of the generated examples using our reward function. We sort and only take the top-K elements per prompt and fine-tune our base model on these examples. So it’s kind of like a filtering and only keeping the highly rewarded examples.\nPolicy Gradients PPO PPO algorithm analogy Suppose we are taking an exam paper. Our objective is to maximize the change of getting good marks by updating our brain (weights and biases).\n$s_t$ is a question that we are looking at and trying to solve. $a_t$ is the our answer for that question. $r_t$ is the immediate reward we get after writing $a_t$, $s_{t+1}$ is the next-question.\n$R_t$ is the actual total exam score.\nSuppose there is an imaginary machine that gives us the expected exam score that we can get just by looking at our question which is $V(s)$.\n$A(s)$ is our advantage i.e how good we are compared to the predicted score.\n$A(s) = R_t - V(s)$\nthis can be modified as as $\\delta_t = R_t - V(s)$ and $A_t = \\delta_t + \\lambda\\cdot\\gamma\\cdot A_{t+1}$. This is just a modified version of advantage to remove the bias and variance.\nThis can be a little confusing as we might have no idea what our actual total score($R_t$) will be while we are still writing some questions $s$ so approximate this $R_t$ with the help of current reward $r$ and future reward that we might get from next question i.e $V(s+1)$ i.e\nthis becomes\n$\\delta_t = r_t + V(s+1) - V(s)$\nso this will still give us our advantage at a point t.\ni.e how good/bad we did at point t= immediate reward(marks) after writing answer to t + expected future reward from new question - expected future reward from previous question t.\nThis will give us our advantage.\nPPO is done using two phases.\nRollout phase Weight update phase. Rollout phase We write a lot of exam paper in this phase in parallel. for each exam paper and for each question in the exam paper we calculate $r_t$, $V(s_t)$ and $R_t$ $A_t$ and use it in our equation. $$ L^{PPO}(\\theta) = \\mathbb{E}_t \\left[ \\min \\left( r_t(\\theta) \\hat{A}_t, \\text{clip}\\left(r_t(\\theta), 1 - \\epsilon, 1 + \\epsilon\\right) \\hat{A}_t \\right)\nc_1 \\left( V_\\theta(s_t) - V_t^\\text{target} \\right)^2 c_2 \\mathcal{H}\\left\\pi_\\theta\\right \\right] $$ $$ [ r_t(\\theta) = \\frac{\\pi_\\theta(a_t | s_t)}{\\pi_{\\theta_\\text{old}}(a_t | s_t)} ] $$ Weight update phase We find this loss and try to maximize this clipped loss and entropy loss, but minimize the value function loss.\nThe PPO clipped surrogate objective is given as:\n$$ L^{\\text{CLIP}}(\\theta) = \\mathbb{E}_t \\Big[ \\min \\big( r_t(\\theta) \\hat{A}_t, ; \\mathrm{clip}(r_t(\\theta), 1-\\varepsilon, 1+\\varepsilon) \\hat{A}_t \\big) \\Big], $$\nThe gradient ascent update rule is:\n$$ \\theta \\gets \\theta + \\alpha \\nabla_\\theta L^{\\text{CLIP}}(\\theta). $$\nThe most important part to understand here is\n$r_t(\\theta) \\hat{A}_t$\nso when this term gets clipped to either $1 + \\varepsilon$ or $1-\\varepsilon$ the gradient of this loss $\\nabla_{\\theta}r_t(\\theta) \\hat{A}t$ is 0. So no update to the weights. But when this gradient is $\\nabla{\\theta}r_t(\\theta) \\hat{A}_t$ the update depends on whether $\\hat{A}_t$ is \u003e0 or \u003c0,\nIf $\\hat{A}t \u003e 0$, the gradient update will be in the direction that increases ${\\pi{\\theta}}$. If $\\hat{A}t \u003e 0$, the gradient update will be in the direction that decreases ${\\pi{\\theta}}$.\nReward Model In case of language models, we want a model to rate our answer i.e (give a score based on how good or bad it is), it is the most important part because it will guide our training, it is providing supervision for our PPO algorithm.\nSteps for training a reward model collect pairs of data, it could be either contrasting pairs or some pairs of prompt with priority. Eg. We want our llm to be trained (later using PPO) to be to generate positive response. In this case our priority prompt would be positive prompt and non-priority prompt would be negative prompt.\nWe take a language model and add a linear head to it. For instance, for each token a LM outputs 512 dimension vector we add a new head that takes in 512 dimension and outputs a one dimensional vector which gives us the reward.\nThe loss function for the reward model is constructed likewise.\n$$ L = -log(\\sigma(r1 - r2)) $$ where $r1$ is reward for priority prompt and $r2$ is reward for non-priority prompt. We want to maximize this difference $r1 - r2$ and minimize the this function. $\\sigma$ represents sigmoid function.\nNOTES we calculate the reward for the ending token which represents a reward given to the whole token. Integrating reward model to PPO As you might have noticed, the PPO loss comes from the token level, meaning we need loprobs, value, reward, return and advantage for each token. Buuuuut, this reward function we just trained is trained to output only one reward for last token so how does that work?\nAnswer: the reward is propagated.\nThe advantage is calculated reverse recursively i.e advantage at token n is also passed to the n-1 token. This means that we are looking ahead and telling our token n-1 that we already ended up a good state because of the state we are in. Lets look at this from the lens of advantage formula.\n$\\delta_t = R_t - V(s)$ and $A_t = \\delta_t + \\lambda\\cdot\\gamma\\cdot A_{t+1}$\nLets consider we are at 100th token which is the ending token of our sequence\n$$R_t = r_t + V_{t+1}(s) - V_t(s)$$ reward model assigns $r_{100}$ 100 and lets ignore both the value function assuming they cancel out as we are already at the end.\n$$ \\begin{gather} R_t= 100\\A_{100}=100, considering A_{101}=0 \\end{gather} $$ At 100th token we are at an advantage, now lets calculate $A_{99}$\n$$ A_{99} = \\delta_{99} + \\lambda\\cdot\\gamma\\cdot A_{100} $$ as you can see the reward 100 is propagated to the 99th token, considering $\\delta_{99}$ is positive here, it tells us that token 99 is still at an advantage because the we can already see the future here i.e 100th token which was at an advantage, so taking action 99 is still an advantage to us.\nReward Hacking our models can find a loophole to maximize their return by generating high reward tokens but no-so-good answer. Example: If we are trying to make our model positive, model may find a way to output tokens such as “thank you” and add it our answer, which will provide a high reward to it, but it is meaningless to us. So we don’t want our new (trained via PPO) model to deviate significantly from the model that we started from (SFT model), so we add KL divergence as a penalty to our each token’s reward.\nAs described earlier, reward is provided to only the ending token, and the reward for other token becomes this KL penalty.\ni.e if we have token_1, token_2, and token_3\nr(token_3) = some reward from the reward model r(token_2) = KL penalty i.e (logprobs_for_token_2_from_model_being_trained - logprobs_for_token_2_from_SFT_model)* -KL_penalty_coefficient. and so on…\n",
+  "wordCount" : "1700",
   "inLanguage": "en",
   "datePublished": "2025-02-24T00:00:00Z",
   "dateModified": "2025-02-24T00:00:00Z",
@@ -227,20 +227,234 @@ No state transition happen, generation of one state does not affect another. Swi
     <h1 class="post-title">
       RLHF
     </h1>
-    <div class="post-meta"><span title='2025-02-24 00:00:00 +0000 UTC'>February 24, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM
+    <div class="post-meta"><span title='2025-02-24 00:00:00 +0000 UTC'>February 24, 2025</span>&nbsp;·&nbsp;8 min&nbsp;·&nbsp;CohleM
 
 </div>
-  </header> 
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
 
-  <div class="post-content"><p><img loading="lazy" src="rl1.png" alt="rl1"  />
-</p>
-<p>How&rsquo;s RLHF different from RL setup</p>
+        <div class="inner"><ul><ul><ul>
+                <li>
+                    <a href="#general-rl-setting" aria-label="General RL setting">General RL setting</a></li>
+                <li>
+                    <a href="#rlhf" aria-label="RLHF">RLHF</a></li>
+                <li>
+                    <a href="#reward-models" aria-label="Reward Models">Reward Models</a></li>
+                <li>
+                    <a href="#regularization" aria-label="Regularization">Regularization</a></li>
+                <li>
+                    <a href="#rejection-sampling" aria-label="Rejection Sampling">Rejection Sampling</a></li>
+                <li>
+                    <a href="#policy-gradients" aria-label="Policy Gradients">Policy Gradients</a></li>
+                <li>
+                    <a href="#ppo" aria-label="PPO">PPO</a><ul>
+                        
+                <li>
+                    <a href="#ppo-algorithm-analogy" aria-label="PPO algorithm analogy">PPO algorithm analogy</a></li>
+                <li>
+                    <a href="#rollout-phase" aria-label="Rollout phase">Rollout phase</a></li>
+                <li>
+                    <a href="#weight-update-phase" aria-label="Weight update phase">Weight update phase</a></li></ul>
+                </li></ul>
+                    </ul>
+                    
+                <li>
+                    <a href="#reward-model" aria-label="Reward Model">Reward Model</a><ul>
+                        
+                <li>
+                    <a href="#steps-for-training-a-reward-model" aria-label="Steps for training a reward model">Steps for training a reward model</a><ul>
+                        
+                <li>
+                    <a href="#notes" aria-label="NOTES">NOTES</a></li>
+                <li>
+                    <a href="#integrating-reward-model-to-ppo" aria-label="Integrating reward model to PPO">Integrating reward model to PPO</a></li>
+                <li>
+                    <a href="#reward-hacking" aria-label="Reward Hacking">Reward Hacking</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p><em>NOTE: This is a my own summary of Nathan Lambert&rsquo;s RLHF <a href="https://rlhfbook.com/">book</a></em></p>
+<h3 id="general-rl-setting">General RL setting<a hidden class="anchor" aria-hidden="true" href="#general-rl-setting">#</a></h3>
+<p>$$
+J(\pi) =
+\mathbb{E}<em>{\tau \sim \pi} \left[ \sum</em>{t=0}^{\infty} \gamma^t r(s_t,
+a_t) \right],\qquad{(1)}
+$$
+In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$
+given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$. $\gamma$ is the discount factor from 0 to 1 that balances the desirability of of near vs future-rewards.</p>
+<p>An example: If our RL setup is confined to finding a maze, a reward function could be $r(s,a)=-\text{distance to goal}$</p>
+<h3 id="rlhf">RLHF<a hidden class="anchor" aria-hidden="true" href="#rlhf">#</a></h3>
+<p>RLHF reduces the equation 1 by removing this discounted factor
+$$
+J(\pi) =
+\mathbb{E}<em>{\tau \sim \pi} \left[ \sum</em>{t=0}^{\infty} r(s_t,
+a_t) \right],\qquad{(2)}
+$$
+We aim to maximize our objective function by optimizing the policy. The reward function is designed such that the actions must align with the human preferences.</p>
+<p>The most common reward model predicts the probability that a piece of text was close to a “preferred” piece of text from the training comparisons.</p>
+<h3 id="reward-models">Reward Models<a hidden class="anchor" aria-hidden="true" href="#reward-models">#</a></h3>
+<p>Given two prompts $y1$ and $y2$ we want to have a reward model that gives high score to $y1$ and low score to $y2$ meaning $y1$ is always preferred over $y2$. Their relative preference is given by the Bradly Terry model.</p>
+<p>$$
+P(i &gt; j) =
+\frac{p_i}{p_i + p_j}\qquad{(3)}
+$$
+It gives the probability of i being preferred over j where $p_{i}$ and $p_{j}$ represent &ldquo;strengths&rdquo; for those prompts.</p>
+<p>We want our model to maximize this probability because later $i$ would represent the text we want (aligned) and $j$ would represent the text we don&rsquo;t want (not aligned). The training objective can be derived from the equation above. The &ldquo;strengths&rdquo; are exponential because we want them to be strictly positive.</p>
+<p>$$
+P(y_1 &gt;
+y_2) = \frac{\exp(r(y_1))}{\exp(r(y_1)) +
+\exp(r(y_2))}\qquad{(4)}
+$$</p>
+<p>$$
+\begin{aligned}
+\theta^* = \arg\max_\theta P(y_w &gt; y_l) &amp;= \arg\max_\theta
+\frac{\exp(r_\theta(y_w))}{\exp(r_\theta(y_w)) + \exp(r_\theta(y_l))}
+\
+&amp;= \arg\max_\theta
+\frac{\exp(r_\theta(y_w))}{\exp(r_\theta(y_w))\left(1 +
+\frac{\exp(r_\theta(y_l))}{\exp(r_\theta(y_w))}\right)} \
+&amp;= \arg\max_\theta \frac{1}{1 +
+\frac{\exp(r_\theta(y_l))}{\exp(r_\theta(y_w))}} \
+&amp;= \arg\max_\theta \frac{1}{1 + \exp(-(r_\theta(y_w) -
+r_\theta(y_l)))} \
+&amp;= \arg\max_\theta \sigma \left( r_\theta(y_w) - r_\theta(y_l)
+\right) \
+&amp;= \arg\min_\theta - \log \left( \sigma \left(r_\theta(y_w) -
+r_\theta(y_l)\right) \right)
+\end{aligned}
+\qquad{(5)}
+$$
+The loss function becomes</p>
+<p>$$
+\mathcal{L}(\theta) = - \log \left( \sigma
+\left( r_{\theta}(x, y_w) - r_{\theta}(x, y_l) \right)
+\right)\qquad{(6)}
+$$
+Our existing model can be configured to output just one value by adding a linear head to the model.</p>
+<p>&mdash;&mdash;-<strong>Skipping other reward models for now</strong>&mdash;&mdash;-</p>
+<h3 id="regularization">Regularization<a hidden class="anchor" aria-hidden="true" href="#regularization">#</a></h3>
+<p>We want aligned reward models but would still &ldquo;not go off the rails&rdquo; meaning it stays within the limitation of our reference model. It allows the policy being trained to stay close to the reference policy.</p>
+<p>$$
+r = r_\theta -
+\lambda r_{\text{reg.}} \qquad{(1)}
+$$
+$$
+r = r_\theta - \lambda_{\text{KL}} \mathcal{D}_{\text{KL}} \left(
+\pi^{\text{RL}}(y \mid x) , | , \pi^{\text{Ref.}}(y \mid x) \right)
+\qquad{(2)}
+$$</p>
+<p>KL divergence is calculated as</p>
+<p>$$
+D_{\text{KL}}(P ,||, Q) = \mathbb{E}_{x \sim P} \left[ \log P(x) -
+\log Q(x) \right].
+\qquad{(3)}
+$$</p>
+<h3 id="rejection-sampling">Rejection Sampling<a hidden class="anchor" aria-hidden="true" href="#rejection-sampling">#</a></h3>
+<p>This process is kind of a filtering process. We first sample outputs from our base language model that we&rsquo;ll be training next. For example, we generate 5 example outputs for a sample prompt. We then provide a score to each of the generated examples using our reward function. We sort and only take the top-K elements per prompt and fine-tune our base model on these examples. So it&rsquo;s kind of like a filtering and only keeping the highly rewarded examples.</p>
+<h3 id="policy-gradients">Policy Gradients<a hidden class="anchor" aria-hidden="true" href="#policy-gradients">#</a></h3>
+<h3 id="ppo">PPO<a hidden class="anchor" aria-hidden="true" href="#ppo">#</a></h3>
+<h4 id="ppo-algorithm-analogy">PPO algorithm analogy<a hidden class="anchor" aria-hidden="true" href="#ppo-algorithm-analogy">#</a></h4>
+<p>Suppose we are taking an exam paper. Our objective is to maximize the change of getting good marks by updating our brain (weights and biases).</p>
+<p>$s_t$ is a question that we are looking at and trying to solve. $a_t$ is the our answer for that question. $r_t$ is the immediate reward we get after writing $a_t$, $s_{t+1}$ is the next-question.</p>
+<p>$R_t$ is the actual total exam score.</p>
+<p>Suppose there is an imaginary machine that gives us the expected exam score that we can get just by looking at our question which is $V(s)$.</p>
+<p>$A(s)$ is our advantage i.e how good we are compared to the predicted score.</p>
+<p>$A(s) = R_t - V(s)$</p>
+<p>this can be modified as  as $\delta_t = R_t - V(s)$ and $A_t = \delta_t + \lambda\cdot\gamma\cdot A_{t+1}$. This is just a modified version of advantage to remove the bias and variance.</p>
+<p>This can be a little confusing as we might have no idea what our actual total score($R_t$) will be while we are still writing some questions $s$ so approximate this $R_t$ with the help of current reward $r$ and future reward that we might get from next question i.e $V(s+1)$ i.e</p>
+<p>this becomes</p>
+<p>$\delta_t =  r_t + V(s+1) - V(s)$</p>
+<p>so this will still give us our advantage at a point t.</p>
+<p>i.e how good/bad we did at point t= immediate reward(marks) after writing answer to t + expected future reward from new question - expected future reward from previous question t.</p>
+<p>This will give us our advantage.</p>
+<p>PPO is done using two phases.</p>
+<ol>
+<li>Rollout phase</li>
+<li>Weight update phase.</li>
+</ol>
+<h4 id="rollout-phase">Rollout phase<a hidden class="anchor" aria-hidden="true" href="#rollout-phase">#</a></h4>
+<p>We write a lot of exam paper in this phase in parallel.
+for each exam paper and for each question in the exam paper we calculate $r_t$, $V(s_t)$ and $R_t$ $A_t$ and use it in our equation.
+$$
+L^{PPO}(\theta) = \mathbb{E}_t \left[
+\min \left( r_t(\theta) \hat{A}_t, \text{clip}\left(r_t(\theta), 1 - \epsilon, 1 + \epsilon\right) \hat{A}_t \right)</p>
 <ul>
-<li>No state transition happen, generation of one state does not affect another.</li>
-<li>Switching from a reward function to a reward model. reward model could be any classification model.</li>
+<li>c_1 \left( V_\theta(s_t) - V_t^\text{target} \right)^2</li>
 </ul>
-<p><img loading="lazy" src="rl2.png" alt="rl2"  />
-</p>
+<ul>
+<li>c_2 \mathcal{H}\left<a href="s_t">\pi_\theta\right</a>
+\right]
+$$
+$$
+[
+r_t(\theta) = \frac{\pi_\theta(a_t | s_t)}{\pi_{\theta_\text{old}}(a_t | s_t)}
+]
+$$</li>
+</ul>
+<h4 id="weight-update-phase">Weight update phase<a hidden class="anchor" aria-hidden="true" href="#weight-update-phase">#</a></h4>
+<p>We find this loss and try to maximize this clipped loss and entropy loss, but minimize the value function loss.</p>
+<p>The PPO clipped surrogate objective is given as:</p>
+<p>$$
+L^{\text{CLIP}}(\theta) = \mathbb{E}_t \Big[ \min \big( r_t(\theta) \hat{A}_t, ; \mathrm{clip}(r_t(\theta), 1-\varepsilon, 1+\varepsilon) \hat{A}_t \big) \Big],
+$$</p>
+<p>The gradient ascent update rule is:</p>
+<p>$$
+\theta \gets \theta + \alpha \nabla_\theta L^{\text{CLIP}}(\theta).
+$$</p>
+<p>The most important part to understand here is</p>
+<p>$r_t(\theta) \hat{A}_t$</p>
+<p>so when this term gets clipped to either $1 + \varepsilon$ or $1-\varepsilon$ the gradient of this loss $\nabla_{\theta}r_t(\theta) \hat{A}<em>t$ is 0. So no update to the weights. But when this gradient is $\nabla</em>{\theta}r_t(\theta) \hat{A}_t$ the update depends on whether $\hat{A}_t$ is &gt;0 or &lt;0,</p>
+<p>If $\hat{A}<em>t &gt; 0$, the gradient update will be in the direction that increases ${\pi</em>{\theta}}$.
+If $\hat{A}<em>t &gt; 0$, the gradient update will be in the direction that decreases ${\pi</em>{\theta}}$.</p>
+<h1 id="reward-model">Reward Model<a hidden class="anchor" aria-hidden="true" href="#reward-model">#</a></h1>
+<p>In case of language models, we want a model to rate our answer i.e (give a score based on how good or bad it is), it is the most important part because it will guide our training, it is providing supervision for our PPO algorithm.</p>
+<h2 id="steps-for-training-a-reward-model">Steps for training a reward model<a hidden class="anchor" aria-hidden="true" href="#steps-for-training-a-reward-model">#</a></h2>
+<p>collect pairs of data, it could be either contrasting pairs or some pairs of prompt with priority. Eg. We want our llm to be trained (later using PPO) to be to generate positive response. In this case our priority prompt would be positive prompt and non-priority prompt would be negative prompt.</p>
+<p>We take a language model and add a linear head to it. For instance, for each token a LM outputs 512 dimension vector we add a new head that takes in 512 dimension and outputs a one dimensional vector which gives us the reward.</p>
+<p>The loss function for the reward model is constructed likewise.</p>
+<p>$$
+L = -log(\sigma(r1 - r2))
+$$
+where $r1$ is reward for priority prompt and $r2$ is reward for non-priority prompt. We want to maximize this difference $r1 - r2$ and minimize the this function. $\sigma$ represents sigmoid function.</p>
+<h3 id="notes">NOTES<a hidden class="anchor" aria-hidden="true" href="#notes">#</a></h3>
+<ul>
+<li>we calculate the reward for the ending token which represents a reward given to the whole token.</li>
+</ul>
+<h3 id="integrating-reward-model-to-ppo">Integrating reward model to PPO<a hidden class="anchor" aria-hidden="true" href="#integrating-reward-model-to-ppo">#</a></h3>
+<p>As you might have noticed, the PPO loss comes from the token level, meaning we need loprobs, value, reward, return and advantage for each token. Buuuuut, this reward function we just trained is trained to output only one reward for last token so how does that work?</p>
+<p>Answer: the reward is propagated.</p>
+<p>The advantage is calculated reverse recursively i.e advantage at token n is also passed to the n-1 token. This means that we are looking ahead and telling our token n-1 that we already ended up a good state because of the state we are in. Lets look at this from the lens of advantage formula.</p>
+<p>$\delta_t = R_t - V(s)$ and  $A_t = \delta_t + \lambda\cdot\gamma\cdot A_{t+1}$</p>
+<p>Lets consider we are at 100th token which is the ending token of our sequence</p>
+<p>$$R_t = r_t + V_{t+1}(s) - V_t(s)$$
+reward model assigns $r_{100}$ 100 and lets ignore both the value function assuming they cancel out as we are already at the end.</p>
+<p>$$
+\begin{gather}
+R_t= 100\A_{100}=100, considering A_{101}=0
+\end{gather}
+$$
+At 100th token we are at an advantage, now lets calculate $A_{99}$</p>
+<p>$$
+A_{99} = \delta_{99} + \lambda\cdot\gamma\cdot A_{100}
+$$
+as you can see the reward 100 is propagated to the 99th token, considering $\delta_{99}$ is positive here, it tells us that token 99 is still at an advantage because the we can already see the future here i.e 100th token which was at an advantage, so taking action 99 is still an advantage to us.</p>
+<h3 id="reward-hacking">Reward Hacking<a hidden class="anchor" aria-hidden="true" href="#reward-hacking">#</a></h3>
+<p>our models can find a loophole to maximize their return by generating high reward tokens but no-so-good answer. Example: If we are trying to make our model positive, model may find a way to output tokens such as &ldquo;thank you&rdquo; and add it our answer, which will provide a high reward to it, but it is meaningless to us. So we don&rsquo;t want our new (trained via PPO) model to deviate significantly from the model that we started from (SFT model), so we add KL divergence as a penalty to our each token&rsquo;s reward.</p>
+<p>As described earlier, reward is provided to only the ending token, and the reward for other token becomes this KL penalty.</p>
+<p>i.e if we have token_1, token_2, and token_3</p>
+<p>r(token_3) = some reward from the reward model
+r(token_2) = KL penalty i.e (logprobs_for_token_2_from_model_being_trained - logprobs_for_token_2_from_SFT_model)* -KL_penalty_coefficient.
+and so on&hellip;</p>
 
 
   </div>

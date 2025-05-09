@@ -201,10 +201,10 @@ Induction head A head which implements the induction behaviour....</p>
     </h2>
   </header>
   <div class="entry-content">
-    <p> How’s RLHF different from RL setup
-No state transition happen, generation of one state does not affect another. Switching from a reward function to a reward model. reward model could be any classification model. </p>
+    <p>NOTE: This is a my own summary of Nathan Lambert’s RLHF book
+General RL setting $$ J(\pi) = \mathbb{E}{\tau \sim \pi} \left[ \sum{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)} $$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$....</p>
   </div>
-  <footer class="entry-footer"><span title='2025-02-24 00:00:00 +0000 UTC'>February 24, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
+  <footer class="entry-footer"><span title='2025-02-24 00:00:00 +0000 UTC'>February 24, 2025</span>&nbsp;·&nbsp;8 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to RLHF" href="https://cohlem.github.io/sub-notes/rlhf/"></a>
 </article>
 
