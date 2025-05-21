@@ -57,7 +57,7 @@ Induction head A head which implements the induction behaviour.</description>
       <pubDate>Mon, 24 Feb 2025 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/sub-notes/rlhf/</guid>
-      <description>Markov decision process General RL setting $$J(\pi) = \mathbb{E}{\tau \sim \pi} \left[ \sum{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)}$$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$. $\gamma$ is the discount factor from 0 to 1 that balances the desirability of of near vs future-rewards.</description>
+      <description>General RL setting $$ J(\pi) = \mathbb{E}_{\tau \sim \pi} \left[ \sum_{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)} $$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$. $\gamma$ is the discount factor from 0 to 1 that balances the desirability of of near vs future-rewards.</description>
     </item>
     
     <item>
