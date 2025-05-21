@@ -13,7 +13,7 @@
       <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
       
       <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
-      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization RMSNorm Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization SwiGLU activation- not mine, but offers best explanation Architecture Implementation GPT implementation MoE RoPE KV Cache and Grouped Query Attention LoRA Multi-head Latent Attention GPU Basic intro to GPU architecture </description>
+      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Goto video for intuitively understanding Entropy/Cross-Entropy/KL-divergence Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization RMSNorm Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization SwiGLU activation- not mine, but offers best explanation Architecture Implementation GPT implementation MoE RoPE KV Cache and Grouped Query Attention LoRA Multi-head Latent Attention GPU Basic intro to GPU architecture Interpretability Mechanistic Interpretability</description>
     </item>
     
     <item>
@@ -36,35 +36,6 @@ A routing layer is set to choose experts depending on how many experts are selec
       <guid>https://cohlem.github.io/sub-notes/multi-head-latent-attention/</guid>
       <description>Scaled-dot product Attention Q1 Given the attention equation $$ \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(xWq)(xWk)^\top}{\sqrt{d_k}}\right)(xWv)W_O $$ Why don&amp;rsquo;t we train by combining $WqWk^\top$ and $WvWo$? because mathematically they seem equivalent $$ \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{x(WqWk^\top)x^\top}{\sqrt{d_k}}\right)x(WvW_O) $$ I initially thought if we could combine those weights, we don&amp;rsquo;t need to calculate $Q,K,V$ meaning there will be less number of matrix multiplication.
 Answer We lose the objective of $Q,K,V,O$, they are meant to operate independently.</description>
-    </item>
-    
-    <item>
-      <title>math reasoning</title>
-      <link>https://cohlem.github.io/sub-notes/math-reasoning/</link>
-      <pubDate>Tue, 22 Apr 2025 00:00:00 +0000</pubDate>
-      
-      <guid>https://cohlem.github.io/sub-notes/math-reasoning/</guid>
-      <description>behaviors:
-Error recognition and Correction Knowledge Tom plays 6 rounds of golf. He takes an average of 7 strokes per hole. The par value per hole is 5. How many strokes over par was he?&amp;lt;｜Assistant｜&amp;gt; Okay, so Tom is playing golf, and he&amp;rsquo;s done 6 rounds. Hmm, that&amp;rsquo;s a lot, but I guess that&amp;rsquo;s how it goes. Anyway, he takes an average of 7 strokes per hole. Wait, average strokes per hole?</description>
-    </item>
-    
-    <item>
-      <title>Steering Vectors</title>
-      <link>https://cohlem.github.io/sub-notes/steering-vectors/</link>
-      <pubDate>Tue, 08 Apr 2025 00:00:00 +0000</pubDate>
-      
-      <guid>https://cohlem.github.io/sub-notes/steering-vectors/</guid>
-      <description>LoReFT equation
-ΦLoReFT​(h)=h+R⊤(Wh+b−Rh)
-Analogy
-hh: The original photo (pixels, colors, brightness).
-RR: A filter that only adjusts &amp;ldquo;warmth&amp;rdquo; and &amp;ldquo;contrast&amp;rdquo; (ignores other settings).
-Wh+bWh+b: The ideal warmth/contrast (e.g., &amp;ldquo;make it sunset-like&amp;rdquo;).
-RhRh: Current warmth/contrast (e.g., too cold and flat).
-Difference: &amp;ldquo;Increase warmth by +20, contrast by +15&amp;rdquo;.
-R⊤R⊤: Applies those changes only to warmth/contrast (leaves sharpness unchanged).
-New hh: A warmer, more vibrant photo!
-Why it fits: LoReFT surgically edits specific features without altering the whole image.</description>
     </item>
     
     <item>
@@ -95,8 +66,7 @@ Induction head A head which implements the induction behaviour.</description>
       <pubDate>Mon, 24 Feb 2025 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/sub-notes/rlhf/</guid>
-      <description>NOTE: This is a my own summary of Nathan Lambert&amp;rsquo;s RLHF book + other resources
-General RL setting $$J(\pi) = \mathbb{E}{\tau \sim \pi} \left[ \sum{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)}$$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$.</description>
+      <description>Markov decision process General RL setting $$J(\pi) = \mathbb{E}{\tau \sim \pi} \left[ \sum{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)}$$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$. $\gamma$ is the discount factor from 0 to 1 that balances the desirability of of near vs future-rewards.</description>
     </item>
     
     <item>
@@ -196,9 +166,7 @@ Disadvantages No notion of relative information between tokens doesn&amp;rsquo;t
       <pubDate>Mon, 13 Jan 2025 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/random/movies/</guid>
-      <description>Watch list Mirror (1975) The Magnificent Seven Bone Tomahawk
-The Ballad of Buster Scruggs Cowboys and Aliens
-Recently Watched (my rating /10) Gladiator 2 (6) Braveheart (7) Saltburn (3) Wind River (8.5) Hell or High Water (8) Blue Ruin (8) The Place Beyond the Pines (8.5) 3:10 to Yuma (9.5) Personal Favorites (unranked) Stalker (1979) Parasite Mother (dir. Bong Joon ho) Memories of murder Dune 1 and 2 Snowpiercer Gravity Arrival Incendis Prisoners 3:10 to Yuma &amp;hellip;.</description>
+      <description>Watch list Mirror (1975) Recently Watched (my rating /10) Gladiator 2 (6) Braveheart (7) Saltburn (3) Wind River (8.5) Hell or High Water (8) Blue Ruin (8) The Place Beyond the Pines (8.5) 3:10 to Yuma (9.5) The Magnificent Seven (7) Bone Tomahawk (8) Unforgiven (6) True Grit (7) Personal Favorites (unranked) Stalker (1979) Parasite Mother (dir. Bong Joon ho) Memories of murder Dune 1 and 2 Snowpiercer Gravity Arrival Incendis Prisoners 3:10 to Yuma Series (ranked) I don&amp;rsquo;t follow series a lot but these are some that I&amp;rsquo;ve enjoyed watching.</description>
     </item>
     
     <item>
@@ -356,32 +324,12 @@ So overall, the model tries to balance the Loss (L) as well as keep the weights 
     </item>
     
     <item>
-      <title>Backpropagation from scratch</title>
-      <link>https://cohlem.github.io/posts/backpropogation/</link>
-      <pubDate>Sat, 12 Aug 2023 21:57:23 +0545</pubDate>
-      
-      <guid>https://cohlem.github.io/posts/backpropogation/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>Using Genetic Algorithm for Weights Optimization</title>
-      <link>https://cohlem.github.io/posts/using-genetic-algorithm-for-weights-optimization/</link>
+      <link>https://cohlem.github.io/sub-notes/using-genetic-algorithm-for-weights-optimization/</link>
       <pubDate>Sat, 12 Aug 2023 21:57:23 +0545</pubDate>
       
-      <guid>https://cohlem.github.io/posts/using-genetic-algorithm-for-weights-optimization/</guid>
+      <guid>https://cohlem.github.io/sub-notes/using-genetic-algorithm-for-weights-optimization/</guid>
       <description>BackStory This is a simple fun little project that I did almost a year ago, At that time I used to see a lot of CodeBullet&amp;rsquo;s videos and wanted to learn the gist behind these evolutionary algorithms, and I can&amp;rsquo;t get into my head if I don&amp;rsquo;t do it from scratch so I wanted to implement this project from scratch. At that time, I wanted to document the learning and the implementation process, I even thought of making a youtube video about this topic but could not complete it, at that time, I had made some video animations about this process but could not complete it because I started doing something else and when I can back it was already too much mess and could not complete the video animations, but I&amp;rsquo;ll include the video animations that I had made earlier.</description>
-    </item>
-    
-    <item>
-      <title>Fine-tuning LLM vs In-context learning</title>
-      <link>https://cohlem.github.io/posts/llmvsincontext/</link>
-      <pubDate>Sat, 22 Jul 2023 20:40:19 +0545</pubDate>
-      
-      <guid>https://cohlem.github.io/posts/llmvsincontext/</guid>
-      <description>This is my experience and experimentation that I did while building a product for the use case of using LLMs for our own data for question answering. If you&amp;rsquo;re doing something similar, this could be of some help.
-The most commonly used methods while using LLMs with our own data were typically
-Fine-tuning the model with your own data Using Retrieval Augmented Generation (RAG) techniques Fine-tuning the model with your own data This is the initial method and follows the general structure of training a model</description>
     </item>
     
     <item>

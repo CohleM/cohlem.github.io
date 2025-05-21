@@ -183,33 +183,6 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2>Pytorch Commands I forget time to time/ commands that are essential
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>torch.stack(tensors, dim) stacks the tensors across dim
-#usage # data has to be tensor torch.stack([data[i:i&#43;some_number] for i in range(10)]) torch.from_numpy(numpy_array) shares the memory with the numpy_array but is tensor type
-a = np.array([1,2,3]) b = torch.tensor(a) # creates copy c = torch.from_numpy(a) # shares memory a[0] = 11 c # outputs: tensor([11, 2, 3]) torch.flatten(input, start,end=-1) flattens the input from dim start to end (-1 by default)
-t = torch.tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) torch....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-29 00:00:00 +0000 UTC'>January 29, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Pytorch Commands I forget time to time/ commands that are essential" href="https://cohlem.github.io/sub-notes/pytorch/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Tokenization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Unicode Character encoding standard aims to incorporate all the available digital characters Each character in Unicode has a unique 4 to 6-digit hexadecimal number. For Example, the letter ‘A’ has the code 0041, represented as U&#43;0041. compatible with ASCII first 128 characters in Unicode directly correspond to the characters represented in the 7-bit ASCII table Unicode Transformation Format (UTF-8) uses 1-4 bytes to represent each character can encode all the unicode code points backward compatible with ASCII Example: (1 byte) The character &#39;A&#39; (U&#43;0041) is encoded as `01000001` (0x41 in hexadecimal)....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-22 00:00:00 +0000 UTC'>January 22, 2025</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Tokenization" href="https://cohlem.github.io/sub-notes/tokenization/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
     <h2>Papers Summaries
     </h2>
   </header>
@@ -245,6 +218,33 @@ We needed to balance the distribution of inputs (internal covariance shift) i.e 
   </div>
   <footer class="entry-footer"><span title='2025-01-15 00:00:00 +0000 UTC'>January 15, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to RMSNorm" href="https://cohlem.github.io/sub-notes/rmsnorm/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>RoPE
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Recap of Absolute PE We previously used absolute positional embedding in our GPT-2 model.
+Disadvantages No notion of relative information between tokens doesn’t work for sequences larger than context length the model is trained with, because we run out of token embeddings for tokens that come at sequence larger than the context length. RoPE pre-requisites This is how we rotate a point by an angel theta in a two dimensional space and this is all we need in RoPE....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-15 00:00:00 +0000 UTC'>January 15, 2025</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to RoPE" href="https://cohlem.github.io/sub-notes/rope/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>GPUs
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>GPU physcial structure let’s first understand the structure of GPU.
+Inside a GPU it has a chip named GA102 (depends on architecture, this is for ampere architecture) built from 28.3million transistors (semiconductor device that can switch or amplify electrical signals) and majority area covered by processing cores. processing core is divide into seven Graphics processing clusters (GPCs)
+among each GPC there are 12 Streaming Multiprocessors. Inside each SM there are 4 warps and 1 Raytracing core inside a warp there are 32 Cudas and 1 Tensor Core....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-08 00:00:00 +0000 UTC'>January 8, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to GPUs" href="https://cohlem.github.io/sub-notes/gpus/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

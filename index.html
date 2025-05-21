@@ -243,41 +243,6 @@ Answer We lose the objective of $Q,K,V,O$, they are meant to operate independent
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2>math reasoning
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>behaviors:
-Error recognition and Correction Knowledge Tom plays 6 rounds of golf. He takes an average of 7 strokes per hole. The par value per hole is 5. How many strokes over par was he?&lt;｜Assistant｜&gt; Okay, so Tom is playing golf, and he’s done 6 rounds. Hmm, that’s a lot, but I guess that’s how it goes. Anyway, he takes an average of 7 strokes per hole. Wait, average strokes per hole?...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-04-22 00:00:00 +0000 UTC'>April 22, 2025</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to math reasoning" href="https://cohlem.github.io/sub-notes/math-reasoning/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Steering Vectors
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>LoReFT equation
-ΦLoReFT​(h)=h&#43;R⊤(Wh&#43;b−Rh)
-Analogy
-hh: The original photo (pixels, colors, brightness).
-RR: A filter that only adjusts “warmth” and “contrast” (ignores other settings).
-Wh&#43;bWh&#43;b: The ideal warmth/contrast (e.g., “make it sunset-like”).
-RhRh: Current warmth/contrast (e.g., too cold and flat).
-Difference: “Increase warmth by &#43;20, contrast by &#43;15”.
-R⊤R⊤: Applies those changes only to warmth/contrast (leaves sharpness unchanged).
-New hh: A warmer, more vibrant photo!
-Why it fits: LoReFT surgically edits specific features without altering the whole image....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-04-08 00:00:00 +0000 UTC'>April 8, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Steering Vectors" href="https://cohlem.github.io/sub-notes/steering-vectors/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
     <h2>LoRA
     </h2>
   </header>
@@ -288,6 +253,32 @@ In LoRA, we approximate that dW but by breaking down into two low rank matrices 
   </div>
   <footer class="entry-footer"><span title='2025-04-07 00:00:00 +0000 UTC'>April 7, 2025</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to LoRA" href="https://cohlem.github.io/sub-notes/lora/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>Interpretability
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Induction circuits Induction behaviour The task of detecting and repeating subsequences in a text by finding some patterns.
+For example: If there exist a text containing name “James Bond” and later in the text when the model sees the word “James” it predicts/repeats the word “Bond” because it’s already seen the words “James Bond” and analyzes that “bond” should come after the word “James”. Also called “Strict Induction”
+Induction head A head which implements the induction behaviour....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-03-03 00:00:00 +0000 UTC'>March 3, 2025</span>&nbsp;·&nbsp;11 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Interpretability" href="https://cohlem.github.io/sub-notes/interpretability/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>RLHF
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Markov decision process General RL setting $$J(\pi) = \mathbb{E}{\tau \sim \pi} \left[ \sum{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)}$$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$. $\gamma$ is the discount factor from 0 to 1 that balances the desirability of of near vs future-rewards....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-02-24 00:00:00 +0000 UTC'>February 24, 2025</span>&nbsp;·&nbsp;9 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to RLHF" href="https://cohlem.github.io/sub-notes/rlhf/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

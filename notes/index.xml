@@ -13,7 +13,7 @@
       <pubDate>Sun, 08 Dec 2024 21:57:23 +0545</pubDate>
       
       <guid>https://cohlem.github.io/notes/deep-learning-notes/</guid>
-      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization RMSNorm Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization SwiGLU activation- not mine, but offers best explanation Architecture Implementation GPT implementation MoE RoPE KV Cache and Grouped Query Attention LoRA Multi-head Latent Attention GPU Basic intro to GPU architecture </description>
+      <description>Backpropagation Backpropagation on scalars from scratch Manual Backpropagation on tensor Loss function Maximum likelihood estimate as loss function Why we add regularization to loss functioñ Goto video for intuitively understanding Entropy/Cross-Entropy/KL-divergence Optimization Optimization Algorithms (SGD with momentum, RMSProp, Adam) Optimizing loss with weight initialization BatchNormalization RMSNorm Diagnostic tool to look out for while training NN Skip Connections Training Misc Matrix Visualization SwiGLU activation- not mine, but offers best explanation Architecture Implementation GPT implementation MoE RoPE KV Cache and Grouped Query Attention LoRA Multi-head Latent Attention GPU Basic intro to GPU architecture Interpretability Mechanistic Interpretability</description>
     </item>
     
     <item>

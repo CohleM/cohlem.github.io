@@ -30,35 +30,6 @@ Answer We lose the objective of $Q,K,V,O$, they are meant to operate independent
     </item>
     
     <item>
-      <title>math reasoning</title>
-      <link>https://cohlem.github.io/sub-notes/math-reasoning/</link>
-      <pubDate>Tue, 22 Apr 2025 00:00:00 +0000</pubDate>
-      
-      <guid>https://cohlem.github.io/sub-notes/math-reasoning/</guid>
-      <description>behaviors:
-Error recognition and Correction Knowledge Tom plays 6 rounds of golf. He takes an average of 7 strokes per hole. The par value per hole is 5. How many strokes over par was he?&amp;lt;｜Assistant｜&amp;gt; Okay, so Tom is playing golf, and he&amp;rsquo;s done 6 rounds. Hmm, that&amp;rsquo;s a lot, but I guess that&amp;rsquo;s how it goes. Anyway, he takes an average of 7 strokes per hole. Wait, average strokes per hole?</description>
-    </item>
-    
-    <item>
-      <title>Steering Vectors</title>
-      <link>https://cohlem.github.io/sub-notes/steering-vectors/</link>
-      <pubDate>Tue, 08 Apr 2025 00:00:00 +0000</pubDate>
-      
-      <guid>https://cohlem.github.io/sub-notes/steering-vectors/</guid>
-      <description>LoReFT equation
-ΦLoReFT​(h)=h+R⊤(Wh+b−Rh)
-Analogy
-hh: The original photo (pixels, colors, brightness).
-RR: A filter that only adjusts &amp;ldquo;warmth&amp;rdquo; and &amp;ldquo;contrast&amp;rdquo; (ignores other settings).
-Wh+bWh+b: The ideal warmth/contrast (e.g., &amp;ldquo;make it sunset-like&amp;rdquo;).
-RhRh: Current warmth/contrast (e.g., too cold and flat).
-Difference: &amp;ldquo;Increase warmth by +20, contrast by +15&amp;rdquo;.
-R⊤R⊤: Applies those changes only to warmth/contrast (leaves sharpness unchanged).
-New hh: A warmer, more vibrant photo!
-Why it fits: LoReFT surgically edits specific features without altering the whole image.</description>
-    </item>
-    
-    <item>
       <title>LoRA</title>
       <link>https://cohlem.github.io/sub-notes/lora/</link>
       <pubDate>Mon, 07 Apr 2025 00:00:00 +0000</pubDate>
@@ -86,8 +57,7 @@ Induction head A head which implements the induction behaviour.</description>
       <pubDate>Mon, 24 Feb 2025 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/sub-notes/rlhf/</guid>
-      <description>NOTE: This is a my own summary of Nathan Lambert&amp;rsquo;s RLHF book + other resources
-General RL setting $$J(\pi) = \mathbb{E}{\tau \sim \pi} \left[ \sum{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)}$$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$.</description>
+      <description>Markov decision process General RL setting $$J(\pi) = \mathbb{E}{\tau \sim \pi} \left[ \sum{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)}$$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$. $\gamma$ is the discount factor from 0 to 1 that balances the desirability of of near vs future-rewards.</description>
     </item>
     
     <item>
@@ -317,6 +287,15 @@ a = Value(2.0, label=&amp;#39;a&amp;#39;) b = Value(-3.0, label=&amp;#39;b&amp;#
       <description>it penalizes the weights, and prioritizes uniformity in weights. How does it penalize the weights? Now when we do the backprop and gradient descent.
 The gradient of loss w.r.t some weights become as we can see it penalizes the weight by reducing the weights&amp;rsquo;s value by some higher amount compared to the some minimial weight update when we only used loss function.
 So overall, the model tries to balance the Loss (L) as well as keep the weights small.</description>
+    </item>
+    
+    <item>
+      <title>Using Genetic Algorithm for Weights Optimization</title>
+      <link>https://cohlem.github.io/sub-notes/using-genetic-algorithm-for-weights-optimization/</link>
+      <pubDate>Sat, 12 Aug 2023 21:57:23 +0545</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/using-genetic-algorithm-for-weights-optimization/</guid>
+      <description>BackStory This is a simple fun little project that I did almost a year ago, At that time I used to see a lot of CodeBullet&amp;rsquo;s videos and wanted to learn the gist behind these evolutionary algorithms, and I can&amp;rsquo;t get into my head if I don&amp;rsquo;t do it from scratch so I wanted to implement this project from scratch. At that time, I wanted to document the learning and the implementation process, I even thought of making a youtube video about this topic but could not complete it, at that time, I had made some video animations about this process but could not complete it because I started doing something else and when I can back it was already too much mess and could not complete the video animations, but I&amp;rsquo;ll include the video animations that I had made earlier.</description>
     </item>
     
     <item>

@@ -178,33 +178,6 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2>BatchNormalization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>As we saw in our previous note how important it is to have the pre-activation values to be roughly gaussian (0 mean, and unit std). We saw how we can initialize our weights that make our pre-activation roughly gaussian by using Kaiming init. But, how do we always maintain our pre-activations to be roughly gaussian?
-Answer: BatchNormalization
-Benefits
-stable training preserves vanishing gradients BatchNormalization As the name suggests, batches are normalized (across batches), by normalizing across batches we preserve the gaussian property of our pre-activations....</p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-19 00:00:00 +0000 UTC'>December 19, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to BatchNormalization" href="https://cohlem.github.io/sub-notes/batchnormalization/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Maximum likelihood estimate as loss function
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> </p>
-  </div>
-  <footer class="entry-footer"><span title='2024-12-16 00:00:00 +0000 UTC'>December 16, 2024</span>&nbsp;·&nbsp;0 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Maximum likelihood estimate as loss function" href="https://cohlem.github.io/sub-notes/maximum-likelihood-estimate-as-loss/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
     <h2>Backpropagation from scratch
     </h2>
   </header>
@@ -234,6 +207,18 @@ So overall, the model tries to balance the Loss (L) as well as keep the weights 
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Using Genetic Algorithm for Weights Optimization
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>BackStory This is a simple fun little project that I did almost a year ago, At that time I used to see a lot of CodeBullet’s videos and wanted to learn the gist behind these evolutionary algorithms, and I can’t get into my head if I don’t do it from scratch so I wanted to implement this project from scratch. At that time, I wanted to document the learning and the implementation process, I even thought of making a youtube video about this topic but could not complete it, at that time, I had made some video animations about this process but could not complete it because I started doing something else and when I can back it was already too much mess and could not complete the video animations, but I’ll include the video animations that I had made earlier....</p>
+  </div>
+  <footer class="entry-footer"><span title='2023-08-12 21:57:23 +0545 +0545'>August 12, 2023</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to Using Genetic Algorithm for Weights Optimization" href="https://cohlem.github.io/sub-notes/using-genetic-algorithm-for-weights-optimization/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>
     </h2>
   </header>
@@ -242,6 +227,19 @@ So overall, the model tries to balance the Loss (L) as well as keep the weights 
   </div>
   <footer class="entry-footer">40 min</footer>
   <a class="entry-link" aria-label="post link to " href="https://cohlem.github.io/sub-notes/gpt-implementation/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>optimizing-loss-with-weight-initialization
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Problem Consider a simple MLP that takes in combined 3 character embeddings as an input and we predicts a new character.
+# A simple MLP n_embd = 10 # the dimensionality of the character embedding vectors n_hidden = 200 # the number of neurons in the hidden layer of the MLP g = torch.Generator().manual_seed(2147483647) # for reproducibility C = torch.randn((vocab_size, n_embd), generator=g) W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) b1 = torch....</p>
+  </div>
+  <footer class="entry-footer">7 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to optimizing-loss-with-weight-initialization" href="https://cohlem.github.io/sub-notes/optimizing-loss/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
