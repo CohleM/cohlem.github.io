@@ -61,16 +61,18 @@ a = Value(2.0, label=&#39;a&#39;) b = Value(-3.0, label=&#39;b&#39;) c = Value(1
     </style>
 </noscript>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    renderMathInElement(document.body, {
-        delimiters: [
-            {left: "$$", right: "$$", display: true},
-            {left: "$", right: "$", display: false}
-        ]
-    });
-});
+<script type="text/javascript">
+  MathJax = {
+    tex: {
+      inlineMath: [["\\(", "\\)"], ["$", "$"]],
+      displayMath: [["\\[", "\\]"], ["$$", "$$"]]
+    },
+    options: {
+      skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"]
+    }
+  };
 </script>
+
 
 
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-X6LV4QY2G2"></script>
