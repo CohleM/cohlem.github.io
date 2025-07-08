@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>TITLE | CohleM</title>
+<meta name="keywords" content="">
+<meta name="description" content="Unpacking over indexing why?
+less noisy # do this a,b = somehting # over a = something[0] b = somehting[1] another example
+# don&#39;t do this snacks = [(&#39;bacon&#39;, 350), (&#39;donut&#39;, 240), (&#39;muffin&#39;, 190)] for i in range(len(snacks)): item = snacks[i] name = item[0] calories = item[1] print(f&#39;#{i&#43;1}: {name} has {calories} calories&#39;) # do this for rank, (name, calorie) in enumerate(snacks,1): print(rank, name, calorie) Unpacking can be applied to any iterables (dict, lists, tuples)">
+<meta name="author" content="CohleM">
+<link rel="canonical" href="https://cohlem.github.io/sub-notes/python/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.3613efbd0b1772781e8f49935e973cae632a7f61471c05b17be155505ccf87b5.css" integrity="sha256-NhPvvQsXcngej0mTXpc8rmMqf2FHHAWxe&#43;FVUFzPh7U=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.f413e19d0714851f6474e7ee9632408e58ac146fbdbe62747134bea2fa3415e0.js" integrity="sha256-9BPhnQcUhR9kdOfuljJAjlisFG&#43;9vmJ0cTS&#43;ovo0FeA="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://cohlem.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://cohlem.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://cohlem.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://cohlem.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://cohlem.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script type="text/javascript">
+  MathJax = {
+    tex: {
+      inlineMath: [["\\(", "\\)"], ["$", "$"]],
+      displayMath: [["\\[", "\\]"], ["$$", "$$"]]
+    },
+    options: {
+      skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"]
+    }
+  };
+</script>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X6LV4QY2G2"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-X6LV4QY2G2', { 'anonymize_ip': false });
+}
+</script>
+<meta property="og:title" content="TITLE" />
+<meta property="og:description" content="Unpacking over indexing why?
+less noisy # do this a,b = somehting # over a = something[0] b = somehting[1] another example
+# don&#39;t do this snacks = [(&#39;bacon&#39;, 350), (&#39;donut&#39;, 240), (&#39;muffin&#39;, 190)] for i in range(len(snacks)): item = snacks[i] name = item[0] calories = item[1] print(f&#39;#{i&#43;1}: {name} has {calories} calories&#39;) # do this for rank, (name, calorie) in enumerate(snacks,1): print(rank, name, calorie) Unpacking can be applied to any iterables (dict, lists, tuples)" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cohlem.github.io/sub-notes/python/" /><meta property="article:section" content="sub-notes" />
+<meta property="article:published_time" content="2025-06-09T00:00:00+00:00" />
+<meta property="article:modified_time" content="2025-06-09T00:00:00+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="TITLE"/>
+<meta name="twitter:description" content="Unpacking over indexing why?
+less noisy # do this a,b = somehting # over a = something[0] b = somehting[1] another example
+# don&#39;t do this snacks = [(&#39;bacon&#39;, 350), (&#39;donut&#39;, 240), (&#39;muffin&#39;, 190)] for i in range(len(snacks)): item = snacks[i] name = item[0] calories = item[1] print(f&#39;#{i&#43;1}: {name} has {calories} calories&#39;) # do this for rank, (name, calorie) in enumerate(snacks,1): print(rank, name, calorie) Unpacking can be applied to any iterables (dict, lists, tuples)"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Sub-notes",
+      "item": "https://cohlem.github.io/sub-notes/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "TITLE",
+      "item": "https://cohlem.github.io/sub-notes/python/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "TITLE",
+  "name": "TITLE",
+  "description": "Unpacking over indexing why?\nless noisy # do this a,b = somehting # over a = something[0] b = somehting[1] another example\n# don\u0026#39;t do this snacks = [(\u0026#39;bacon\u0026#39;, 350), (\u0026#39;donut\u0026#39;, 240), (\u0026#39;muffin\u0026#39;, 190)] for i in range(len(snacks)): item = snacks[i] name = item[0] calories = item[1] print(f\u0026#39;#{i+1}: {name} has {calories} calories\u0026#39;) # do this for rank, (name, calorie) in enumerate(snacks,1): print(rank, name, calorie) Unpacking can be applied to any iterables (dict, lists, tuples)",
+  "keywords": [
+    
+  ],
+  "articleBody": "Unpacking over indexing why?\nless noisy # do this a,b = somehting # over a = something[0] b = somehting[1] another example\n# don't do this snacks = [('bacon', 350), ('donut', 240), ('muffin', 190)] for i in range(len(snacks)): item = snacks[i] name = item[0] calories = item[1] print(f'#{i+1}: {name} has {calories} calories') # do this for rank, (name, calorie) in enumerate(snacks,1): print(rank, name, calorie) Unpacking can be applied to any iterables (dict, lists, tuples)\nSlicing slicing creates a reference to original list, but changing sliced object won’t reflect in original list\na = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] b = a[:3] b[0]= 10 print(b) # [10, 'b', 'c'] print(a) # ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] Striding Avoid using striding (step) i.e start:stop:step altogether, mostly avoid them while using negative strides.\na[::-1] # outputs ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a'] a[-2::-2] # ['g', 'e', 'c', 'a'] # its confusing, so avoid it Starred Expression car_ages = [0, 9, 4, 8, 7, 20, 19, 1, 6, 15] car_ages_descending = sorted(car_ages, reverse=True) oldest, second_oldest = car_ages_descending # Instead of doing this oldest = car_ages_descending[0] second_oldest = car_ages_descending[1] others = car_ages_descending[2:] print(oldest, second_oldest, others) # Do this oldest, second_oldest, *others = car_ages_descending print(oldest, second_oldest, others) But it can only be used once in an expression, but it should alway pair with at least one normal unpacking. i.e only doing * others = car_ages_descending will not work.\nSorting .sort() can be called on to any built-in types that has ordering, i.e int, float, str. Defaults to sorting in ascending order, use reverse=True for descending.\nnumbers = [93, 86, 11, 68, 70] numbers.sort() print(numbers) # [11, 68, 70, 86, 93] class Tool: def __init__(self, name, weight): self.name = name self.weight = weight def __repr__(self): return f'Tool({self.name!r}, {self.weight})' tools = [ Tool('level', 3.5), Tool('hammer', 1.25), Tool('screwdriver', 0.5), Tool('chisel', 0.25), ] #simply calling tools.sort() will result in error, cause Tool class doesn't implement comparision operator by default. # sort it using key parameter. # keys expects a function, and the should return by which we want our list to be ordered i.e by name tools.sort(key = lambda x: x.name) Tuples have built in order defined in them, i.e\n(4, 'drill') \u003c (4, 'sander') in this case, 4 is compared with 4, and since its true ‘drill’ is compared with ‘sander’, we can take advantage of this tuple within our key function to defined the order i.e\ntools.sort(key = lambda x: (x.weight, x.name)) In this case, it sort by ascending order, but first weight is compared AND if any two items have the same weight their name attribute is compared i.e drill and sander have same weights, so d \u003c s\n#output [Tool('drill', 4), Tool('sander', 4), Tool('circular saw', 5), Tool('jackhammer', 40)] ",
+  "wordCount" : "460",
+  "inLanguage": "en",
+  "datePublished": "2025-06-09T00:00:00Z",
+  "dateModified": "2025-06-09T00:00:00Z",
+  "author":[{
+    "@type": "Person",
+    "name": "CohleM"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://cohlem.github.io/sub-notes/python/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CohleM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cohlem.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://cohlem.github.io" accesskey="h" title="CohleM (Alt + H)">CohleM</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://cohlem.github.io/archives/" title="Archive">
+                    <span>Archive</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/notes/" title="Notes">
+                    <span>Notes</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/random/" title="Random">
+                    <span>Random</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://cohlem.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://cohlem.github.io">Home</a>&nbsp;»&nbsp;<a href="https://cohlem.github.io/sub-notes/">Sub-notes</a></div>
+    <h1 class="post-title">
+      TITLE
+    </h1>
+    <div class="post-meta"><span title='2025-06-09 00:00:00 +0000 UTC'>June 9, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;CohleM
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#unpacking-over-indexing" aria-label="Unpacking over indexing">Unpacking over indexing</a></li>
+                <li>
+                    <a href="#slicing" aria-label="Slicing">Slicing</a></li>
+                <li>
+                    <a href="#striding" aria-label="Striding">Striding</a></li>
+                <li>
+                    <a href="#starred-expression" aria-label="Starred Expression">Starred Expression</a></li>
+                <li>
+                    <a href="#sorting" aria-label="Sorting">Sorting</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h3 id="unpacking-over-indexing">Unpacking over indexing<a hidden class="anchor" aria-hidden="true" href="#unpacking-over-indexing">#</a></h3>
+<p>why?</p>
+<ul>
+<li>less noisy</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># do this </span>
+</span></span><span style="display:flex;"><span>a,b <span style="color:#f92672">=</span> somehting
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># over </span>
+</span></span><span style="display:flex;"><span>a <span style="color:#f92672">=</span> something[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>b <span style="color:#f92672">=</span> somehting[<span style="color:#ae81ff">1</span>]
+</span></span></code></pre></div><p>another example</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># don&#39;t do this</span>
+</span></span><span style="display:flex;"><span>snacks <span style="color:#f92672">=</span> [(<span style="color:#e6db74">&#39;bacon&#39;</span>, <span style="color:#ae81ff">350</span>), (<span style="color:#e6db74">&#39;donut&#39;</span>, <span style="color:#ae81ff">240</span>), (<span style="color:#e6db74">&#39;muffin&#39;</span>, <span style="color:#ae81ff">190</span>)]
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(snacks)):
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    item <span style="color:#f92672">=</span> snacks[i]
+</span></span><span style="display:flex;"><span>    name <span style="color:#f92672">=</span> item[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>    calories <span style="color:#f92672">=</span> item[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;#</span><span style="color:#e6db74">{</span>i<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span><span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74"> has </span><span style="color:#e6db74">{</span>calories<span style="color:#e6db74">}</span><span style="color:#e6db74"> calories&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># do this</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> rank, (name, calorie) <span style="color:#f92672">in</span> enumerate(snacks,<span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>	print(rank, name, calorie)
+</span></span></code></pre></div><p>Unpacking can be applied to any iterables (dict, lists, tuples)</p>
+<h3 id="slicing">Slicing<a hidden class="anchor" aria-hidden="true" href="#slicing">#</a></h3>
+<p>slicing creates a reference to original list, but changing sliced object won&rsquo;t reflect in original list</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>a <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;a&#39;</span>, <span style="color:#e6db74">&#39;b&#39;</span>, <span style="color:#e6db74">&#39;c&#39;</span>, <span style="color:#e6db74">&#39;d&#39;</span>, <span style="color:#e6db74">&#39;e&#39;</span>, <span style="color:#e6db74">&#39;f&#39;</span>, <span style="color:#e6db74">&#39;g&#39;</span>, <span style="color:#e6db74">&#39;h&#39;</span>]
+</span></span><span style="display:flex;"><span>b <span style="color:#f92672">=</span> a[:<span style="color:#ae81ff">3</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>b[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>print(b) <span style="color:#75715e"># [10, &#39;b&#39;, &#39;c&#39;]</span>
+</span></span><span style="display:flex;"><span>print(a) <span style="color:#75715e"># [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;, &#39;e&#39;, &#39;f&#39;, &#39;g&#39;, &#39;h&#39;]</span>
+</span></span></code></pre></div><h3 id="striding">Striding<a hidden class="anchor" aria-hidden="true" href="#striding">#</a></h3>
+<p>Avoid using striding (step) i.e start:stop:step altogether, mostly avoid them while using negative strides.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>a[::<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>] <span style="color:#75715e"># outputs [&#39;h&#39;, &#39;g&#39;, &#39;f&#39;, &#39;e&#39;, &#39;d&#39;, &#39;c&#39;, &#39;b&#39;, &#39;a&#39;]</span>
+</span></span><span style="display:flex;"><span>a[<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>::<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>] <span style="color:#75715e"># [&#39;g&#39;, &#39;e&#39;, &#39;c&#39;, &#39;a&#39;] # its confusing, so avoid it</span>
+</span></span></code></pre></div><h3 id="starred-expression">Starred Expression<a hidden class="anchor" aria-hidden="true" href="#starred-expression">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>car_ages <span style="color:#f92672">=</span> [<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">9</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">7</span>, <span style="color:#ae81ff">20</span>, <span style="color:#ae81ff">19</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">15</span>]
+</span></span><span style="display:flex;"><span>car_ages_descending <span style="color:#f92672">=</span> sorted(car_ages, reverse<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>oldest, second_oldest <span style="color:#f92672">=</span> car_ages_descending
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Instead of doing this </span>
+</span></span><span style="display:flex;"><span>oldest <span style="color:#f92672">=</span> car_ages_descending[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>second_oldest <span style="color:#f92672">=</span> car_ages_descending[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>others <span style="color:#f92672">=</span> car_ages_descending[<span style="color:#ae81ff">2</span>:]
+</span></span><span style="display:flex;"><span>print(oldest, second_oldest, others)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Do this </span>
+</span></span><span style="display:flex;"><span>oldest, second_oldest, <span style="color:#f92672">*</span>others <span style="color:#f92672">=</span> car_ages_descending
+</span></span><span style="display:flex;"><span>print(oldest, second_oldest, others)
+</span></span></code></pre></div><p>But it can only be used once in an expression, but it should alway pair with at least one normal unpacking. i.e only doing * others = car_ages_descending will not work.</p>
+<h3 id="sorting">Sorting<a hidden class="anchor" aria-hidden="true" href="#sorting">#</a></h3>
+<p>.sort() can be called on to any built-in types that has ordering, i.e int, float, str. Defaults to sorting in ascending order, use reverse=True for descending.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>numbers <span style="color:#f92672">=</span> [<span style="color:#ae81ff">93</span>, <span style="color:#ae81ff">86</span>, <span style="color:#ae81ff">11</span>, <span style="color:#ae81ff">68</span>, <span style="color:#ae81ff">70</span>]
+</span></span><span style="display:flex;"><span>numbers<span style="color:#f92672">.</span>sort()
+</span></span><span style="display:flex;"><span>print(numbers) <span style="color:#75715e"># [11, 68, 70, 86, 93]</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Tool</span>:
+</span></span><span style="display:flex;"><span>     <span style="color:#66d9ef">def</span> __init__(self, name, weight):
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>         self<span style="color:#f92672">.</span>name <span style="color:#f92672">=</span> name
+</span></span><span style="display:flex;"><span>         self<span style="color:#f92672">.</span>weight <span style="color:#f92672">=</span> weight
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>     <span style="color:#66d9ef">def</span> __repr__(self):
+</span></span><span style="display:flex;"><span>         <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;Tool(</span><span style="color:#e6db74">{</span>self<span style="color:#f92672">.</span>name<span style="color:#e6db74">!r}</span><span style="color:#e6db74">, </span><span style="color:#e6db74">{</span>self<span style="color:#f92672">.</span>weight<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#39;</span>
+</span></span><span style="display:flex;"><span>tools <span style="color:#f92672">=</span> [
+</span></span><span style="display:flex;"><span>    Tool(<span style="color:#e6db74">&#39;level&#39;</span>, <span style="color:#ae81ff">3.5</span>),
+</span></span><span style="display:flex;"><span>    Tool(<span style="color:#e6db74">&#39;hammer&#39;</span>, <span style="color:#ae81ff">1.25</span>),
+</span></span><span style="display:flex;"><span>    Tool(<span style="color:#e6db74">&#39;screwdriver&#39;</span>, <span style="color:#ae81ff">0.5</span>),
+</span></span><span style="display:flex;"><span>    Tool(<span style="color:#e6db74">&#39;chisel&#39;</span>, <span style="color:#ae81ff">0.25</span>),
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#simply calling tools.sort() will result in error, cause Tool class doesn&#39;t implement comparision operator by default.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sort it using key parameter.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># keys expects a function, and the should return by which we want our list to be ordered i.e by name</span>
+</span></span><span style="display:flex;"><span>tools<span style="color:#f92672">.</span>sort(key <span style="color:#f92672">=</span> <span style="color:#66d9ef">lambda</span> x: x<span style="color:#f92672">.</span>name)
+</span></span></code></pre></div><p>Tuples have built in order defined in them, i.e</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>(<span style="color:#ae81ff">4</span>, <span style="color:#e6db74">&#39;drill&#39;</span>) <span style="color:#f92672">&lt;</span> (<span style="color:#ae81ff">4</span>, <span style="color:#e6db74">&#39;sander&#39;</span>)
+</span></span></code></pre></div><p>in this case, 4 is compared with 4, and since its true &lsquo;drill&rsquo; is compared with &lsquo;sander&rsquo;, we can take advantage of this tuple within our key function to defined the order i.e</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>tools<span style="color:#f92672">.</span>sort(key <span style="color:#f92672">=</span> <span style="color:#66d9ef">lambda</span> x: (x<span style="color:#f92672">.</span>weight, x<span style="color:#f92672">.</span>name))
+</span></span></code></pre></div><p>In this case, it sort by ascending order, but first weight is compared AND if any two items have the same weight their name attribute is compared i.e drill and sander have same weights, so d &lt; s</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#output</span>
+</span></span><span style="display:flex;"><span>[Tool(<span style="color:#e6db74">&#39;drill&#39;</span>,        <span style="color:#ae81ff">4</span>),
+</span></span><span style="display:flex;"><span> Tool(<span style="color:#e6db74">&#39;sander&#39;</span>,       <span style="color:#ae81ff">4</span>),
+</span></span><span style="display:flex;"><span> Tool(<span style="color:#e6db74">&#39;circular saw&#39;</span>, <span style="color:#ae81ff">5</span>),
+</span></span><span style="display:flex;"><span> Tool(<span style="color:#e6db74">&#39;jackhammer&#39;</span>,   <span style="color:#ae81ff">40</span>)]
+</span></span></code></pre></div>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://cohlem.github.io/sub-notes/mixture-of-experts/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Mixture of Experts</span>
+  </a>
+  <a class="next" href="https://cohlem.github.io/sub-notes/multi-head-latent-attention/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Multi-head latent attention</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2025 <a href="https://cohlem.github.io">CohleM</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

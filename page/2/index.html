@@ -174,6 +174,19 @@ if (!doNotTrack) {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>RLHF
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Before starting, it’s advisable to first complete David Silver’s Course on RL and read Lilian’s notes on RL which explains/provides notes on the David’s course in sequential manner.
+In simple problems, we simply start with an arbitrary value function, and then go on updating that value function incrementally, using different algorithms such as Monte Carlo (which collects reward over the whole episoe), Temporal difference, aka TD(0) (which considers bootstrapping, i.e only considering the immediate reward and then approximating other remaining rewards with the help of value function $r &#43; V(s)$ ) and other algorithms....</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-02-24 00:00:00 +0000 UTC'>February 24, 2025</span>&nbsp;·&nbsp;17 min&nbsp;·&nbsp;CohleM</footer>
+  <a class="entry-link" aria-label="post link to RLHF" href="https://cohlem.github.io/sub-notes/rlhf/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>Flops calculation
     </h2>
   </header>
@@ -224,18 +237,6 @@ t = torch.tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) torch....</p>
   </div>
   <footer class="entry-footer"><span title='2025-01-29 00:00:00 +0000 UTC'>January 29, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;CohleM</footer>
   <a class="entry-link" aria-label="post link to Pytorch Commands I forget time to time/ commands that are essential" href="https://cohlem.github.io/sub-notes/pytorch/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>Tokenization
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Unicode Character encoding standard aims to incorporate all the available digital characters Each character in Unicode has a unique 4 to 6-digit hexadecimal number. For Example, the letter ‘A’ has the code 0041, represented as U&#43;0041. compatible with ASCII first 128 characters in Unicode directly correspond to the characters represented in the 7-bit ASCII table Unicode Transformation Format (UTF-8) uses 1-4 bytes to represent each character can encode all the unicode code points backward compatible with ASCII Example: (1 byte) The character &#39;A&#39; (U&#43;0041) is encoded as `01000001` (0x41 in hexadecimal)....</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-01-22 00:00:00 +0000 UTC'>January 22, 2025</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;CohleM</footer>
-  <a class="entry-link" aria-label="post link to Tokenization" href="https://cohlem.github.io/sub-notes/tokenization/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

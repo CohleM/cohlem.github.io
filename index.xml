@@ -6,7 +6,7 @@
     <description>Recent content on CohleM</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Mon, 28 Apr 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 09 Jun 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://cohlem.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Deep Learning Notes</title>
       <link>https://cohlem.github.io/notes/deep-learning-notes/</link>
@@ -26,6 +26,17 @@
 Basic MoE structure Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs. Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
 Down the line it could use multiple experts but at different blocks i.e (layers)
 A routing layer is set to choose experts depending on how many experts are selected MoE are categorized into two i.</description>
+    </item>
+    
+    <item>
+      <title>TITLE</title>
+      <link>https://cohlem.github.io/sub-notes/python/</link>
+      <pubDate>Mon, 09 Jun 2025 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/python/</guid>
+      <description>Unpacking over indexing why?
+less noisy # do this a,b = somehting # over a = something[0] b = somehting[1] another example
+# don&amp;#39;t do this snacks = [(&amp;#39;bacon&amp;#39;, 350), (&amp;#39;donut&amp;#39;, 240), (&amp;#39;muffin&amp;#39;, 190)] for i in range(len(snacks)): item = snacks[i] name = item[0] calories = item[1] print(f&amp;#39;#{i+1}: {name} has {calories} calories&amp;#39;) # do this for rank, (name, calorie) in enumerate(snacks,1): print(rank, name, calorie) Unpacking can be applied to any iterables (dict, lists, tuples)</description>
     </item>
     
     <item>
@@ -66,7 +77,8 @@ Induction head A head which implements the induction behaviour.</description>
       <pubDate>Mon, 24 Feb 2025 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/sub-notes/rlhf/</guid>
-      <description>General RL setting $$ J(\pi) = \mathbb{E}_{\tau \sim \pi} \left[ \sum_{t=0}^{\infty} \gamma^t r(s_t, a_t) \right],\qquad{(1)} $$ In RL setting we aim to optimize the objective function $J(\pi)$ by updating the policy $\pi$ given a reward function $r(s,a)$ that takes in a state and the action performed at that state. The next action is determined by $\pi(a|s)$. We find the expected(average) reward over all the trajectories $\tau$. $\gamma$ is the discount factor from 0 to 1 that balances the desirability of of near vs future-rewards.</description>
+      <description>Before starting, it&amp;rsquo;s advisable to first complete David Silver&amp;rsquo;s Course on RL and read Lilian&amp;rsquo;s notes on RL which explains/provides notes on the David&amp;rsquo;s course in sequential manner.
+In simple problems, we simply start with an arbitrary value function, and then go on updating that value function incrementally, using different algorithms such as Monte Carlo (which collects reward over the whole episoe), Temporal difference, aka TD(0) (which considers bootstrapping, i.e only considering the immediate reward and then approximating other remaining rewards with the help of value function $r + V(s)$ ) and other algorithms.</description>
     </item>
     
     <item>
@@ -166,7 +178,7 @@ Disadvantages No notion of relative information between tokens doesn&amp;rsquo;t
       <pubDate>Mon, 13 Jan 2025 00:00:00 +0000</pubDate>
       
       <guid>https://cohlem.github.io/random/movies/</guid>
-      <description>Watch list Mirror (1975) Recently Watched (my rating /10) Gladiator 2 (6) Braveheart (7) Saltburn (3) Wind River (8.5) Hell or High Water (8) Blue Ruin (8) The Place Beyond the Pines (8.5) 3:10 to Yuma (9.5) The Magnificent Seven (7) Bone Tomahawk (8) Unforgiven (6) True Grit (7) Personal Favorites (unranked) Stalker (1979) Parasite Mother (dir. Bong Joon ho) Memories of murder Dune 1 and 2 Snowpiercer Gravity Arrival Incendis Prisoners 3:10 to Yuma Series (ranked) I don&amp;rsquo;t follow series a lot but these are some that I&amp;rsquo;ve enjoyed watching.</description>
+      <description>Watch list Mirror (1975) Recently Watched (my rating /10) Gladiator 2 (6) Braveheart (7) Saltburn (3) Wind River (8.5) Hell or High Water (8) Blue Ruin (8) The Place Beyond the Pines (8.5) 3:10 to Yuma (9.5) The Magnificent Seven (7) Bone Tomahawk (8) Unforgiven (6) True Grit (7) The Assassination of Jesse James by the Coward Robert Ford (6.5) The Chaser (8.5) The Man from Nowhere (7.5) The yellow sea (7.</description>
     </item>
     
     <item>
