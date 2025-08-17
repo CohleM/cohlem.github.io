@@ -353,6 +353,16 @@ So overall, the model tries to balance the Loss (L) as well as keep the weights 
       <description># We always start with a dataset to train on. Let&amp;#39;s download the tiny shakespeare dataset !wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt with open(&amp;#39;input.txt&amp;#39;, &amp;#39;r&amp;#39;, encoding=&amp;#39;utf-8&amp;#39;) as f: data = f.read() from torch import nn import torch vocab = sorted(list(set(data))) len(data) stoi = {s:i for i,s in enumerate(vocab)} itos = {i:s for s,i in stoi.items()} encode = lambda x: [stoi[i] for i in x] decode = lambda x: &amp;#39;&amp;#39;.join([itos[i] for i in x]) type(data) str Xtr = data[:int(0.</description>
     </item>
     
+    <item>
+      <title></title>
+      <link>https://cohlem.github.io/sub-notes/rl-framework/readme/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://cohlem.github.io/sub-notes/rl-framework/readme/</guid>
+      <description>I was learning how we can do distributed RL training, saw karpathy posting this and thought why not make a complete blog about what I learned so here it is.
+The end goal of this blog is to explain clearly how to do distributed RL training, right now it contains explanations about fundamentals of distributed training, such as data parallelism, model parallelism, and tensor parallelism. Consider this as a part 1, where in the next blog I&amp;rsquo;ll be explaining how we apply the techniques learned in the blog.</description>
+    </item>
+    
     
     <item>
       <title>optimizing-loss-with-weight-initialization</title>
