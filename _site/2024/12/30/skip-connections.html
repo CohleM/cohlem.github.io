@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skip Connections - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Skip Connections</h1>
+<p>30 Dec 2024 - cohlem</p>
+
+<p>Skip connections are simply skipping the layers by adding the identity of input to it’s output as shown in the figure below.</p>
+
+<p><img src="sub-notes/skip-connections/fig1.png" alt="fig1" /></p>
+
+<p>Why add the identity of input x to the output ?
+<img src="sub-notes/skip-connections/fig2.png" alt="fig2" /></p>
+
+<p>We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks.</p>
+
+<p>When we add the identity of input to it’s output like this
+hl+1​=F(hl​)+hl​</p>
+
+<p>and when we backpropagate, we get this type of equation.
+<img src="sub-notes/skip-connections/fig3.png" alt="fig3" /></p>
+
+<p>So even when d(F(h1))/dh1 becomes close to 0 the previous gradient dL/dhl+1 is propagated as it is multiplied with 1 which is the outcome of adding the identity of input to its output.</p>
+
+<p>Eventually, skip connections stop vanishing gradient problem, and the other thing they help with is that, when going to a residual block(could be attention block or feedforward block) neural network may loose previous information when going through that transformation, so adding identity of input to its output will take into consideration the new learned features + the previous features.</p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Skip Connections</h1>
+    <time datetime="2024-12-30T00:00:00+05:45">
+      December 30, 2024
+    </time>
+  </header>
+
+  <div class="post-content"><p>Skip connections are simply skipping the layers by adding the identity of input to it’s output as shown in the figure below.</p>
+
+<p><img src="sub-notes/skip-connections/fig1.png" alt="fig1" /></p>
+
+<p>Why add the identity of input x to the output ?
+<img src="sub-notes/skip-connections/fig2.png" alt="fig2" /></p>
+
+<p>We calculate the gradients of parameters using chain rule, as shown in figure above. For deeper layers the gradient start to become close to 0 and the gradient stops propagating, which is a vanishing gradient problem in a deep neural networks.</p>
+
+<p>When we add the identity of input to it’s output like this
+hl+1​=F(hl​)+hl​</p>
+
+<p>and when we backpropagate, we get this type of equation.
+<img src="sub-notes/skip-connections/fig3.png" alt="fig3" /></p>
+
+<p>So even when d(F(h1))/dh1 becomes close to 0 the previous gradient dL/dhl+1 is propagated as it is multiplied with 1 which is the outcome of adding the identity of input to its output.</p>
+
+<p>Eventually, skip connections stop vanishing gradient problem, and the other thing they help with is that, when going to a residual block(could be attention block or feedforward block) neural network may loose previous information when going through that transformation, so adding identity of input to its output will take into consideration the new learned features + the previous features.</p>
+</div>
+
+  
+  <div class="tags">
+    
+    <span class="tag">optimization</span>
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

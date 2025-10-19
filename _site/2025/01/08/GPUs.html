@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gpus - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Gpus</h1>
+<p>08 Jan 2025 - cohlem</p>
+
+<h3 id="gpu-physcial-structure">GPU physcial structure</h3>
+
+<p>let’s first understand the structure of GPU.</p>
+
+<p>Inside a GPU it has a chip named GA102 (depends on architecture, this is for ampere architecture) built from 28.3million transistors (semiconductor device that can <strong>switch</strong> or <strong>amplify</strong> electrical signals)
+<img src="gpusfig1.png" alt="one" />
+and majority area covered by processing cores.
+<img src="gpusfig2.png" alt="two" />
+processing core is divide into seven Graphics processing clusters (GPCs)</p>
+
+<p><img src="gpus3.png" alt="three" /></p>
+
+<p>among each GPC there are 12 Streaming Multiprocessors.
+<img src="gpus4.png" alt="four" />
+Inside each SM there are 4 warps and 1 Raytracing core
+<img src="gpus5.png" alt="five" />
+inside a warp there are 32 Cudas and 1 Tensor Core.</p>
+
+<p>Altogether there are</p>
+
+<ul>
+  <li>10752 CUDA Cores</li>
+  <li>336 Tensor Cores</li>
+  <li>84 Ray Tracing Cores</li>
+</ul>
+
+<p>Each cores have different function.</p>
+
+<h3 id="cuda-cores">Cuda Cores</h3>
+
+<p><img src="gpus6.png" alt="six" />
+cuda core is like a basic calculator with multiplication and addition operations.</p>
+
+<ul>
+  <li>Mostly used for processing video frames.</li>
+  <li>perform operations like A x B + C called fused multiply and add (FMA)</li>
+  <li>half of the cuda cores perform FMA on 32-bit floating point numbers other half perform 32-bit integer FMA.</li>
+  <li>other sections perform bit shifting and bit masking as well as collecting and queuing incoming operands, and accumulating output results.</li>
+  <li>So it can be though of like a calculator.</li>
+  <li>performs one 1 multiply and 1 add operation per 1 cycle</li>
+  <li>so altogether 2 operations x 10752 cuda cores x 1.7 GhZ clock speed(10^9 cycles per second) = 35.6 trillion calculations per second.</li>
+</ul>
+
+<h3 id="ray-tracing-cores">Ray tracing Cores</h3>
+
+<p><img src="gpus8.png" alt="eight" /></p>
+
+<ul>
+  <li>used for executing ray tracing algorithms</li>
+</ul>
+
+<p>Depending on the amount of streaming multiprocessors that are damaged during manufacturing they are categoriezed and sold at different prices, for instance RTX 3090 ti has full 10752 cuda where as 3090 might have some damaged SMs. These cards might have different clock speed too.</p>
+
+<h3 id="graphics-memory-gddr6x-sdram">Graphics Memory GDDR6X SDRAM</h3>
+
+<p>these 24GBs of GDDR6X surround the GPU chip
+In order to run the operations of GPU chip</p>
+
+<ul>
+  <li>They must be loaded from SSD to these graphics memory.</li>
+  <li>They have certain bandwidth i.e the amount of data they can transfer per second to the GPU chip. They have 1.15 Terbytes/sec bandwidth.</li>
+  <li>Similar to HBM memory in AI chips, would look something like this
+<img src="gpus10.png" alt="ten" /></li>
+</ul>
+
+<h3 id="how-are-operations-executed">How are operations executed?</h3>
+
+<ul>
+  <li>Each instruction is executed by a thread (which is matched to a single cuda core) and these threads are combined into 32 cores called warp, 4 warps are combined to form thread blocks that are operated by Streaming Multiprocessor (SM). Similarly SM is combined together. All these are operated by Gigathread Engine</li>
+</ul>
+
+<p>If processor runs at 1Ghz, it can run 10^9 cycles per second, assuming 1cycle = 1 basic operation it can execute 10^9 operations.</p>
+
+<ul>
+  <li>its basically like a unit of time, 10^9 cycles per 1 second means, one cycle takes 10^-9 seconds to run.</li>
+  <li>Different operations take varying amount of cycles (i.e latency of the operation) to perform.</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>- Global memory access (up to 80GB): ~380 cycles
+- L2 cache: ~200 cycles
+- L1 cache or Shared memory access (up to 128 kb per Streaming Multiprocessor): ~34 cycles
+- Fused multiplication and addition, a*b+c (FFMA): 4 cycles
+- Tensor Core matrix multiply: 1 cycle
+</code></pre></div></div>
+
+<h3 id="tensor-cores-most-important">Tensor Cores (Most important)</h3>
+
+<p>These cores are used for matrix multiplication and matrix additions.</p>
+
+<ul>
+  <li>predominantly used in deep learning calculation.</li>
+</ul>
+
+<p><img src="gpus7.png" alt="seven" /></p>
+
+<p>First lets start by understanding the precision formats that’s used.</p>
+
+<h4 id="1-fp16-half-precision-floating-point"><strong>1. FP16 (Half-Precision Floating-Point)</strong></h4>
+
+<ul>
+  <li><strong>Full Name</strong>: Half-precision floating-point.</li>
+  <li><strong>Size</strong>: 16 bits (2 bytes).</li>
+  <li>
+    <p><strong>Bit Allocation</strong>:</p>
+
+    <ul>
+      <li>1 bit for the sign.</li>
+      <li>5 bits for the exponent.</li>
+      <li>10 bits for the mantissa.</li>
+    </ul>
+  </li>
+  <li><strong>Precision</strong>: About 3 decimal digits, 2^10 = 1024, taking log10(1024) = 3 decimal digits.</li>
+</ul>
+
+<h4 id="2-fp32-single-precision-floating-point"><strong>2. FP32 (Single-Precision Floating-Point)</strong></h4>
+
+<ul>
+  <li><strong>Full Name</strong>: Single-precision floating-point.</li>
+  <li><strong>Size</strong>: 32 bits (4 bytes).</li>
+  <li><strong>Bit Allocation</strong>:
+    <ul>
+      <li>1 bit for the sign.</li>
+      <li>8 bits for the exponent.</li>
+      <li>23 bits for the mantissa.</li>
+    </ul>
+  </li>
+  <li><strong>Precision</strong>: About 7 decimal digits.</li>
+</ul>
+
+<p>The operation performed by Tensor Core is something like this.</p>
+
+<p>(picture)
+It performs 64 FMA operations per clock.</p>
+
+<h4 id="understanding-matrix-multiplication-in-tensor-cores">Understanding matrix multiplication in tensor cores.</h4>
+
+<p><strong>Task</strong>:</p>
+
+<p>Matrix multiply A and B with each size 32 x 32</p>
+
+<p>lets say our tensor cores process 4x4 matrix multiplications per 1 cycle. The step to multiply A and B are</p>
+
+<ul>
+  <li>divide A and B into tiles of 4x4 matrices i.e 64 4x4 tile for each matrix</li>
+  <li>load the tiles into shared memory (164KB) from global memory takes about 200 cycles.</li>
+  <li>load the tiles into tensor core registers for operation from shared memory, take about 34 cycles.</li>
+  <li>perform matrix multiplication on eight tensor cores all in parallel, take 1 cycle and then accumulate the values.</li>
+  <li>total cycle 200+34 + 1 = 235 cycles.</li>
+</ul>
+
+<h4 id="memory-bandwidth">Memory Bandwidth</h4>
+
+<p>we have seen that Tensor Cores are very fast. So fast, in fact, that they are idle most of the time as they are waiting for memory to arrive from global memory.
+ For example, during GPT-3-sized training, which uses huge matrices — the larger, the better for Tensor Cores — we have a Tensor Core TFLOPS utilization of about 45-65%, meaning that even for the large neural networks about 50% of the time, Tensor Cores are idle.</p>
+
+<h3 id="nvidia-ampere-architecture">Nvidia Ampere Architecture</h3>
+
+<ul>
+  <li><strong>108 streaming multiprocessors (SMs)</strong></li>
+  <li>432 Tensor Cores</li>
+  <li>6,912 FP32 Cuda Cores</li>
+  <li>3,456 FP64 cuda cores</li>
+  <li>(they share the same physical hardware, different in a sense that each require different clock speed and precision )</li>
+</ul>
+
+<p>More details in the picture below.</p>
+
+<p><img src="gpus12.png" alt="twelve" /></p>
+
+<p>These TFLOPS are calculated using this formula</p>
+
+<p>Number of cores for that precision (FP64) x clock speed x Operations per clock (generally 1FMA or 2 Operations)</p>
+
+<ul>
+  <li><strong>Tensor Float 32 (TF32)</strong>:
+    <ul>
+      <li>
+        <table>
+          <tbody>
+            <tr>
+              <td>**156 TFLOPS</td>
+              <td>312 TFLOPS***: TF32 is a mixed-precision format optimized for AI workloads. It provides a balance between FP16 and FP32 precision.</td>
+            </tr>
+          </tbody>
+        </table>
+      </li>
+    </ul>
+  </li>
+  <li><strong>BFLOAT16</strong>:
+    <ul>
+      <li>
+        <table>
+          <tbody>
+            <tr>
+              <td>**312 TFLOPS</td>
+              <td>624 TFLOPS***: BFLOAT16 is a 16-bit floating-point format used in deep learning, offering a good trade-off between range and precision.</td>
+            </tr>
+          </tbody>
+        </table>
+      </li>
+    </ul>
+  </li>
+  <li><strong>FP16 Tensor Core</strong>:
+    <ul>
+      <li>
+        <table>
+          <tbody>
+            <tr>
+              <td>**312 TFLOPS</td>
+              <td>624 TFLOPS***: FP16 is used for deep learning training and inference, providing high throughput for lower-precision computations.</td>
+            </tr>
+          </tbody>
+        </table>
+      </li>
+    </ul>
+  </li>
+  <li><strong>INT8 Tensor Core</strong>:
+    <ul>
+      <li>
+        <table>
+          <tbody>
+            <tr>
+              <td>**624 TOPS</td>
+              <td>1248 TOPS***: INT8 is used for inference tasks, where lower precision is acceptable, and high throughput is critical.</td>
+            </tr>
+          </tbody>
+        </table>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>This figure shows the range and precision of each of these.</p>
+
+<p><img src="gpus13.png" alt="thirteen" /></p>
+
+<p>Preferred:</p>
+
+<ul>
+  <li>TF32 for training and mostly FP16 and BF16 for inference.</li>
+</ul>
+
+<h4 id="how-numbers-are-stored-example-of-fp16">How numbers are stored (example of fp16)</h4>
+
+<p>lets store <strong>-8764.781267</strong> in FP16 format</p>
+
+<p>first convert int and frac part to binary, we get</p>
+
+<p>(8764.781267)base10≈(10001000111100.110012)base2</p>
+
+<p>Normalize the binary number to the form 1.mantissa x 2^(exponent)</p>
+
+<p>10001000111100.11001​=1.000100011110011001​×2^13</p>
+
+<p>The exponent is biased by <strong>15</strong> in FP16:
+i.e Exponent Bits=Actual Exponent+15=13+15=28</p>
+
+<p>(28)base10​=(11100)base2</p>
+
+<p>The mantissa is the fractional part of the normalized number, truncated to <strong>10 bits</strong>:</p>
+
+<p>(1.000100011110011001)base2→(00010001111.000100011110011001)base2​→(0001000111)base2</p>
+
+<p>The number is negative, so the sign bit is:</p>
+
+<p>Sign Bit=1Sign Bit=1</p>
+
+<p>Combine the sign bit, exponent bits, and mantissa bits:</p>
+
+<ul>
+  <li><strong>Sign Bit:</strong> <code class="language-plaintext highlighter-rouge">1</code></li>
+  <li><strong>Exponent Bits:</strong> <code class="language-plaintext highlighter-rouge">11100</code></li>
+  <li><strong>Mantissa Bits:</strong> <code class="language-plaintext highlighter-rouge">0001000111</code></li>
+</ul>
+
+<p>The FP16 representation is:</p>
+
+<p>11110000010001111111000001000111</p>
+
+<p>​</p>
+
+<p>Tensor cores are optimized for matrix multiplications so it can peform more operations per clock rather than just 64 FMA per clock.</p>
+
+<h3 id="sparsity">Sparsity</h3>
+
+<p>Matrix contains large number of zeros in it, by using a fine-grained pruning algorithm to compress (essentially removing) small and zero-value matrices, the GPU saves computing resources, power, memory and bandwidth.</p>
+
+<h3 id="form-factor">Form Factor</h3>
+
+<p>They define how the GPU is physically integrated into a system and how it connects to other components like the CPU and memory.</p>
+
+<ul>
+  <li><strong>PCIe</strong> is a standard interface used to connect GPUs, SSDs, network cards, and other peripherals to a computer’s motherboard</li>
+  <li><strong>SXM</strong> are not standalone cards and is used in data centers.</li>
+</ul>
+
+<p>| <strong>Bandwidth</strong> | PCIe Gen4: 64 GB/s (x16) | NVLink: 600 GB/s (per GPU pair) |
+| ————- | ———————— | ——————————- |</p>
+
+<h3 id="references">References</h3>
+
+<ul>
+  <li><a href="https://youtu.be/h9Z4oGN89MU?si=3oqaqgIWJMSQAMz3">How do Graphics Cards Work? Exploring GPU Architecture</a></li>
+  <li><a href="https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf">NVIDIA A100 TENSOR CORE GPU</a></li>
+</ul>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Gpus</h1>
+    <time datetime="2025-01-08T00:00:00+05:45">
+      January 08, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><h3 id="gpu-physcial-structure">GPU physcial structure</h3>
+
+<p>let’s first understand the structure of GPU.</p>
+
+<p>Inside a GPU it has a chip named GA102 (depends on architecture, this is for ampere architecture) built from 28.3million transistors (semiconductor device that can <strong>switch</strong> or <strong>amplify</strong> electrical signals)
+<img src="gpusfig1.png" alt="one" />
+and majority area covered by processing cores.
+<img src="gpusfig2.png" alt="two" />
+processing core is divide into seven Graphics processing clusters (GPCs)</p>
+
+<p><img src="gpus3.png" alt="three" /></p>
+
+<p>among each GPC there are 12 Streaming Multiprocessors.
+<img src="gpus4.png" alt="four" />
+Inside each SM there are 4 warps and 1 Raytracing core
+<img src="gpus5.png" alt="five" />
+inside a warp there are 32 Cudas and 1 Tensor Core.</p>
+
+<p>Altogether there are</p>
+
+<ul>
+  <li>10752 CUDA Cores</li>
+  <li>336 Tensor Cores</li>
+  <li>84 Ray Tracing Cores</li>
+</ul>
+
+<p>Each cores have different function.</p>
+
+<h3 id="cuda-cores">Cuda Cores</h3>
+
+<p><img src="gpus6.png" alt="six" />
+cuda core is like a basic calculator with multiplication and addition operations.</p>
+
+<ul>
+  <li>Mostly used for processing video frames.</li>
+  <li>perform operations like A x B + C called fused multiply and add (FMA)</li>
+  <li>half of the cuda cores perform FMA on 32-bit floating point numbers other half perform 32-bit integer FMA.</li>
+  <li>other sections perform bit shifting and bit masking as well as collecting and queuing incoming operands, and accumulating output results.</li>
+  <li>So it can be though of like a calculator.</li>
+  <li>performs one 1 multiply and 1 add operation per 1 cycle</li>
+  <li>so altogether 2 operations x 10752 cuda cores x 1.7 GhZ clock speed(10^9 cycles per second) = 35.6 trillion calculations per second.</li>
+</ul>
+
+<h3 id="ray-tracing-cores">Ray tracing Cores</h3>
+
+<p><img src="gpus8.png" alt="eight" /></p>
+
+<ul>
+  <li>used for executing ray tracing algorithms</li>
+</ul>
+
+<p>Depending on the amount of streaming multiprocessors that are damaged during manufacturing they are categoriezed and sold at different prices, for instance RTX 3090 ti has full 10752 cuda where as 3090 might have some damaged SMs. These cards might have different clock speed too.</p>
+
+<h3 id="graphics-memory-gddr6x-sdram">Graphics Memory GDDR6X SDRAM</h3>
+
+<p>these 24GBs of GDDR6X surround the GPU chip
+In order to run the operations of GPU chip</p>
+
+<ul>
+  <li>They must be loaded from SSD to these graphics memory.</li>
+  <li>They have certain bandwidth i.e the amount of data they can transfer per second to the GPU chip. They have 1.15 Terbytes/sec bandwidth.</li>
+  <li>Similar to HBM memory in AI chips, would look something like this
+<img src="gpus10.png" alt="ten" /></li>
+</ul>
+
+<h3 id="how-are-operations-executed">How are operations executed?</h3>
+
+<ul>
+  <li>Each instruction is executed by a thread (which is matched to a single cuda core) and these threads are combined into 32 cores called warp, 4 warps are combined to form thread blocks that are operated by Streaming Multiprocessor (SM). Similarly SM is combined together. All these are operated by Gigathread Engine</li>
+</ul>
+
+<p>If processor runs at 1Ghz, it can run 10^9 cycles per second, assuming 1cycle = 1 basic operation it can execute 10^9 operations.</p>
+
+<ul>
+  <li>its basically like a unit of time, 10^9 cycles per 1 second means, one cycle takes 10^-9 seconds to run.</li>
+  <li>Different operations take varying amount of cycles (i.e latency of the operation) to perform.</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>- Global memory access (up to 80GB): ~380 cycles
+- L2 cache: ~200 cycles
+- L1 cache or Shared memory access (up to 128 kb per Streaming Multiprocessor): ~34 cycles
+- Fused multiplication and addition, a*b+c (FFMA): 4 cycles
+- Tensor Core matrix multiply: 1 cycle
+</code></pre></div></div>
+
+<h3 id="tensor-cores-most-important">Tensor Cores (Most important)</h3>
+
+<p>These cores are used for matrix multiplication and matrix additions.</p>
+
+<ul>
+  <li>predominantly used in deep learning calculation.</li>
+</ul>
+
+<p><img src="gpus7.png" alt="seven" /></p>
+
+<p>First lets start by understanding the precision formats that’s used.</p>
+
+<h4 id="1-fp16-half-precision-floating-point"><strong>1. FP16 (Half-Precision Floating-Point)</strong></h4>
+
+<ul>
+  <li><strong>Full Name</strong>: Half-precision floating-point.</li>
+  <li><strong>Size</strong>: 16 bits (2 bytes).</li>
+  <li>
+    <p><strong>Bit Allocation</strong>:</p>
+
+    <ul>
+      <li>1 bit for the sign.</li>
+      <li>5 bits for the exponent.</li>
+      <li>10 bits for the mantissa.</li>
+    </ul>
+  </li>
+  <li><strong>Precision</strong>: About 3 decimal digits, 2^10 = 1024, taking log10(1024) = 3 decimal digits.</li>
+</ul>
+
+<h4 id="2-fp32-single-precision-floating-point"><strong>2. FP32 (Single-Precision Floating-Point)</strong></h4>
+
+<ul>
+  <li><strong>Full Name</strong>: Single-precision floating-point.</li>
+  <li><strong>Size</strong>: 32 bits (4 bytes).</li>
+  <li><strong>Bit Allocation</strong>:
+    <ul>
+      <li>1 bit for the sign.</li>
+      <li>8 bits for the exponent.</li>
+      <li>23 bits for the mantissa.</li>
+    </ul>
+  </li>
+  <li><strong>Precision</strong>: About 7 decimal digits.</li>
+</ul>
+
+<p>The operation performed by Tensor Core is something like this.</p>
+
+<p>(picture)
+It performs 64 FMA operations per clock.</p>
+
+<h4 id="understanding-matrix-multiplication-in-tensor-cores">Understanding matrix multiplication in tensor cores.</h4>
+
+<p><strong>Task</strong>:</p>
+
+<p>Matrix multiply A and B with each size 32 x 32</p>
+
+<p>lets say our tensor cores process 4x4 matrix multiplications per 1 cycle. The step to multiply A and B are</p>
+
+<ul>
+  <li>divide A and B into tiles of 4x4 matrices i.e 64 4x4 tile for each matrix</li>
+  <li>load the tiles into shared memory (164KB) from global memory takes about 200 cycles.</li>
+  <li>load the tiles into tensor core registers for operation from shared memory, take about 34 cycles.</li>
+  <li>perform matrix multiplication on eight tensor cores all in parallel, take 1 cycle and then accumulate the values.</li>
+  <li>total cycle 200+34 + 1 = 235 cycles.</li>
+</ul>
+
+<h4 id="memory-bandwidth">Memory Bandwidth</h4>
+
+<p>we have seen that Tensor Cores are very fast. So fast, in fact, that they are idle most of the time as they are waiting for memory to arrive from global memory.
+ For example, during GPT-3-sized training, which uses huge matrices — the larger, the better for Tensor Cores — we have a Tensor Core TFLOPS utilization of about 45-65%, meaning that even for the large neural networks about 50% of the time, Tensor Cores are idle.</p>
+
+<h3 id="nvidia-ampere-architecture">Nvidia Ampere Architecture</h3>
+
+<ul>
+  <li><strong>108 streaming multiprocessors (SMs)</strong></li>
+  <li>432 Tensor Cores</li>
+  <li>6,912 FP32 Cuda Cores</li>
+  <li>3,456 FP64 cuda cores</li>
+  <li>(they share the same physical hardware, different in a sense that each require different clock speed and precision )</li>
+</ul>
+
+<p>More details in the picture below.</p>
+
+<p><img src="gpus12.png" alt="twelve" /></p>
+
+<p>These TFLOPS are calculated using this formula</p>
+
+<p>Number of cores for that precision (FP64) x clock speed x Operations per clock (generally 1FMA or 2 Operations)</p>
+
+<ul>
+  <li><strong>Tensor Float 32 (TF32)</strong>:
+    <ul>
+      <li>
+        <table>
+          <tbody>
+            <tr>
+              <td>**156 TFLOPS</td>
+              <td>312 TFLOPS***: TF32 is a mixed-precision format optimized for AI workloads. It provides a balance between FP16 and FP32 precision.</td>
+            </tr>
+          </tbody>
+        </table>
+      </li>
+    </ul>
+  </li>
+  <li><strong>BFLOAT16</strong>:
+    <ul>
+      <li>
+        <table>
+          <tbody>
+            <tr>
+              <td>**312 TFLOPS</td>
+              <td>624 TFLOPS***: BFLOAT16 is a 16-bit floating-point format used in deep learning, offering a good trade-off between range and precision.</td>
+            </tr>
+          </tbody>
+        </table>
+      </li>
+    </ul>
+  </li>
+  <li><strong>FP16 Tensor Core</strong>:
+    <ul>
+      <li>
+        <table>
+          <tbody>
+            <tr>
+              <td>**312 TFLOPS</td>
+              <td>624 TFLOPS***: FP16 is used for deep learning training and inference, providing high throughput for lower-precision computations.</td>
+            </tr>
+          </tbody>
+        </table>
+      </li>
+    </ul>
+  </li>
+  <li><strong>INT8 Tensor Core</strong>:
+    <ul>
+      <li>
+        <table>
+          <tbody>
+            <tr>
+              <td>**624 TOPS</td>
+              <td>1248 TOPS***: INT8 is used for inference tasks, where lower precision is acceptable, and high throughput is critical.</td>
+            </tr>
+          </tbody>
+        </table>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>This figure shows the range and precision of each of these.</p>
+
+<p><img src="gpus13.png" alt="thirteen" /></p>
+
+<p>Preferred:</p>
+
+<ul>
+  <li>TF32 for training and mostly FP16 and BF16 for inference.</li>
+</ul>
+
+<h4 id="how-numbers-are-stored-example-of-fp16">How numbers are stored (example of fp16)</h4>
+
+<p>lets store <strong>-8764.781267</strong> in FP16 format</p>
+
+<p>first convert int and frac part to binary, we get</p>
+
+<p>(8764.781267)base10≈(10001000111100.110012)base2</p>
+
+<p>Normalize the binary number to the form 1.mantissa x 2^(exponent)</p>
+
+<p>10001000111100.11001​=1.000100011110011001​×2^13</p>
+
+<p>The exponent is biased by <strong>15</strong> in FP16:
+i.e Exponent Bits=Actual Exponent+15=13+15=28</p>
+
+<p>(28)base10​=(11100)base2</p>
+
+<p>The mantissa is the fractional part of the normalized number, truncated to <strong>10 bits</strong>:</p>
+
+<p>(1.000100011110011001)base2→(00010001111.000100011110011001)base2​→(0001000111)base2</p>
+
+<p>The number is negative, so the sign bit is:</p>
+
+<p>Sign Bit=1Sign Bit=1</p>
+
+<p>Combine the sign bit, exponent bits, and mantissa bits:</p>
+
+<ul>
+  <li><strong>Sign Bit:</strong> <code class="language-plaintext highlighter-rouge">1</code></li>
+  <li><strong>Exponent Bits:</strong> <code class="language-plaintext highlighter-rouge">11100</code></li>
+  <li><strong>Mantissa Bits:</strong> <code class="language-plaintext highlighter-rouge">0001000111</code></li>
+</ul>
+
+<p>The FP16 representation is:</p>
+
+<p>11110000010001111111000001000111</p>
+
+<p>​</p>
+
+<p>Tensor cores are optimized for matrix multiplications so it can peform more operations per clock rather than just 64 FMA per clock.</p>
+
+<h3 id="sparsity">Sparsity</h3>
+
+<p>Matrix contains large number of zeros in it, by using a fine-grained pruning algorithm to compress (essentially removing) small and zero-value matrices, the GPU saves computing resources, power, memory and bandwidth.</p>
+
+<h3 id="form-factor">Form Factor</h3>
+
+<p>They define how the GPU is physically integrated into a system and how it connects to other components like the CPU and memory.</p>
+
+<ul>
+  <li><strong>PCIe</strong> is a standard interface used to connect GPUs, SSDs, network cards, and other peripherals to a computer’s motherboard</li>
+  <li><strong>SXM</strong> are not standalone cards and is used in data centers.</li>
+</ul>
+
+<p>| <strong>Bandwidth</strong> | PCIe Gen4: 64 GB/s (x16) | NVLink: 600 GB/s (per GPU pair) |
+| ————- | ———————— | ——————————- |</p>
+
+<h3 id="references">References</h3>
+
+<ul>
+  <li><a href="https://youtu.be/h9Z4oGN89MU?si=3oqaqgIWJMSQAMz3">How do Graphics Cards Work? Exploring GPU Architecture</a></li>
+  <li><a href="https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf">NVIDIA A100 TENSOR CORE GPU</a></li>
+</ul>
+</div>
+
+  
+  <div class="tags">
+    
+    <span class="tag">gpu</span>
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

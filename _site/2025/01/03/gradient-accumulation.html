@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gradient Accumulation - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Gradient Accumulation</h1>
+<p>03 Jan 2025 - cohlem</p>
+
+<h3 id="gradient-accumulation">Gradient Accumulation</h3>
+
+<p>When we want to train a neural network with some predefined set of tokens, but don’t have enough GPU resources, what do we do?</p>
+
+<ul>
+  <li>Gradient Accumulation</li>
+</ul>
+
+<p>We simply accumulate the gradients. For instance, in order to reproduce GPT-2 124B, we need to train the model with 0.5 Million tokens in a single run with 1024 context length, we would need 0.5e6/ 1024 = 488 batches i.e B,T = (488,1024) to calculate the gradients and update them.</p>
+
+<p>We don’t have the enough resources, to fit those batches in our GPU, now what we do is divide that 488 into multiple batches and then do the forward pass and calculate gradients and accumulate (+) the gradients but we don’t update the gradients until we reach the end of the the desired batch size. After that, we update the parameters once.</p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Gradient Accumulation</h1>
+    <time datetime="2025-01-03T00:00:00+05:45">
+      January 03, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><h3 id="gradient-accumulation">Gradient Accumulation</h3>
+
+<p>When we want to train a neural network with some predefined set of tokens, but don’t have enough GPU resources, what do we do?</p>
+
+<ul>
+  <li>Gradient Accumulation</li>
+</ul>
+
+<p>We simply accumulate the gradients. For instance, in order to reproduce GPT-2 124B, we need to train the model with 0.5 Million tokens in a single run with 1024 context length, we would need 0.5e6/ 1024 = 488 batches i.e B,T = (488,1024) to calculate the gradients and update them.</p>
+
+<p>We don’t have the enough resources, to fit those batches in our GPU, now what we do is divide that 488 into multiple batches and then do the forward pass and calculate gradients and accumulate (+) the gradients but we don’t update the gradients until we reach the end of the the desired batch size. After that, we update the parameters once.</p>
+</div>
+
+  
+  <div class="tags">
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

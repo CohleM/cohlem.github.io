@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interpretability - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Interpretability</h1>
+<p>03 Mar 2025 - cohlem</p>
+
+<h3 id="induction-circuits">Induction circuits</h3>
+
+<p><strong>Induction behaviour</strong>
+The task of detecting and repeating subsequences in a text by finding some patterns.</p>
+
+<p>For example: If there exist a text containing name “James Bond” and later in the text when the model sees the word “James” it predicts/repeats the word “Bond” because it’s already seen the words “James Bond” and analyzes that “bond” should come after the word “James”. Also called “Strict Induction”</p>
+
+<p><strong>Induction head</strong>
+A head which implements the induction behaviour. They allow models to perform in-context learning (ICL).</p>
+
+<h3 id="qk-circuit">QK circuit</h3>
+
+<p>Wq, Wk, Wv be the projection matrices in our attention and Wo be the projection matrix in attention.</p>
+
+<p>Wq,Wk, Wv can be thought of as what we take in(read) from the residual stream and Wo can be though of as what we put into(write) the residual stream. Similar to read/write operation.</p>
+
+<p>QK circuit is represented as combination of
+<img src="i1.png" alt="i1" /></p>
+
+<p>and attention scores are calculated as
+<img src="i2.png" alt="i2" /></p>
+
+<p>it is similar to Q @ K.T</p>
+
+<p>Conceptually, this matrix tells us <strong>which tokens information is moved to &amp; from</strong> in the residual stream.</p>
+
+<h3 id="ov-circuit">OV circuit</h3>
+
+<p><img src="i3.png" alt="i3" /></p>
+
+<ul>
+  <li>Conceptually, this matrix (Vi.Wov) tells us <strong>what information is moved from a token</strong>, if that token is attended to.</li>
+</ul>
+
+<p><strong>Some prerequisites</strong></p>
+
+<p><strong>orthogonal subspace</strong>
+Important assumption to keep in mind is subspaces are orthogonal i.e their dot product is 0, which means, we can decompose a vector into different subspaces that can have independent meaning because of this assumption.</p>
+
+<p>A simple example is when we add the positional embedding and vector embedding initially,</p>
+
+<p>output = positional embedding + vector embedding</p>
+
+<p>we are simply adding two different informations from different subspaces i.e positional embedding and vector embedding, and if they are orthogonal, we can independently pluck out their embeddings from the output.</p>
+
+<p><strong>K-composition</strong>
+In K-composition, the output of one attention at layer 0 is used as a key for another attention calculation in layer1.</p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/dhz5bqfuuoujydh89caa.png" alt="matrix" /></p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/ui0f38ofgdsyr9zzt5ar.png" alt="imag2" /></p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/voncnaecap3tsw8dt0mn.png" alt="image3" /></p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/tuskojx6dtlzjwoqs9zd.png" alt="image3" />
+<img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/eaongteayjgei7no5ycy.png" alt="image5" /></p>
+
+<p>Induction heads are responsible in significant downward loss. It could mainly occur in phase changes, eg. 2B to 4B tokens. Are responsible to ICL but also helps in translation as well as few-shots learning</p>
+
+<h3 id="visualization-of-induction-head">Visualization of induction head</h3>
+
+<p><img src="i4.png" alt="i4" /></p>
+
+<p>the visualization would look like this, for an induction head i.e the destination token attends to token after the previous destination token’s occurance offset by seq_len - 1.</p>
+
+<h3 id="direct-logits-attribution">Direct logits attribution</h3>
+
+<p><img src="i5.png" alt="i5" /></p>
+
+<p>It involves understanding how much each component (e.g., attention heads, layers, or direct paths) contributes to the model’s predictions.</p>
+
+<p>Using attention head pattern is not enough to deduce that the model is actually using that attention information, to finally verify we also have to see their direct logits attribution, i.e how much their RS contribute to the final logits.</p>
+
+<h3 id="ablation">Ablation</h3>
+
+<p>Zeroing activation is not recommended because it completely moves the model’s representation out of distribution. Instead, mean over some batch dimension is recommended.</p>
+
+<h3 id="making-sense-of-induction-circuits-in-terms-of-qk-ov-circuits">Making sense of induction circuits in terms of QK, OV circuits</h3>
+
+<p>source token: the token that is being attended to
+destination token: the token that is looking at other tokens</p>
+
+<p>lets say we process a random but repeating sequence.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>['&lt;|endoftext|&gt;', 'anguage', ' reign', 'ای', ' aides', ' freight', ' Break', ' compete', ' Ment', '··', ' vaginal', ' burn', '을', 'Connell', ' affiliates', 'Back', 'Trigger', ' blade', 'ų', ' emotion', ' Ash', ' rupture', 'ian', ' pickup', ' Theresa', ' creepy', ' libert', 'uclidean', ' repairs', 'ylvan', 'τή', ' playwright', ' decou', ' deliver', ' Steele', '70', ' employing', 'idopsis', 'hidden', ' Ren', 'UTR', ' morale', ' vacant', ' _(', ' contra', 'ィ', ' vocals', ' reduces', 'Civil', 'ussion', ' deeds', 'anguage', ' reign', 'ای', ' aides', ' freight', ' Break', ' compete', ' Ment', '··', ' vaginal', ' burn', '을', 'Connell', ' affiliates', 'Back', 'Trigger', ' blade', 'ų', ' emotion', ' Ash', ' rupture', 'ian', ' pickup', ' Theresa', ' creepy', ' libert', 'uclidean', ' repairs', 'ylvan', 'τή', ' playwright', ' decou', ' deliver', ' Steele', '70', ' employing', 'idopsis', 'hidden', ' Ren', 'UTR', ' morale', ' vacant', ' _(', ' contra', 'ィ', ' vocals', ' reduces', 'Civil', 'ussion', ' deeds']
+</code></pre></div></div>
+
+<p>We pass it through our 2 layer attention-only model</p>
+
+<p>we get attention pattern like this for layer 0 <img src="i6.png" alt="i6" />
+here 7 is a <strong>previous token head</strong></p>
+
+<p>and we get this attention pattern for layer 1
+<img src="i7.png" alt="i7" /></p>
+
+<p>4 and 7 are induction heads, cause we see the activations for seq_len -1 diagonal</p>
+
+<p>So what we can conclude from this is that OK circuit from attention head no 7 in layer 0 always attends to the previous token, OV circuit from the same head writes the previous token information in the embedding subspace.</p>
+
+<p>In layer 1, attention 4,10, K-composition is used i.e the output of attention head 7 is used as the key in these attentions, the QK circuit looks at the source token whose previous token is the destination token (i.e current token) and OV circuits writes this information in the embedding subspace (i.e info about which tokens come next).</p>
+
+<p><strong>NOTE</strong> decomposition trick only works for things that are linear, it would work if there are no activation functions eg, ReLU, GeLU. or would only work before softmax, rather than after softmax.</p>
+
+<h2 id="a-mathematical-framework-for-transformer-circuits">A Mathematical Framework for Transformer Circuits</h2>
+
+<p><strong>Key takeaways</strong></p>
+
+<ul>
+  <li>Residual stream (RS) can be thought of sum of changes added by each layer (embedding, attention, MLP)</li>
+  <li>The residual stream has a deeply linear structure.</li>
+  <li>dimensions of the residual stream become something like “memory” or “bandwidth”</li>
+  <li>Why do we decompose residual stream and study them independently? because they try to communicate in superposition. Meaning, a residual stream only has limited dimensions eg 512 and at MLP it has to interact with a lot more dimensions i.e 4Xmore dimension than it has space on it. So its better to study them independently. So the RS has very high demand, is the reason why some info gets deleted and some added by some layers.</li>
+  <li>Attention heads copy information from the residual stream of one token to the residual stream of another. They typically write
+to a different subspace than they read from.
+-</li>
+</ul>
+
+<h3 id="paper">Paper</h3>
+
+<p>implement this formula to find which component/layer are important <img src="i8.png" alt="i8" /></p>
+
+<p>to find how good they are (faithful) use this equation</p>
+
+<p><img src="i9.png" alt="i9" /></p>
+
+<p>IDENTIFYING ANSWER-PROMOTING COMPONENTS
+train linear probing for each layer, at each position p, find which which layer at which position promote the correct-answer</p>
+
+<p>DECOMPOSING CIRCUIT MLPS TO INDIVIDUAL NEURONS</p>
+
+<p>Go more deep into the MLP to see which neurons promote arithmetic calculation</p>
+
+<p>do activation patching on neurons.</p>
+
+<p>they find &gt; neurons with the highest effect are different between operators.</p>
+
+<p>only 200 neurons (roughly 1.5%) per layer are needed to achieve high faithfulness and correctly compute arithmetic prompts.</p>
+
+<p>among top 200 they examine neurons, by hypothesizing that 1. their key denotes the activation patterns, and 2. their values encodes the correct output in these dimension.</p>
+
+<p>Approach</p>
+
+<p>Our Hypothesis: Circuits for Math Reasoning only work for similar problems (i.e the patterns/distributions LLMs encoded in their weights during their training) and circuits fail when they receives problems that require calculation which is out-of-distribution.</p>
+
+<p>The hypothesis is to basically prove why LLMs are not robust in Math Reasoning.</p>
+
+<p>Steps to prove:</p>
+
+<ol>
+  <li>Find circuits of LMs responsible for Math Reasoning/Calculations for correct output ( i.e we find circuit for problems which LMs can solve and ignore the problems on which they fail) using patching. (calculating indirect effect (IE) as done in this paper https://arxiv.org/pdf/2305.15054)</li>
+  <li>We can go further and find specific neurons responsible for calculations by finding the top-k tokens for specific neurons and patching/ablating them to find if they’re really important. However, I believe we can limit experiment to til finding the circuits as mentioned in step 1.</li>
+  <li>Generate adversarial math problems (i.e out of distribution problems ). We can simply opt for M2 level problems as done in this paper (https://arxiv.org/pdf/2402.17916)</li>
+  <li>Test those adversarial problems on LMs, filter and keep only the problems on which LMs produce incorrect output and study their whole output ( which should also include their step-by-step reasoning)</li>
+</ol>
+
+<p>for example:</p>
+
+<p><strong>Prompt</strong>:</p>
+
+<p>Chenny is 64 years old. Alyana is 54 years younger than Chenny. How old is Anne if she is 55 years older than Alyana?</p>
+
+<p>LM output:</p>
+
+<p>To determine Anne’s age, we need to follow these steps:</p>
+
+<ol>
+  <li>Calculate Alyana’s age.</li>
+  <li>Use Alyana’s age to find Anne’s age.</li>
+</ol>
+
+<p><strong>Step 1: Calculate Alyana’s age.</strong> Chenny is 64 years old. Alyana is 54 years younger than Chenny. So, Alyana’s age is: [ 64 - 54 = 100 ]</p>
+
+<p><strong>Step 2: Calculate Anne’s age.</strong> Anne is 55 years older than Alyana. So, Anne’s age is: [ 100 + 55 = 155 ] Thus, Anne is (\boxed{155}) years old.</p>
+
+<ol>
+  <li>Analyze the point where there is error in calculation, i.e there was error in <code class="language-plaintext highlighter-rouge">\[ 64 - 54 = 100 \]</code> in the LM’s output above.</li>
+  <li>We hypothesize here that the mistake in calculation was because the circuits lacks patterns/ heuristics to solve the problem. The concept about patterns/heuristics can be found in this recent paper (https://arxiv.org/pdf/2410.21272). To elaborate, while training it was able to encode this pattern/ heuristics that 5-4 = 1 in their weights, but it cant perform 65 - 54 because it lacks those patterns/heuristics.</li>
+  <li>We can prove our hypothesis to be true here, if we can supply it with the necessary pattern/heuristics. To do so,</li>
+  <li>We run the LMs with our prompt new prompt.</li>
+</ol>
+
+<p>PROMPT:</p>
+
+<p>Chenny is 64 years old. Alyana is 54 years younger than Chenny. How old is Anne if she is 55 years older than Alyana?</p>
+
+<p>To determine Anne’s age, we need to follow these steps:</p>
+
+<ol>
+  <li>Calculate Alyana’s age.</li>
+  <li>Use Alyana’s age to find Anne’s age.
+<strong>Step 1: Calculate Alyana’s age.</strong> Chenny is 64 years old. Alyana is 54 years younger than Chenny. So, Alyana’s age is: [ 64 - 54 = 10</li>
+</ol>
+
+<p>as you can see our new prompt is <strong>previous prompt + the LM’s output til the point where LMs get calculations wrong</strong>
+but we manually correct the calculation, example 64 - 55 = 100 was corrected to 64 - 55 = 10,</p>
+
+<p>and we get the activations for this new prompt by only generating the activations for only 1 new sequence (meaning we don’t let it complete the whole sequence, the point is to just get activations till the point where it gets wrong) , and then patch the circuit activations from this new corrected run to the old run where it got it wrong.</p>
+
+<p>Now, if the old run is able to get the answer right after the patching process, it’s very likely that it lacked the necessary pattern/heuristics for solving that problem.</p>
+
+<p>The bottleneck/time consuming thing would be manually identifying the point in the LM’s output where it has error and correcting it.</p>
+
+<p>logit difference</p>
+
+<p>The metric also is a mostly linear function of the residual stream (unlike probability-based metrics) which makes it easy to directly attribute logit difference to individual components (“direct logit attribution”, “logit lens”).</p>
+
+<p>Probabilities: This metric measures the probability of the right answer, or the difference in probabilities of different answers. The main issue with such metrics is Probabilities are non-linear, in the sense that they track the logits ~exponentially. For example, a model component adding +2 to a given logit can create a 1 or 40 percentage point probability increase, just depending on what the baseline was. As an example of the non-linearity consider the orange line in the figure above: A modest increase in logit difference around layer 17 converts to a jump in probability. Probabilities also inherit the problems of the logprob metric, namely saturation and unspecificity. The figure shows the saturation effect for the orange line at layer &gt;18.</p>
+
+<p>TLDR: probability is exponential we can’t attribute model component’s work to prob change completely.</p>
+
+<p>I would like to tell you the update about the work that did in past 2 weeks.</p>
+
+<p>In the first week, I was involved in reading the paper that you sent me. I’ve attached slides for those paper which is attached in this email. Afterwards, I did some experimentation of the basics of Mechanistic Interpretability such as probing, logits lens and ablation using TransformerLens library, then I studied how induction, QK and OV circuits work, and some detail about K composition.</p>
+
+<p>In the second week, I started experimentation by looking into neurons to see if I can find specific neurons that are responsible for math reasoning. I used few samples from GSM8K dataset. I was able to find specific neurons responsible for</p>
+
+<h3 id="direct-effect">Direct effect</h3>
+
+<p>measuring how patching/ablation affects the logits directly</p>
+
+<h3 id="indirect-effect">Indirect effect</h3>
+
+<p>measuring how patching/ablation affects the logits indirectly, for example: patching one attention layer might not contribute directly to logits but may interact with further attention layer, it kind of a chain effect. Hard to measure.</p>
+
+<h3 id="logit-difference">Logit difference</h3>
+
+<p>logit differnce is easier to understand</p>
+
+<p>logit difference == logprob difference</p>
+
+<p><img src="i10.png" alt="i10" /></p>
+
+<h3 id="things-to-check">Things to check</h3>
+
+<ul>
+  <li>Compute the likelihood of the input “22 + 78 =” under the model’s probability distribution.</li>
+  <li>Compare this likelihood to the likelihood of known in-distribution examples.</li>
+  <li>If the likelihood is significantly lower, the input might be OOD.</li>
+</ul>
+
+<p>We can also check if the number is deleted by ffn or by the composition.</p>
+
+<ul>
+  <li>See all the logit lens of residual network and also the logit lens of ffn and see if it deletes, See ffns are kv memories paper in the end.</li>
+</ul>
+
+<h4 id="references">References</h4>
+
+<p>https://dynalist.io/d/n2ZWtnoYHrU1s4vnFSAQ519J#z=_Jzi6YHRHKP1JziwdE02qdYZ
+https://www.lesswrong.com/posts/TvrfY4c9eaGLeyDkE/induction-heads-illustrated</p>
+
+<p>best practices for patching https://arxiv.org/pdf/2309.16042</p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Interpretability</h1>
+    <time datetime="2025-03-03T00:00:00+05:45">
+      March 03, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><h3 id="induction-circuits">Induction circuits</h3>
+
+<p><strong>Induction behaviour</strong>
+The task of detecting and repeating subsequences in a text by finding some patterns.</p>
+
+<p>For example: If there exist a text containing name “James Bond” and later in the text when the model sees the word “James” it predicts/repeats the word “Bond” because it’s already seen the words “James Bond” and analyzes that “bond” should come after the word “James”. Also called “Strict Induction”</p>
+
+<p><strong>Induction head</strong>
+A head which implements the induction behaviour. They allow models to perform in-context learning (ICL).</p>
+
+<h3 id="qk-circuit">QK circuit</h3>
+
+<p>Wq, Wk, Wv be the projection matrices in our attention and Wo be the projection matrix in attention.</p>
+
+<p>Wq,Wk, Wv can be thought of as what we take in(read) from the residual stream and Wo can be though of as what we put into(write) the residual stream. Similar to read/write operation.</p>
+
+<p>QK circuit is represented as combination of
+<img src="i1.png" alt="i1" /></p>
+
+<p>and attention scores are calculated as
+<img src="i2.png" alt="i2" /></p>
+
+<p>it is similar to Q @ K.T</p>
+
+<p>Conceptually, this matrix tells us <strong>which tokens information is moved to &amp; from</strong> in the residual stream.</p>
+
+<h3 id="ov-circuit">OV circuit</h3>
+
+<p><img src="i3.png" alt="i3" /></p>
+
+<ul>
+  <li>Conceptually, this matrix (Vi.Wov) tells us <strong>what information is moved from a token</strong>, if that token is attended to.</li>
+</ul>
+
+<p><strong>Some prerequisites</strong></p>
+
+<p><strong>orthogonal subspace</strong>
+Important assumption to keep in mind is subspaces are orthogonal i.e their dot product is 0, which means, we can decompose a vector into different subspaces that can have independent meaning because of this assumption.</p>
+
+<p>A simple example is when we add the positional embedding and vector embedding initially,</p>
+
+<p>output = positional embedding + vector embedding</p>
+
+<p>we are simply adding two different informations from different subspaces i.e positional embedding and vector embedding, and if they are orthogonal, we can independently pluck out their embeddings from the output.</p>
+
+<p><strong>K-composition</strong>
+In K-composition, the output of one attention at layer 0 is used as a key for another attention calculation in layer1.</p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/dhz5bqfuuoujydh89caa.png" alt="matrix" /></p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/ui0f38ofgdsyr9zzt5ar.png" alt="imag2" /></p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/voncnaecap3tsw8dt0mn.png" alt="image3" /></p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/tuskojx6dtlzjwoqs9zd.png" alt="image3" />
+<img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/eaongteayjgei7no5ycy.png" alt="image5" /></p>
+
+<p>Induction heads are responsible in significant downward loss. It could mainly occur in phase changes, eg. 2B to 4B tokens. Are responsible to ICL but also helps in translation as well as few-shots learning</p>
+
+<h3 id="visualization-of-induction-head">Visualization of induction head</h3>
+
+<p><img src="i4.png" alt="i4" /></p>
+
+<p>the visualization would look like this, for an induction head i.e the destination token attends to token after the previous destination token’s occurance offset by seq_len - 1.</p>
+
+<h3 id="direct-logits-attribution">Direct logits attribution</h3>
+
+<p><img src="i5.png" alt="i5" /></p>
+
+<p>It involves understanding how much each component (e.g., attention heads, layers, or direct paths) contributes to the model’s predictions.</p>
+
+<p>Using attention head pattern is not enough to deduce that the model is actually using that attention information, to finally verify we also have to see their direct logits attribution, i.e how much their RS contribute to the final logits.</p>
+
+<h3 id="ablation">Ablation</h3>
+
+<p>Zeroing activation is not recommended because it completely moves the model’s representation out of distribution. Instead, mean over some batch dimension is recommended.</p>
+
+<h3 id="making-sense-of-induction-circuits-in-terms-of-qk-ov-circuits">Making sense of induction circuits in terms of QK, OV circuits</h3>
+
+<p>source token: the token that is being attended to
+destination token: the token that is looking at other tokens</p>
+
+<p>lets say we process a random but repeating sequence.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>['&lt;|endoftext|&gt;', 'anguage', ' reign', 'ای', ' aides', ' freight', ' Break', ' compete', ' Ment', '··', ' vaginal', ' burn', '을', 'Connell', ' affiliates', 'Back', 'Trigger', ' blade', 'ų', ' emotion', ' Ash', ' rupture', 'ian', ' pickup', ' Theresa', ' creepy', ' libert', 'uclidean', ' repairs', 'ylvan', 'τή', ' playwright', ' decou', ' deliver', ' Steele', '70', ' employing', 'idopsis', 'hidden', ' Ren', 'UTR', ' morale', ' vacant', ' _(', ' contra', 'ィ', ' vocals', ' reduces', 'Civil', 'ussion', ' deeds', 'anguage', ' reign', 'ای', ' aides', ' freight', ' Break', ' compete', ' Ment', '··', ' vaginal', ' burn', '을', 'Connell', ' affiliates', 'Back', 'Trigger', ' blade', 'ų', ' emotion', ' Ash', ' rupture', 'ian', ' pickup', ' Theresa', ' creepy', ' libert', 'uclidean', ' repairs', 'ylvan', 'τή', ' playwright', ' decou', ' deliver', ' Steele', '70', ' employing', 'idopsis', 'hidden', ' Ren', 'UTR', ' morale', ' vacant', ' _(', ' contra', 'ィ', ' vocals', ' reduces', 'Civil', 'ussion', ' deeds']
+</code></pre></div></div>
+
+<p>We pass it through our 2 layer attention-only model</p>
+
+<p>we get attention pattern like this for layer 0 <img src="i6.png" alt="i6" />
+here 7 is a <strong>previous token head</strong></p>
+
+<p>and we get this attention pattern for layer 1
+<img src="i7.png" alt="i7" /></p>
+
+<p>4 and 7 are induction heads, cause we see the activations for seq_len -1 diagonal</p>
+
+<p>So what we can conclude from this is that OK circuit from attention head no 7 in layer 0 always attends to the previous token, OV circuit from the same head writes the previous token information in the embedding subspace.</p>
+
+<p>In layer 1, attention 4,10, K-composition is used i.e the output of attention head 7 is used as the key in these attentions, the QK circuit looks at the source token whose previous token is the destination token (i.e current token) and OV circuits writes this information in the embedding subspace (i.e info about which tokens come next).</p>
+
+<p><strong>NOTE</strong> decomposition trick only works for things that are linear, it would work if there are no activation functions eg, ReLU, GeLU. or would only work before softmax, rather than after softmax.</p>
+
+<h2 id="a-mathematical-framework-for-transformer-circuits">A Mathematical Framework for Transformer Circuits</h2>
+
+<p><strong>Key takeaways</strong></p>
+
+<ul>
+  <li>Residual stream (RS) can be thought of sum of changes added by each layer (embedding, attention, MLP)</li>
+  <li>The residual stream has a deeply linear structure.</li>
+  <li>dimensions of the residual stream become something like “memory” or “bandwidth”</li>
+  <li>Why do we decompose residual stream and study them independently? because they try to communicate in superposition. Meaning, a residual stream only has limited dimensions eg 512 and at MLP it has to interact with a lot more dimensions i.e 4Xmore dimension than it has space on it. So its better to study them independently. So the RS has very high demand, is the reason why some info gets deleted and some added by some layers.</li>
+  <li>Attention heads copy information from the residual stream of one token to the residual stream of another. They typically write
+to a different subspace than they read from.
+-</li>
+</ul>
+
+<h3 id="paper">Paper</h3>
+
+<p>implement this formula to find which component/layer are important <img src="i8.png" alt="i8" /></p>
+
+<p>to find how good they are (faithful) use this equation</p>
+
+<p><img src="i9.png" alt="i9" /></p>
+
+<p>IDENTIFYING ANSWER-PROMOTING COMPONENTS
+train linear probing for each layer, at each position p, find which which layer at which position promote the correct-answer</p>
+
+<p>DECOMPOSING CIRCUIT MLPS TO INDIVIDUAL NEURONS</p>
+
+<p>Go more deep into the MLP to see which neurons promote arithmetic calculation</p>
+
+<p>do activation patching on neurons.</p>
+
+<p>they find &gt; neurons with the highest effect are different between operators.</p>
+
+<p>only 200 neurons (roughly 1.5%) per layer are needed to achieve high faithfulness and correctly compute arithmetic prompts.</p>
+
+<p>among top 200 they examine neurons, by hypothesizing that 1. their key denotes the activation patterns, and 2. their values encodes the correct output in these dimension.</p>
+
+<p>Approach</p>
+
+<p>Our Hypothesis: Circuits for Math Reasoning only work for similar problems (i.e the patterns/distributions LLMs encoded in their weights during their training) and circuits fail when they receives problems that require calculation which is out-of-distribution.</p>
+
+<p>The hypothesis is to basically prove why LLMs are not robust in Math Reasoning.</p>
+
+<p>Steps to prove:</p>
+
+<ol>
+  <li>Find circuits of LMs responsible for Math Reasoning/Calculations for correct output ( i.e we find circuit for problems which LMs can solve and ignore the problems on which they fail) using patching. (calculating indirect effect (IE) as done in this paper https://arxiv.org/pdf/2305.15054)</li>
+  <li>We can go further and find specific neurons responsible for calculations by finding the top-k tokens for specific neurons and patching/ablating them to find if they’re really important. However, I believe we can limit experiment to til finding the circuits as mentioned in step 1.</li>
+  <li>Generate adversarial math problems (i.e out of distribution problems ). We can simply opt for M2 level problems as done in this paper (https://arxiv.org/pdf/2402.17916)</li>
+  <li>Test those adversarial problems on LMs, filter and keep only the problems on which LMs produce incorrect output and study their whole output ( which should also include their step-by-step reasoning)</li>
+</ol>
+
+<p>for example:</p>
+
+<p><strong>Prompt</strong>:</p>
+
+<p>Chenny is 64 years old. Alyana is 54 years younger than Chenny. How old is Anne if she is 55 years older than Alyana?</p>
+
+<p>LM output:</p>
+
+<p>To determine Anne’s age, we need to follow these steps:</p>
+
+<ol>
+  <li>Calculate Alyana’s age.</li>
+  <li>Use Alyana’s age to find Anne’s age.</li>
+</ol>
+
+<p><strong>Step 1: Calculate Alyana’s age.</strong> Chenny is 64 years old. Alyana is 54 years younger than Chenny. So, Alyana’s age is: [ 64 - 54 = 100 ]</p>
+
+<p><strong>Step 2: Calculate Anne’s age.</strong> Anne is 55 years older than Alyana. So, Anne’s age is: [ 100 + 55 = 155 ] Thus, Anne is (\boxed{155}) years old.</p>
+
+<ol>
+  <li>Analyze the point where there is error in calculation, i.e there was error in <code class="language-plaintext highlighter-rouge">\[ 64 - 54 = 100 \]</code> in the LM’s output above.</li>
+  <li>We hypothesize here that the mistake in calculation was because the circuits lacks patterns/ heuristics to solve the problem. The concept about patterns/heuristics can be found in this recent paper (https://arxiv.org/pdf/2410.21272). To elaborate, while training it was able to encode this pattern/ heuristics that 5-4 = 1 in their weights, but it cant perform 65 - 54 because it lacks those patterns/heuristics.</li>
+  <li>We can prove our hypothesis to be true here, if we can supply it with the necessary pattern/heuristics. To do so,</li>
+  <li>We run the LMs with our prompt new prompt.</li>
+</ol>
+
+<p>PROMPT:</p>
+
+<p>Chenny is 64 years old. Alyana is 54 years younger than Chenny. How old is Anne if she is 55 years older than Alyana?</p>
+
+<p>To determine Anne’s age, we need to follow these steps:</p>
+
+<ol>
+  <li>Calculate Alyana’s age.</li>
+  <li>Use Alyana’s age to find Anne’s age.
+<strong>Step 1: Calculate Alyana’s age.</strong> Chenny is 64 years old. Alyana is 54 years younger than Chenny. So, Alyana’s age is: [ 64 - 54 = 10</li>
+</ol>
+
+<p>as you can see our new prompt is <strong>previous prompt + the LM’s output til the point where LMs get calculations wrong</strong>
+but we manually correct the calculation, example 64 - 55 = 100 was corrected to 64 - 55 = 10,</p>
+
+<p>and we get the activations for this new prompt by only generating the activations for only 1 new sequence (meaning we don’t let it complete the whole sequence, the point is to just get activations till the point where it gets wrong) , and then patch the circuit activations from this new corrected run to the old run where it got it wrong.</p>
+
+<p>Now, if the old run is able to get the answer right after the patching process, it’s very likely that it lacked the necessary pattern/heuristics for solving that problem.</p>
+
+<p>The bottleneck/time consuming thing would be manually identifying the point in the LM’s output where it has error and correcting it.</p>
+
+<p>logit difference</p>
+
+<p>The metric also is a mostly linear function of the residual stream (unlike probability-based metrics) which makes it easy to directly attribute logit difference to individual components (“direct logit attribution”, “logit lens”).</p>
+
+<p>Probabilities: This metric measures the probability of the right answer, or the difference in probabilities of different answers. The main issue with such metrics is Probabilities are non-linear, in the sense that they track the logits ~exponentially. For example, a model component adding +2 to a given logit can create a 1 or 40 percentage point probability increase, just depending on what the baseline was. As an example of the non-linearity consider the orange line in the figure above: A modest increase in logit difference around layer 17 converts to a jump in probability. Probabilities also inherit the problems of the logprob metric, namely saturation and unspecificity. The figure shows the saturation effect for the orange line at layer &gt;18.</p>
+
+<p>TLDR: probability is exponential we can’t attribute model component’s work to prob change completely.</p>
+
+<p>I would like to tell you the update about the work that did in past 2 weeks.</p>
+
+<p>In the first week, I was involved in reading the paper that you sent me. I’ve attached slides for those paper which is attached in this email. Afterwards, I did some experimentation of the basics of Mechanistic Interpretability such as probing, logits lens and ablation using TransformerLens library, then I studied how induction, QK and OV circuits work, and some detail about K composition.</p>
+
+<p>In the second week, I started experimentation by looking into neurons to see if I can find specific neurons that are responsible for math reasoning. I used few samples from GSM8K dataset. I was able to find specific neurons responsible for</p>
+
+<h3 id="direct-effect">Direct effect</h3>
+
+<p>measuring how patching/ablation affects the logits directly</p>
+
+<h3 id="indirect-effect">Indirect effect</h3>
+
+<p>measuring how patching/ablation affects the logits indirectly, for example: patching one attention layer might not contribute directly to logits but may interact with further attention layer, it kind of a chain effect. Hard to measure.</p>
+
+<h3 id="logit-difference">Logit difference</h3>
+
+<p>logit differnce is easier to understand</p>
+
+<p>logit difference == logprob difference</p>
+
+<p><img src="i10.png" alt="i10" /></p>
+
+<h3 id="things-to-check">Things to check</h3>
+
+<ul>
+  <li>Compute the likelihood of the input “22 + 78 =” under the model’s probability distribution.</li>
+  <li>Compare this likelihood to the likelihood of known in-distribution examples.</li>
+  <li>If the likelihood is significantly lower, the input might be OOD.</li>
+</ul>
+
+<p>We can also check if the number is deleted by ffn or by the composition.</p>
+
+<ul>
+  <li>See all the logit lens of residual network and also the logit lens of ffn and see if it deletes, See ffns are kv memories paper in the end.</li>
+</ul>
+
+<h4 id="references">References</h4>
+
+<p>https://dynalist.io/d/n2ZWtnoYHrU1s4vnFSAQ519J#z=_Jzi6YHRHKP1JziwdE02qdYZ
+https://www.lesswrong.com/posts/TvrfY4c9eaGLeyDkE/induction-heads-illustrated</p>
+
+<p>best practices for patching https://arxiv.org/pdf/2309.16042</p>
+</div>
+
+  
+  <div class="tags">
+    
+    <span class="tag">interpretability</span>
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

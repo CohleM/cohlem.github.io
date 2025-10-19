@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matrix Visualization - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Matrix Visualization</h1>
+<p>24 Dec 2024 - cohlem</p>
+
+<p>In deep learning, it’s important to visualize a matrix and how it is represented in a dimension space because the operations that we perform on those matrix becomes very much intuitive afterwards.</p>
+
+<h3 id="visualizing-two-dimensional-matrix">Visualizing two dimensional matrix.</h3>
+
+<p>This has to be the most intuitive visualization.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[ [12, 63, 10, 42, 70, 31, 34, 8, 34, 5],
+[10, 97, 100, 39, 64, 25, 86, 22, 31, 25],
+[28, 44, 82, 61, 70, 94, 22, 88, 89, 56] ]
+</code></pre></div></div>
+
+<p>We can simply imagine rows are some examples and columns as those examples’ features.</p>
+
+<h3 id="visualizing-three-dimensional-matrix">Visualizing three dimensional matrix.</h3>
+
+<p>let’s imagine we have a matrix M with the values</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>M =
+[
+  [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+    [10, 11, 12]
+  ],
+  [
+    [13, 14, 15],
+    [16, 17, 18],
+    [19, 20, 21],
+    [22, 23, 24]
+  ]
+]
+</code></pre></div></div>
+
+<p>it is of dimension (2,4,3). How do we visualize it?
+The key to visualizing a three dimensional matrix is to image it like a two dimensional matrix but only that it’s first dimension is stacked behind one after another.</p>
+
+<p>for instance, for the same matrix image it like it is (4,3) matrix but two of these are stacked behind one after another.</p>
+
+<p>let’s understand it using an image.</p>
+
+<p><img src="sub-notes/Matrix-Visualization/fig1.png" alt="fig1" />
+as you can see from this size of the view we can mostly see its last two dimensions i.e (4,3).</p>
+
+<p>Let’s take another view.
+<img src="sub-notes/Matrix-Visualization/fig2.png" alt="fig2" /></p>
+
+<p>as you can see that 2 examples are stacked behind one another.</p>
+
+<p>To visualize it in 3D you can take visit this website https://array-3d-viz.vercel.app</p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Matrix Visualization</h1>
+    <time datetime="2024-12-24T00:00:00+05:45">
+      December 24, 2024
+    </time>
+  </header>
+
+  <div class="post-content"><p>In deep learning, it’s important to visualize a matrix and how it is represented in a dimension space because the operations that we perform on those matrix becomes very much intuitive afterwards.</p>
+
+<h3 id="visualizing-two-dimensional-matrix">Visualizing two dimensional matrix.</h3>
+
+<p>This has to be the most intuitive visualization.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[ [12, 63, 10, 42, 70, 31, 34, 8, 34, 5],
+[10, 97, 100, 39, 64, 25, 86, 22, 31, 25],
+[28, 44, 82, 61, 70, 94, 22, 88, 89, 56] ]
+</code></pre></div></div>
+
+<p>We can simply imagine rows are some examples and columns as those examples’ features.</p>
+
+<h3 id="visualizing-three-dimensional-matrix">Visualizing three dimensional matrix.</h3>
+
+<p>let’s imagine we have a matrix M with the values</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>M =
+[
+  [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+    [10, 11, 12]
+  ],
+  [
+    [13, 14, 15],
+    [16, 17, 18],
+    [19, 20, 21],
+    [22, 23, 24]
+  ]
+]
+</code></pre></div></div>
+
+<p>it is of dimension (2,4,3). How do we visualize it?
+The key to visualizing a three dimensional matrix is to image it like a two dimensional matrix but only that it’s first dimension is stacked behind one after another.</p>
+
+<p>for instance, for the same matrix image it like it is (4,3) matrix but two of these are stacked behind one after another.</p>
+
+<p>let’s understand it using an image.</p>
+
+<p><img src="sub-notes/Matrix-Visualization/fig1.png" alt="fig1" />
+as you can see from this size of the view we can mostly see its last two dimensions i.e (4,3).</p>
+
+<p>Let’s take another view.
+<img src="sub-notes/Matrix-Visualization/fig2.png" alt="fig2" /></p>
+
+<p>as you can see that 2 examples are stacked behind one another.</p>
+
+<p>To visualize it in 3D you can take visit this website https://array-3d-viz.vercel.app</p>
+</div>
+
+  
+  <div class="tags">
+    
+    <span class="tag">misc</span>
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mixture Of Experts - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Mixture Of Experts</h1>
+<p>05 Jan 2025 - cohlem</p>
+
+<p>Image Source:
+https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts</p>
+
+<h2 id="basic-moe-structure">Basic MoE structure</h2>
+
+<ul>
+  <li>Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs.
+<img src="moefig1.png" alt="fig1" /></li>
+</ul>
+
+<p>Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.</p>
+
+<p><img src="moefig2.png" alt="fig2" />
+Down the line it could use multiple experts but at different blocks i.e (layers)</p>
+
+<p>A routing layer is set to choose experts
+<img src="fig3.png" alt="fig3" /></p>
+
+<p>depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected.</p>
+
+<p>Not only will there be an uneven distribution of experts chosen, but some experts will hardly be trained at all. This results in issues during both training and inference.</p>
+
+<p>Instead, we want equal importance among experts during training and inference, which we call <strong>load balancing</strong>. In a way, it’s to prevent overfitting on the same experts.</p>
+
+<h2 id="load-balancing">Load Balancing</h2>
+
+<p>To balance the importance of experts, we will need to look at the router as it is the main component to decide which experts to choose at a given time.</p>
+
+<h4 id="keeptopk">KeepTopK</h4>
+
+<p>By introducing trainable (gaussian) noise, we can prevent the same experts from always being picked. It’ll help router to distribute experts and not restrict to some specific experts.</p>
+
+<p><img src="fig4.png" alt="fig4" /></p>
+
+<h3 id="capacity-factor">Capacity Factor</h3>
+
+<p>Distributing experts is not enough because distribution of expert happens close to no.of.steps times but there are a lot of batch of tokens that are processed in a single step. An expert could be assigned more than the others but it can also be assigned less tokens as compared to others.
+The solution is to equally divide the number of tokens to all the expert using capacity factor given by this formula.
+<img src="fig5.png" alt="fig5" /></p>
+
+<h2 id="implementation">Implementation</h2>
+
+<p>Now that we know what MoE is, let’s implement it from scratch.</p>
+
+<h3 id="implementation-of-adaptive-mixture-of-local-experts">Implementation of <a href="https://www.cs.toronto.edu/~hinton/absps/jjnh91.pdf">Adaptive Mixture of Local Experts</a></h3>
+
+<p>The MoE was defined as a set of independent <strong>experts</strong> (feed-forward networks) alongside a <strong>gating network</strong> (also a feed-forward network, ). All the experts and the gating network receive the same input . The gating network outputs the distribution of each expert relevance/importance for the given input and is defined as by Softmax(x@Wg) in its simplest form, where Wg  is a (optional) learnable transformation. Finally, the output of the system is the sum of the outputs of all experts weighted by the output of the gating network.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="n">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="n">torch</span><span class="p">.</span><span class="nf">manual_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Config</span><span class="p">():</span>
+    <span class="n">n_embd</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">block_size</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">expert_size</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">vocab_size</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">65</span>
+
+<span class="k">class</span> <span class="nc">Router</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">FFN</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">ffn</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">vocab_size</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="nf">ffn</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MoE</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="nc">Router</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">experts</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">ModuleList</span><span class="p">([</span><span class="nc">FFN</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="c1">#         we = self.we(x) # batch's embeddings (B,T,C)
+</span>        <span class="n">ep</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">).</span><span class="nf">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># expert probability (B,T,E)
+</span>        <span class="n">ep</span> <span class="o">=</span> <span class="n">ep</span><span class="p">.</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># adding one dim to each of our experts, (B,T,E,1)
+</span>        <span class="n">exp_out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">stack</span><span class="p">([</span><span class="nf">out</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">self</span><span class="p">.</span><span class="n">experts</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># (B,T,E,C)
+</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">exp_out</span> <span class="o">*</span> <span class="n">ep</span> <span class="c1"># (B,T,E,C) x (B,T,E,1)
+</span>        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># (B,T,C)
+</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+</code></pre></div></div>
+
+<h3 id="implementation-of-outrageously-large-neural-networks-the-sparsely-gated-mixture-of-experts-layer">Implementation of <a href="https://arxiv.org/pdf/1701.06538">OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER</a></h3>
+
+<p>Using all the experts for inputs will be computationally expensive. A way to reduce that is to implement noise_gating + topK method specified in the paper <a href="https://arxiv.org/pdf/1701.06538">OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER</a></p>
+
+<p><img src="fig6.png" alt="fig6" /></p>
+
+<p>let’s understand these equation with reference to the code</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">clean_logits</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1"># corresponds to (x.W) in the equation 4
+</span></code></pre></div></div>
+
+<p>This is simply using the gating function to calculate the probability of experts for each input tokens. (this self.router(x) is an object of a class Router defined above)</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn_like</span><span class="p">(</span><span class="n">clean_logits</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">.</span><span class="nf">softplus</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="nf">wnoise</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>here torch.randn_like(clean_logits) resembles StandardNormal(), where we choose a random gaussian noise (mean = 0, std=1) to be added as a noise. Adding this will introduce some noise which encourages model to choose other experts.</p>
+
+<p>self.wnoise is a noise but it’s input dependent learnable parameter, because we don’t want to choose experts completely randomly, instead it has to be input dependent, and it is learned during backprop.</p>
+
+<p>and by adding F.softplus we are capping the output of noise to be greater than 0. it’s approximately similar to relu.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">h</span> <span class="o">=</span> <span class="n">clean_logits</span> <span class="o">+</span> <span class="n">noise</span>
+</code></pre></div></div>
+
+<p>we add the clean logits. and the noise, so we now encourage models to explore other experts too.</p>
+
+<p>Now, let’s make our MoE compute efficient i.e by choosing only the topK models for specific tokens.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">topk_val</span><span class="p">,</span> <span class="n">topk_ind</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">topk</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">top_k</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>it will choose the topK experts for each token. topK is taken along the last dimension i.e -1 because experts probability is along the last axis. i.e h shape is (B,T,expert_size)</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">full_like</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="nf">float</span><span class="p">(</span><span class="sh">'</span><span class="s">-inf</span><span class="sh">'</span><span class="p">))</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">topk_ind</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">topk_val</span><span class="p">)</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>we are now creating a new tensor with all the values with negative infinity and setting the topK values with their original values and for other there will be negative infinity. Now normalizing using softmax we get normalized probabilities and 0 in place of negative infinity.</p>
+
+<p>now that we have our expert’s probability for each input. Let’s now pass the input through expert and take the weighted sum because we have topk probability assigned to a token input.</p>
+
+<p>calculating weighted sum for the input tokens can be a difficult in terms of implementation.</p>
+
+<p>The general idea is to iterate over all the experts to first create a mask from our router’s output probabilities for each expert. (i.e creating a mask of True if this input probability in within topk for that specific expert) and flatten that mask, and pluck out the inputs from the flattened input
+using that mask (mask will help us pluck out input tokens with specific index where mask value is true) and pass that plucked out input to the expert layer and then multiply the expert layer’s output with the router’s probability for that specific expert and then keep adding these values for all the experts because we are doing the weighted sum.</p>
+
+<p>The code to do that is given below (it can take some time to understand, but it’s relative easy if you understand this explanation)</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="c1">#         we = self.we(x) # batch's embeddings (B,T,C)
+</span>        <span class="n">out</span><span class="p">,</span><span class="n">topk_val</span><span class="p">,</span><span class="n">topk_ind</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1"># out is size (B,T,experts) experts (B,T,top_k)
+</span>
+        <span class="n">flat_x</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="c1">#(B*T,C)
+</span>        <span class="n">final_output</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">flat_x</span><span class="p">)</span> <span class="c1">#
+</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">expert</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">experts</span><span class="p">):</span>
+            <span class="n">expert_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="c1"># (B,T)
+</span>            <span class="n">expert_mask</span> <span class="o">=</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># (B*T)
+</span>
+            <span class="k">if</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">any</span><span class="p">():</span> <span class="c1"># pass through expert layer only if flattened expert has any one true value
+</span>                <span class="n">select_x</span> <span class="o">=</span> <span class="n">flat_x</span><span class="p">[</span><span class="n">expert_mask</span><span class="p">]</span>
+                <span class="n">expert_x</span> <span class="o">=</span> <span class="nf">expert</span><span class="p">(</span><span class="n">select_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]).</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="n">expert_mask</span><span class="p">].</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1">#unsqueeze for broadcasting across columns
+</span>                <span class="n">final_output</span><span class="p">[</span><span class="n">expert_mask</span><span class="p">]</span> <span class="o">+=</span> <span class="n">expert_x</span> <span class="c1"># add because our inp is combination of experts, i.e one token can take can top2 prob
+</span>
+        <span class="n">final_output</span> <span class="o">=</span> <span class="n">final_output</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">final_output</span>
+</code></pre></div></div>
+
+<h4 id="full-code-til-here">Full code til here</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Router</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">))</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">wnoise</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">clean_logits</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn_like</span><span class="p">(</span><span class="n">clean_logits</span><span class="p">)</span><span class="o">*</span><span class="n">nn</span><span class="p">.</span><span class="nc">Softplus</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="nf">wnoise</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">clean_logits</span> <span class="o">+</span> <span class="n">noise</span>
+
+        <span class="n">topk_val</span><span class="p">,</span> <span class="n">topk_ind</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">topk</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">top_k</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">full_like</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="nf">float</span><span class="p">(</span><span class="sh">'</span><span class="s">-inf</span><span class="sh">'</span><span class="p">))</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">topk_ind</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">topk_val</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span><span class="p">,</span><span class="n">topk_val</span><span class="p">,</span> <span class="n">topk_ind</span>
+
+
+
+<span class="k">class</span> <span class="nc">MoE</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="nc">Router</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">experts</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">ModuleList</span><span class="p">([</span><span class="nc">FFN</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="c1">#         we = self.we(x) # batch's embeddings (B,T,C)
+</span>        <span class="n">out</span><span class="p">,</span><span class="n">topk_val</span><span class="p">,</span><span class="n">topk_ind</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1"># out is size (B,T,experts) experts (B,T,top_k)
+</span>
+        <span class="n">flat_x</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="c1">#(B*T,C)
+</span>
+        <span class="n">final_output</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">flat_x</span><span class="p">)</span>
+
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">expert</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">experts</span><span class="p">):</span>
+            <span class="n">expert_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="c1"># (B,T)
+</span>            <span class="n">expert_mask</span> <span class="o">=</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># (B*T)
+</span>
+            <span class="nf">print</span><span class="p">(</span><span class="n">em_new</span> <span class="o">==</span> <span class="n">expert_mask</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">any</span><span class="p">():</span>
+                <span class="n">select_x</span> <span class="o">=</span> <span class="n">flat_x</span><span class="p">[</span><span class="n">expert_mask</span><span class="p">]</span>
+                <span class="n">expert_x</span> <span class="o">=</span> <span class="nf">expert</span><span class="p">(</span><span class="n">select_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]).</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="n">expert_mask</span><span class="p">].</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1">#unsqueeze for broadcasting across columns
+</span>                <span class="n">final_output</span><span class="p">[</span><span class="n">expert_mask</span><span class="p">]</span> <span class="o">+=</span> <span class="n">expert_x</span> <span class="c1"># add because our inp is combination of experts, i.e one token can take can top2 prob
+</span>
+        <span class="n">final_output</span> <span class="o">=</span> <span class="n">final_output</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">final_output</span>
+</code></pre></div></div>
+
+<p>This implementation assigns expert for each no.of.steps in our training step, here even if the experts are assigned equally, the total number of tokens assigned to those expert could be different, for that reason we would want to distribute input tokens equally to all the experts. We can do that using expert capacity explained above in the Load Balancing section above.</p>
+
+<h4 id="expert-capacity-implementation">Expert Capacity implementation</h4>
+
+<p>we define expert capacity as total number of tokens in a batch divided by number of experts times the capacity factor (which controls the scale).</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">exp_cap</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">B</span><span class="o">*</span><span class="n">T</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">top_k</span> <span class="o">/</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">capacity_factor</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<p>select the indices of input where this specific expert is applied and limit the inputs to be processed to be within the expert capacity if it is greater than expert capacity and truncate other tokens.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">selected_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">nonzero</span><span class="p">(</span><span class="n">expert_mask</span><span class="p">).</span><span class="nf">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">limited_indices</span> <span class="o">=</span> <span class="n">selected_indices</span><span class="p">[:</span><span class="n">exp_cap</span><span class="p">]</span> <span class="k">if</span> <span class="n">selected_indices</span><span class="p">.</span><span class="nf">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">exp_cap</span> <span class="k">else</span> <span class="n">selected_indices</span>
+</code></pre></div></div>
+
+<h4 id="full-implementation">Full implementation</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Router</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">))</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">wnoise</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">clean_logits</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn_like</span><span class="p">(</span><span class="n">clean_logits</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">.</span><span class="nf">softplus</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="nf">wnoise</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">clean_logits</span> <span class="o">+</span> <span class="n">noise</span>
+
+        <span class="n">topk_val</span><span class="p">,</span> <span class="n">topk_ind</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">topk</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">top_k</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">full_like</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="nf">float</span><span class="p">(</span><span class="sh">'</span><span class="s">-inf</span><span class="sh">'</span><span class="p">))</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">topk_ind</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">topk_val</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span><span class="p">,</span><span class="n">topk_val</span><span class="p">,</span> <span class="n">topk_ind</span>
+
+
+
+<span class="k">class</span> <span class="nc">MoE</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="nc">Router</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">experts</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">ModuleList</span><span class="p">([</span><span class="nc">FFN</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">)])</span>
+	    <span class="n">self</span><span class="p">.</span><span class="n">wimportance</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="c1">#         we = self.we(x) # batch's embeddings (B,T,C)
+</span>        <span class="n">B</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">C</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span>
+        <span class="n">out</span><span class="p">,</span><span class="n">topk_val</span><span class="p">,</span><span class="n">topk_ind</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1"># out is size (B,T,experts) experts (B,T,top_k)
+</span>
+        <span class="n">flat_x</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="c1">#(B*T,C)
+</span>
+        <span class="n">final_output</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">flat_x</span><span class="p">)</span>
+
+        <span class="n">exp_cap</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">B</span><span class="o">*</span><span class="n">T</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">top_k</span> <span class="o">/</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">capacity_factor</span><span class="p">)</span>
+
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">expert</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">experts</span><span class="p">):</span>
+            <span class="n">expert_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="c1"># (B,T)
+</span>            <span class="n">expert_mask</span> <span class="o">=</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># (B*T)
+</span>
+            <span class="n">selected_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">nonzero</span><span class="p">(</span><span class="n">expert_mask</span><span class="p">).</span><span class="nf">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">limited_indices</span> <span class="o">=</span> <span class="n">selected_indices</span><span class="p">[:</span><span class="n">exp_cap</span><span class="p">]</span> <span class="k">if</span> <span class="n">selected_indices</span><span class="p">.</span><span class="nf">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">exp_cap</span> <span class="k">else</span> <span class="n">selected_indices</span>
+
+
+            <span class="k">if</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">any</span><span class="p">():</span>
+
+                <span class="n">select_x</span> <span class="o">=</span> <span class="n">flat_x</span><span class="p">[</span><span class="n">limited_indices</span><span class="p">]</span>
+
+                <span class="n">expert_x</span> <span class="o">=</span> <span class="nf">expert</span><span class="p">(</span><span class="n">select_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]).</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="n">limited_indices</span><span class="p">].</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1">#unsqueeze for broadcasting across columns
+</span>
+                <span class="n">final_output</span><span class="p">[</span><span class="n">limited_indices</span><span class="p">]</span> <span class="o">+=</span> <span class="n">expert_x</span> <span class="c1"># add because our inp is combination of experts, i.e one token can take can top2 prob
+</span>
+        <span class="n">final_output</span> <span class="o">=</span> <span class="n">final_output</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c1"># Importance scores for experts i.e batchwise sum of the router's output
+</span>        <span class="n">importance</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># loss that needs to be added to encourage model to choose diverse experts
+</span>        <span class="n">imp_std</span><span class="p">,</span><span class="n">imp_mean</span> <span class="o">=</span> <span class="n">importance</span><span class="p">.</span><span class="nf">std</span><span class="p">(),</span> <span class="n">importance</span><span class="p">.</span><span class="nf">mean</span><span class="p">()</span>
+
+        <span class="n">loss_moe</span> <span class="o">=</span> <span class="p">((</span><span class="n">imp_std</span><span class="o">/</span><span class="n">imp_mean</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">wimportance</span>
+
+
+        <span class="k">return</span> <span class="n">final_output</span><span class="p">,</span><span class="n">loss_moe</span>
+</code></pre></div></div>
+
+<h4 id="auxiliary-loss">Auxiliary Loss</h4>
+
+<p><img src="fig7.png" alt="fig7" /></p>
+
+<p>To encourage models to make expert’s probability uniform (choosing all the experts and not restricting to some experts) We add to our main loss another loss term that we get from our MoE layer. It is calculated by first calculating the importance which is simply calculating the batch sum over the inputs for the router’s output and calculating the square of the coefficient of variation from the importance and then multiplying with a hand tuned scaling factor called Wimportance.</p>
+
+<p>The implementation from this auxiliary loss is already implemented in the code above.</p>
+
+<h3 id="visualizations">Visualizations</h3>
+
+<p>what’s the point of adding the MoE losses and noises if we can’t visualize it’s effect. I’ve trained my GPT + MoE architecture with variations to visualize what they actually do.</p>
+
+<h4 id="no-noise-and-no-moe-loss">No Noise and No MoE loss</h4>
+
+<p>I did not add the noise term i.e in the equation 4 in the picture above and did not add MoE loss to our original loss function.</p>
+
+<p>x axis = no of steps
+y axis = no of tokens assigned to each expert
+<img src="no_noise_no_lossmoe.png" alt="no_noise_no_lossmoe" /></p>
+
+<p>Even though the plot seems to fluctuate too much, we can see that there is inappropriate distribution of tokens among the experts i.e expert 0 is assigned less tokens and and expert 1 and 3 are assigned more tokens and the curve relatively stays the same because we did not add the loss function too.</p>
+
+<h4 id="noise-but-no-moe-loss">Noise but no MoE loss</h4>
+
+<p><img src="noise_yes_lossmoe_no.png" alt="noise_yes_lossmoe_no" /></p>
+
+<p>There is relatively small gap between number of tokens assigned to the experts because this time we added gaussian noise which reduces the gap, but the number of tokens assigned to them remains constantly fluctuating.</p>
+
+<h4 id="no-noise-but-moeloss-included">No Noise but MoELoss included</h4>
+
+<p><img src="noise_no_lossmoe_yes.png" alt="noise_no_lossmoe_yes" /></p>
+
+<p>As you can see there was inappropriate distribution of tokens in the beginning but the model seems to have learned to distribute the tokens among the experts after training for some time.</p>
+
+<h4 id="including-noise-and-moe-loss">Including Noise and MoE Loss</h4>
+
+<p><img src="loss_noisy_topk.png" alt="loss_noisy_topk" /></p>
+
+<p>it looks similar to the previous one, i.e big variation in the beginning but learns to distribute afterwards, its different from the previous one in that initially the range of tokens assigned to experts are between (150, 350) but in the previous plot it was (100,400). This less variation in this plot can be attributed to the addition of gaussian noise.</p>
+
+<p>In conclusion, addition of loss seems to be more important than including the Noise because it seems to become stable in the later iterations.</p>
+
+<p>Whole code with GPT architecture and this MoE implementation can be found here:
+https://github.com/CohleM/deep_learning/blob/master/MoE/moe.ipynb</p>
+
+<h3 id="improvements">Improvements</h3>
+
+<ul>
+  <li>Replace for loop with matrix multiplication while calculating the weighted sum of experts.</li>
+  <li>Improve Block class’ implementation, it doesn’t look neat, we return the modified x and the loss from the moe</li>
+</ul>
+
+<h3 id="switch-transformers-paper">Switch Transformers (<a href="https://arxiv.org/pdf/2101.03961">paper</a>)</h3>
+
+<h4 id="key-points">Key points</h4>
+
+<ul>
+  <li>model improves as the parameters are increase.</li>
+  <li>Following the same pattern they increase the parameter count but with same the FLOP used for a token in previous implementations.</li>
+  <li>Instead of routing tokens to topK &gt; 1 experts they route tokens to k=1 experts (this preserves model quality, reduces routing computation and performs better)</li>
+  <li>since gate function is a softmax layer it is perfectly differentiable.</li>
+</ul>
+
+<p>(out of this paper: discrete operations are not differentiable i.e choosing max from a list, cause derivative of constant is 0 so gradient propagation stops)</p>
+
+<p>Choosing right capacity factor is important as shown in figure below.
+<img src="fig8.png" alt="fig8" /></p>
+
+<p>as you can see the when CF is 1 only one token is truncated (not evaluated) but is passed through to next layers through residual connection.</p>
+
+<ul>
+  <li>when CF is 1.5 3 memory spaces are wasted.</li>
+  <li>So there’s a tradeoff.</li>
+  <li>They find ensuring lower rates of dropped tokens are important for the scaling of sparse expert-models.</li>
+</ul>
+
+<p>The auxiliary loss is given by this equation
+<img src="fig9.png" alt="fig9" /></p>
+
+<blockquote>
+  <p>Since we seek uniform routing of the batch of tokens across the N experts, we desire both vectors to have values of 1/N</p>
+</blockquote>
+
+<p>1/N is a percentage term i.e if there are 4 experts then each experts should be assigned 25% i.e 1/4 tokens.</p>
+
+<p>similarly for Pi it should be 1/n because each router should assign equal probability i.e 25% to promote uniform distribution.</p>
+
+<p>The implementation of loss is likewise.</p>
+
+<h4 id="f-vector">F vector</h4>
+
+<p>consider this sample is our router probability for all 5 tokens and 4 experts (5x4) matrix</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sample</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">sample</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[ 0.0384,  0.3811, -0.9004,  0.0853],
+        [ 0.2770,  0.1141, -0.6625,  0.4889],
+        [ 0.7854,  0.7123, -0.3660, -1.2273],
+        [ 0.9355,  1.9071,  0.7386, -0.3621],
+        [ 0.8633, -0.5028, -1.0617, -1.2414]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">val</span><span class="p">,</span><span class="n">ind</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">topk</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">val</span><span class="p">,</span><span class="n">ind</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(tensor([[0.3811],
+         [0.4889],
+         [0.7854],
+         [1.9071],
+         [0.8633]]),
+ tensor([[1],
+         [3],
+         [0],
+         [1],
+         [0]]))
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">f_vector</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+<span class="n">ones</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+
+<span class="n">f_vector</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">f_vector</span><span class="p">.</span><span class="nf">scatter_</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">ind</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">ones</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[0., 1., 0., 0.],
+        [0., 0., 0., 1.],
+        [1., 0., 0., 0.],
+        [0., 1., 0., 0.],
+        [1., 0., 0., 0.]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">f_vector</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([2., 2., 0., 1.])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">f_vector</span> <span class="o">=</span> <span class="n">f_vector</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="n">f_matrix</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">f_vector</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([0.4000, 0.4000, 0.0000, 0.2000])
+</code></pre></div></div>
+
+<p>see the imbalance? each expert should get 1/4= 0.25 tokens, we need to minimize this inappropriate distribution by adding this in loss function.</p>
+
+<h4 id="p-vector">P vector</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sample</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[ 0.0384,  0.3811, -0.9004,  0.0853],
+        [ 0.2770,  0.1141, -0.6625,  0.4889],
+        [ 0.7854,  0.7123, -0.3660, -1.2273],
+        [ 0.9355,  1.9071,  0.7386, -0.3621],
+        [ 0.8633, -0.5028, -1.0617, -1.2414]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sample</span> <span class="o">=</span> <span class="n">sample</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">sample</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[0.2599, 0.3661, 0.1016, 0.2724],
+        [0.2877, 0.2444, 0.1124, 0.3555],
+        [0.4203, 0.3907, 0.1329, 0.0562],
+        [0.2111, 0.5578, 0.1734, 0.0577],
+        [0.6567, 0.1675, 0.0958, 0.0800]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">p_vector</span> <span class="o">=</span> <span class="n">sample</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="n">sample</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">p_vector</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([0.3671, 0.3453, 0.1232, 0.1644])
+</code></pre></div></div>
+
+<p>as you can see the experts have imbalanced distribution of probabilities, the objective of including P vector is to make this p vector’s distribution uniform</p>
+
+<h4 id="loss-function">loss function</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">N</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.0</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">loss</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">N</span> <span class="o">*</span> <span class="p">(</span><span class="n">p_vector</span><span class="o">*</span><span class="n">f_vector</span><span class="p">).</span><span class="nf">sum</span><span class="p">()</span>
+<span class="n">loss</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor(1.2714)
+</code></pre></div></div>
+
+<p><img src="fig10.png" alt="fig10" /></p>
+
+<h3 id="deepseekmoe-paper">DeepSeekMoE (<a href="https://arxiv.org/pdf/2401.06066">paper</a>)</h3>
+
+<p>One of the recent MoE paper.</p>
+
+<p><img src="fig11.png" alt="fig11" /></p>
+
+<p>There were these limitations.</p>
+
+<ol>
+  <li>Knowledge Hybridity: models utilize small experts (N), information is shared among these experts, and experts can’t be specialized.</li>
+  <li>Knowledge Redundancy: They may train same tokens resulting in experts that learn same concepts, ultimately there is redundancy of knowledge.</li>
+</ol>
+
+<p>In this paper, they propose two changes.</p>
+
+<ol>
+  <li>Fie-grained Expert Segmentation: i.e divide the hidden dimension of current MoE layer to 1/m and create separate mxN number of experts (total parameters remains the same). Doing so will result in greater possibility of choosing experts for a token and experts can be specialized.</li>
+  <li>Shared Expert Isolation: There must be expert that should process some general knowledge task. for that reason they separate out some experts for this knowledge sharing. By sharing knowledge, the fine grained experts don’t need to acquire extra knowledge, enabling them to specialize in specific tasks.</li>
+</ol>
+
+<p><img src="fig12.png" alt="fig12" /></p>
+
+<p>The output representation for a batch, will look like this.</p>
+
+<p>The loss is similar to what we read in switch transformers but incorporating the changes that we made i.e dividing expert into m expert and assigning a common expert. The also include device level balance loss, which is for balancing load across devices. I haven’t read more into how load is balanced in devices, which I leave it for future studies.</p>
+
+<h3 id="references">References</h3>
+
+<ul>
+  <li><a href="https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts">A Visual Guide to Mixture of Experts (MoE)</a></li>
+  <li><a href="https://www.cs.toronto.edu/~hinton/absps/jjnh91.pdf">Adaptive Mixture of Local Experts</a></li>
+  <li><a href="https://arxiv.org/pdf/1701.06538">OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER</a></li>
+  <li><a href="https://arxiv.org/pdf/2101.03961">Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity</a></li>
+  <li><a href="https://arxiv.org/pdf/2401.06066">DeepSeekMoE: Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models</a>)</li>
+</ul>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Mixture Of Experts</h1>
+    <time datetime="2025-01-05T00:00:00+05:45">
+      January 05, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><p>Image Source:
+https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts</p>
+
+<h2 id="basic-moe-structure">Basic MoE structure</h2>
+
+<ul>
+  <li>Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs.
+<img src="moefig1.png" alt="fig1" /></li>
+</ul>
+
+<p>Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.</p>
+
+<p><img src="moefig2.png" alt="fig2" />
+Down the line it could use multiple experts but at different blocks i.e (layers)</p>
+
+<p>A routing layer is set to choose experts
+<img src="fig3.png" alt="fig3" /></p>
+
+<p>depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected.</p>
+
+<p>Not only will there be an uneven distribution of experts chosen, but some experts will hardly be trained at all. This results in issues during both training and inference.</p>
+
+<p>Instead, we want equal importance among experts during training and inference, which we call <strong>load balancing</strong>. In a way, it’s to prevent overfitting on the same experts.</p>
+
+<h2 id="load-balancing">Load Balancing</h2>
+
+<p>To balance the importance of experts, we will need to look at the router as it is the main component to decide which experts to choose at a given time.</p>
+
+<h4 id="keeptopk">KeepTopK</h4>
+
+<p>By introducing trainable (gaussian) noise, we can prevent the same experts from always being picked. It’ll help router to distribute experts and not restrict to some specific experts.</p>
+
+<p><img src="fig4.png" alt="fig4" /></p>
+
+<h3 id="capacity-factor">Capacity Factor</h3>
+
+<p>Distributing experts is not enough because distribution of expert happens close to no.of.steps times but there are a lot of batch of tokens that are processed in a single step. An expert could be assigned more than the others but it can also be assigned less tokens as compared to others.
+The solution is to equally divide the number of tokens to all the expert using capacity factor given by this formula.
+<img src="fig5.png" alt="fig5" /></p>
+
+<h2 id="implementation">Implementation</h2>
+
+<p>Now that we know what MoE is, let’s implement it from scratch.</p>
+
+<h3 id="implementation-of-adaptive-mixture-of-local-experts">Implementation of <a href="https://www.cs.toronto.edu/~hinton/absps/jjnh91.pdf">Adaptive Mixture of Local Experts</a></h3>
+
+<p>The MoE was defined as a set of independent <strong>experts</strong> (feed-forward networks) alongside a <strong>gating network</strong> (also a feed-forward network, ). All the experts and the gating network receive the same input . The gating network outputs the distribution of each expert relevance/importance for the given input and is defined as by Softmax(x@Wg) in its simplest form, where Wg  is a (optional) learnable transformation. Finally, the output of the system is the sum of the outputs of all experts weighted by the output of the gating network.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="n">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="n">torch</span><span class="p">.</span><span class="nf">manual_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Config</span><span class="p">():</span>
+    <span class="n">n_embd</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">block_size</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">expert_size</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">vocab_size</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">65</span>
+
+<span class="k">class</span> <span class="nc">Router</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">FFN</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">ffn</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">vocab_size</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="nf">ffn</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MoE</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="nc">Router</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">experts</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">ModuleList</span><span class="p">([</span><span class="nc">FFN</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="c1">#         we = self.we(x) # batch's embeddings (B,T,C)
+</span>        <span class="n">ep</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">).</span><span class="nf">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># expert probability (B,T,E)
+</span>        <span class="n">ep</span> <span class="o">=</span> <span class="n">ep</span><span class="p">.</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># adding one dim to each of our experts, (B,T,E,1)
+</span>        <span class="n">exp_out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">stack</span><span class="p">([</span><span class="nf">out</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">self</span><span class="p">.</span><span class="n">experts</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># (B,T,E,C)
+</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">exp_out</span> <span class="o">*</span> <span class="n">ep</span> <span class="c1"># (B,T,E,C) x (B,T,E,1)
+</span>        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># (B,T,C)
+</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+</code></pre></div></div>
+
+<h3 id="implementation-of-outrageously-large-neural-networks-the-sparsely-gated-mixture-of-experts-layer">Implementation of <a href="https://arxiv.org/pdf/1701.06538">OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER</a></h3>
+
+<p>Using all the experts for inputs will be computationally expensive. A way to reduce that is to implement noise_gating + topK method specified in the paper <a href="https://arxiv.org/pdf/1701.06538">OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER</a></p>
+
+<p><img src="fig6.png" alt="fig6" /></p>
+
+<p>let’s understand these equation with reference to the code</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">clean_logits</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1"># corresponds to (x.W) in the equation 4
+</span></code></pre></div></div>
+
+<p>This is simply using the gating function to calculate the probability of experts for each input tokens. (this self.router(x) is an object of a class Router defined above)</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn_like</span><span class="p">(</span><span class="n">clean_logits</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">.</span><span class="nf">softplus</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="nf">wnoise</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>here torch.randn_like(clean_logits) resembles StandardNormal(), where we choose a random gaussian noise (mean = 0, std=1) to be added as a noise. Adding this will introduce some noise which encourages model to choose other experts.</p>
+
+<p>self.wnoise is a noise but it’s input dependent learnable parameter, because we don’t want to choose experts completely randomly, instead it has to be input dependent, and it is learned during backprop.</p>
+
+<p>and by adding F.softplus we are capping the output of noise to be greater than 0. it’s approximately similar to relu.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">h</span> <span class="o">=</span> <span class="n">clean_logits</span> <span class="o">+</span> <span class="n">noise</span>
+</code></pre></div></div>
+
+<p>we add the clean logits. and the noise, so we now encourage models to explore other experts too.</p>
+
+<p>Now, let’s make our MoE compute efficient i.e by choosing only the topK models for specific tokens.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">topk_val</span><span class="p">,</span> <span class="n">topk_ind</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">topk</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">top_k</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>it will choose the topK experts for each token. topK is taken along the last dimension i.e -1 because experts probability is along the last axis. i.e h shape is (B,T,expert_size)</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">full_like</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="nf">float</span><span class="p">(</span><span class="sh">'</span><span class="s">-inf</span><span class="sh">'</span><span class="p">))</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">topk_ind</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">topk_val</span><span class="p">)</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>we are now creating a new tensor with all the values with negative infinity and setting the topK values with their original values and for other there will be negative infinity. Now normalizing using softmax we get normalized probabilities and 0 in place of negative infinity.</p>
+
+<p>now that we have our expert’s probability for each input. Let’s now pass the input through expert and take the weighted sum because we have topk probability assigned to a token input.</p>
+
+<p>calculating weighted sum for the input tokens can be a difficult in terms of implementation.</p>
+
+<p>The general idea is to iterate over all the experts to first create a mask from our router’s output probabilities for each expert. (i.e creating a mask of True if this input probability in within topk for that specific expert) and flatten that mask, and pluck out the inputs from the flattened input
+using that mask (mask will help us pluck out input tokens with specific index where mask value is true) and pass that plucked out input to the expert layer and then multiply the expert layer’s output with the router’s probability for that specific expert and then keep adding these values for all the experts because we are doing the weighted sum.</p>
+
+<p>The code to do that is given below (it can take some time to understand, but it’s relative easy if you understand this explanation)</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="c1">#         we = self.we(x) # batch's embeddings (B,T,C)
+</span>        <span class="n">out</span><span class="p">,</span><span class="n">topk_val</span><span class="p">,</span><span class="n">topk_ind</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1"># out is size (B,T,experts) experts (B,T,top_k)
+</span>
+        <span class="n">flat_x</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="c1">#(B*T,C)
+</span>        <span class="n">final_output</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">flat_x</span><span class="p">)</span> <span class="c1">#
+</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">expert</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">experts</span><span class="p">):</span>
+            <span class="n">expert_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="c1"># (B,T)
+</span>            <span class="n">expert_mask</span> <span class="o">=</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># (B*T)
+</span>
+            <span class="k">if</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">any</span><span class="p">():</span> <span class="c1"># pass through expert layer only if flattened expert has any one true value
+</span>                <span class="n">select_x</span> <span class="o">=</span> <span class="n">flat_x</span><span class="p">[</span><span class="n">expert_mask</span><span class="p">]</span>
+                <span class="n">expert_x</span> <span class="o">=</span> <span class="nf">expert</span><span class="p">(</span><span class="n">select_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]).</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="n">expert_mask</span><span class="p">].</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1">#unsqueeze for broadcasting across columns
+</span>                <span class="n">final_output</span><span class="p">[</span><span class="n">expert_mask</span><span class="p">]</span> <span class="o">+=</span> <span class="n">expert_x</span> <span class="c1"># add because our inp is combination of experts, i.e one token can take can top2 prob
+</span>
+        <span class="n">final_output</span> <span class="o">=</span> <span class="n">final_output</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">final_output</span>
+</code></pre></div></div>
+
+<h4 id="full-code-til-here">Full code til here</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Router</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">))</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">wnoise</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">clean_logits</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn_like</span><span class="p">(</span><span class="n">clean_logits</span><span class="p">)</span><span class="o">*</span><span class="n">nn</span><span class="p">.</span><span class="nc">Softplus</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="nf">wnoise</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">clean_logits</span> <span class="o">+</span> <span class="n">noise</span>
+
+        <span class="n">topk_val</span><span class="p">,</span> <span class="n">topk_ind</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">topk</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">top_k</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">full_like</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="nf">float</span><span class="p">(</span><span class="sh">'</span><span class="s">-inf</span><span class="sh">'</span><span class="p">))</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">topk_ind</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">topk_val</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span><span class="p">,</span><span class="n">topk_val</span><span class="p">,</span> <span class="n">topk_ind</span>
+
+
+
+<span class="k">class</span> <span class="nc">MoE</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="nc">Router</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">experts</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">ModuleList</span><span class="p">([</span><span class="nc">FFN</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="c1">#         we = self.we(x) # batch's embeddings (B,T,C)
+</span>        <span class="n">out</span><span class="p">,</span><span class="n">topk_val</span><span class="p">,</span><span class="n">topk_ind</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1"># out is size (B,T,experts) experts (B,T,top_k)
+</span>
+        <span class="n">flat_x</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="c1">#(B*T,C)
+</span>
+        <span class="n">final_output</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">flat_x</span><span class="p">)</span>
+
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">expert</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">experts</span><span class="p">):</span>
+            <span class="n">expert_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="c1"># (B,T)
+</span>            <span class="n">expert_mask</span> <span class="o">=</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># (B*T)
+</span>
+            <span class="nf">print</span><span class="p">(</span><span class="n">em_new</span> <span class="o">==</span> <span class="n">expert_mask</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">any</span><span class="p">():</span>
+                <span class="n">select_x</span> <span class="o">=</span> <span class="n">flat_x</span><span class="p">[</span><span class="n">expert_mask</span><span class="p">]</span>
+                <span class="n">expert_x</span> <span class="o">=</span> <span class="nf">expert</span><span class="p">(</span><span class="n">select_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]).</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="n">expert_mask</span><span class="p">].</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1">#unsqueeze for broadcasting across columns
+</span>                <span class="n">final_output</span><span class="p">[</span><span class="n">expert_mask</span><span class="p">]</span> <span class="o">+=</span> <span class="n">expert_x</span> <span class="c1"># add because our inp is combination of experts, i.e one token can take can top2 prob
+</span>
+        <span class="n">final_output</span> <span class="o">=</span> <span class="n">final_output</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">final_output</span>
+</code></pre></div></div>
+
+<p>This implementation assigns expert for each no.of.steps in our training step, here even if the experts are assigned equally, the total number of tokens assigned to those expert could be different, for that reason we would want to distribute input tokens equally to all the experts. We can do that using expert capacity explained above in the Load Balancing section above.</p>
+
+<h4 id="expert-capacity-implementation">Expert Capacity implementation</h4>
+
+<p>we define expert capacity as total number of tokens in a batch divided by number of experts times the capacity factor (which controls the scale).</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">exp_cap</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">B</span><span class="o">*</span><span class="n">T</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">top_k</span> <span class="o">/</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">capacity_factor</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<p>select the indices of input where this specific expert is applied and limit the inputs to be processed to be within the expert capacity if it is greater than expert capacity and truncate other tokens.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">selected_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">nonzero</span><span class="p">(</span><span class="n">expert_mask</span><span class="p">).</span><span class="nf">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">limited_indices</span> <span class="o">=</span> <span class="n">selected_indices</span><span class="p">[:</span><span class="n">exp_cap</span><span class="p">]</span> <span class="k">if</span> <span class="n">selected_indices</span><span class="p">.</span><span class="nf">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">exp_cap</span> <span class="k">else</span> <span class="n">selected_indices</span>
+</code></pre></div></div>
+
+<h4 id="full-implementation">Full implementation</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Router</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">))</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">wnoise</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">n_embd</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">clean_logits</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn_like</span><span class="p">(</span><span class="n">clean_logits</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">.</span><span class="nf">softplus</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="nf">wnoise</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">clean_logits</span> <span class="o">+</span> <span class="n">noise</span>
+
+        <span class="n">topk_val</span><span class="p">,</span> <span class="n">topk_ind</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">topk</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">top_k</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">full_like</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="nf">float</span><span class="p">(</span><span class="sh">'</span><span class="s">-inf</span><span class="sh">'</span><span class="p">))</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">topk_ind</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">topk_val</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span><span class="p">,</span><span class="n">topk_val</span><span class="p">,</span> <span class="n">topk_ind</span>
+
+
+
+<span class="k">class</span> <span class="nc">MoE</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">router</span> <span class="o">=</span> <span class="nc">Router</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">experts</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">ModuleList</span><span class="p">([</span><span class="nc">FFN</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span><span class="p">)])</span>
+	    <span class="n">self</span><span class="p">.</span><span class="n">wimportance</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="c1">#         we = self.we(x) # batch's embeddings (B,T,C)
+</span>        <span class="n">B</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">C</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span>
+        <span class="n">out</span><span class="p">,</span><span class="n">topk_val</span><span class="p">,</span><span class="n">topk_ind</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">router</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1"># out is size (B,T,experts) experts (B,T,top_k)
+</span>
+        <span class="n">flat_x</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="c1">#(B*T,C)
+</span>
+        <span class="n">final_output</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">flat_x</span><span class="p">)</span>
+
+        <span class="n">exp_cap</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">B</span><span class="o">*</span><span class="n">T</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">top_k</span> <span class="o">/</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">expert_size</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">capacity_factor</span><span class="p">)</span>
+
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">expert</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">experts</span><span class="p">):</span>
+            <span class="n">expert_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="c1"># (B,T)
+</span>            <span class="n">expert_mask</span> <span class="o">=</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># (B*T)
+</span>
+            <span class="n">selected_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">nonzero</span><span class="p">(</span><span class="n">expert_mask</span><span class="p">).</span><span class="nf">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">limited_indices</span> <span class="o">=</span> <span class="n">selected_indices</span><span class="p">[:</span><span class="n">exp_cap</span><span class="p">]</span> <span class="k">if</span> <span class="n">selected_indices</span><span class="p">.</span><span class="nf">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">exp_cap</span> <span class="k">else</span> <span class="n">selected_indices</span>
+
+
+            <span class="k">if</span> <span class="n">expert_mask</span><span class="p">.</span><span class="nf">any</span><span class="p">():</span>
+
+                <span class="n">select_x</span> <span class="o">=</span> <span class="n">flat_x</span><span class="p">[</span><span class="n">limited_indices</span><span class="p">]</span>
+
+                <span class="n">expert_x</span> <span class="o">=</span> <span class="nf">expert</span><span class="p">(</span><span class="n">select_x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">out</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]).</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="n">limited_indices</span><span class="p">].</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1">#unsqueeze for broadcasting across columns
+</span>
+                <span class="n">final_output</span><span class="p">[</span><span class="n">limited_indices</span><span class="p">]</span> <span class="o">+=</span> <span class="n">expert_x</span> <span class="c1"># add because our inp is combination of experts, i.e one token can take can top2 prob
+</span>
+        <span class="n">final_output</span> <span class="o">=</span> <span class="n">final_output</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c1"># Importance scores for experts i.e batchwise sum of the router's output
+</span>        <span class="n">importance</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># loss that needs to be added to encourage model to choose diverse experts
+</span>        <span class="n">imp_std</span><span class="p">,</span><span class="n">imp_mean</span> <span class="o">=</span> <span class="n">importance</span><span class="p">.</span><span class="nf">std</span><span class="p">(),</span> <span class="n">importance</span><span class="p">.</span><span class="nf">mean</span><span class="p">()</span>
+
+        <span class="n">loss_moe</span> <span class="o">=</span> <span class="p">((</span><span class="n">imp_std</span><span class="o">/</span><span class="n">imp_mean</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">wimportance</span>
+
+
+        <span class="k">return</span> <span class="n">final_output</span><span class="p">,</span><span class="n">loss_moe</span>
+</code></pre></div></div>
+
+<h4 id="auxiliary-loss">Auxiliary Loss</h4>
+
+<p><img src="fig7.png" alt="fig7" /></p>
+
+<p>To encourage models to make expert’s probability uniform (choosing all the experts and not restricting to some experts) We add to our main loss another loss term that we get from our MoE layer. It is calculated by first calculating the importance which is simply calculating the batch sum over the inputs for the router’s output and calculating the square of the coefficient of variation from the importance and then multiplying with a hand tuned scaling factor called Wimportance.</p>
+
+<p>The implementation from this auxiliary loss is already implemented in the code above.</p>
+
+<h3 id="visualizations">Visualizations</h3>
+
+<p>what’s the point of adding the MoE losses and noises if we can’t visualize it’s effect. I’ve trained my GPT + MoE architecture with variations to visualize what they actually do.</p>
+
+<h4 id="no-noise-and-no-moe-loss">No Noise and No MoE loss</h4>
+
+<p>I did not add the noise term i.e in the equation 4 in the picture above and did not add MoE loss to our original loss function.</p>
+
+<p>x axis = no of steps
+y axis = no of tokens assigned to each expert
+<img src="no_noise_no_lossmoe.png" alt="no_noise_no_lossmoe" /></p>
+
+<p>Even though the plot seems to fluctuate too much, we can see that there is inappropriate distribution of tokens among the experts i.e expert 0 is assigned less tokens and and expert 1 and 3 are assigned more tokens and the curve relatively stays the same because we did not add the loss function too.</p>
+
+<h4 id="noise-but-no-moe-loss">Noise but no MoE loss</h4>
+
+<p><img src="noise_yes_lossmoe_no.png" alt="noise_yes_lossmoe_no" /></p>
+
+<p>There is relatively small gap between number of tokens assigned to the experts because this time we added gaussian noise which reduces the gap, but the number of tokens assigned to them remains constantly fluctuating.</p>
+
+<h4 id="no-noise-but-moeloss-included">No Noise but MoELoss included</h4>
+
+<p><img src="noise_no_lossmoe_yes.png" alt="noise_no_lossmoe_yes" /></p>
+
+<p>As you can see there was inappropriate distribution of tokens in the beginning but the model seems to have learned to distribute the tokens among the experts after training for some time.</p>
+
+<h4 id="including-noise-and-moe-loss">Including Noise and MoE Loss</h4>
+
+<p><img src="loss_noisy_topk.png" alt="loss_noisy_topk" /></p>
+
+<p>it looks similar to the previous one, i.e big variation in the beginning but learns to distribute afterwards, its different from the previous one in that initially the range of tokens assigned to experts are between (150, 350) but in the previous plot it was (100,400). This less variation in this plot can be attributed to the addition of gaussian noise.</p>
+
+<p>In conclusion, addition of loss seems to be more important than including the Noise because it seems to become stable in the later iterations.</p>
+
+<p>Whole code with GPT architecture and this MoE implementation can be found here:
+https://github.com/CohleM/deep_learning/blob/master/MoE/moe.ipynb</p>
+
+<h3 id="improvements">Improvements</h3>
+
+<ul>
+  <li>Replace for loop with matrix multiplication while calculating the weighted sum of experts.</li>
+  <li>Improve Block class’ implementation, it doesn’t look neat, we return the modified x and the loss from the moe</li>
+</ul>
+
+<h3 id="switch-transformers-paper">Switch Transformers (<a href="https://arxiv.org/pdf/2101.03961">paper</a>)</h3>
+
+<h4 id="key-points">Key points</h4>
+
+<ul>
+  <li>model improves as the parameters are increase.</li>
+  <li>Following the same pattern they increase the parameter count but with same the FLOP used for a token in previous implementations.</li>
+  <li>Instead of routing tokens to topK &gt; 1 experts they route tokens to k=1 experts (this preserves model quality, reduces routing computation and performs better)</li>
+  <li>since gate function is a softmax layer it is perfectly differentiable.</li>
+</ul>
+
+<p>(out of this paper: discrete operations are not differentiable i.e choosing max from a list, cause derivative of constant is 0 so gradient propagation stops)</p>
+
+<p>Choosing right capacity factor is important as shown in figure below.
+<img src="fig8.png" alt="fig8" /></p>
+
+<p>as you can see the when CF is 1 only one token is truncated (not evaluated) but is passed through to next layers through residual connection.</p>
+
+<ul>
+  <li>when CF is 1.5 3 memory spaces are wasted.</li>
+  <li>So there’s a tradeoff.</li>
+  <li>They find ensuring lower rates of dropped tokens are important for the scaling of sparse expert-models.</li>
+</ul>
+
+<p>The auxiliary loss is given by this equation
+<img src="fig9.png" alt="fig9" /></p>
+
+<blockquote>
+  <p>Since we seek uniform routing of the batch of tokens across the N experts, we desire both vectors to have values of 1/N</p>
+</blockquote>
+
+<p>1/N is a percentage term i.e if there are 4 experts then each experts should be assigned 25% i.e 1/4 tokens.</p>
+
+<p>similarly for Pi it should be 1/n because each router should assign equal probability i.e 25% to promote uniform distribution.</p>
+
+<p>The implementation of loss is likewise.</p>
+
+<h4 id="f-vector">F vector</h4>
+
+<p>consider this sample is our router probability for all 5 tokens and 4 experts (5x4) matrix</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sample</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">sample</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[ 0.0384,  0.3811, -0.9004,  0.0853],
+        [ 0.2770,  0.1141, -0.6625,  0.4889],
+        [ 0.7854,  0.7123, -0.3660, -1.2273],
+        [ 0.9355,  1.9071,  0.7386, -0.3621],
+        [ 0.8633, -0.5028, -1.0617, -1.2414]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">val</span><span class="p">,</span><span class="n">ind</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">topk</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">val</span><span class="p">,</span><span class="n">ind</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(tensor([[0.3811],
+         [0.4889],
+         [0.7854],
+         [1.9071],
+         [0.8633]]),
+ tensor([[1],
+         [3],
+         [0],
+         [1],
+         [0]]))
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">f_vector</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+<span class="n">ones</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+
+<span class="n">f_vector</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">f_vector</span><span class="p">.</span><span class="nf">scatter_</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">ind</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">ones</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[0., 1., 0., 0.],
+        [0., 0., 0., 1.],
+        [1., 0., 0., 0.],
+        [0., 1., 0., 0.],
+        [1., 0., 0., 0.]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">f_vector</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([2., 2., 0., 1.])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">f_vector</span> <span class="o">=</span> <span class="n">f_vector</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="n">f_matrix</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">f_vector</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([0.4000, 0.4000, 0.0000, 0.2000])
+</code></pre></div></div>
+
+<p>see the imbalance? each expert should get 1/4= 0.25 tokens, we need to minimize this inappropriate distribution by adding this in loss function.</p>
+
+<h4 id="p-vector">P vector</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sample</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[ 0.0384,  0.3811, -0.9004,  0.0853],
+        [ 0.2770,  0.1141, -0.6625,  0.4889],
+        [ 0.7854,  0.7123, -0.3660, -1.2273],
+        [ 0.9355,  1.9071,  0.7386, -0.3621],
+        [ 0.8633, -0.5028, -1.0617, -1.2414]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sample</span> <span class="o">=</span> <span class="n">sample</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">sample</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[0.2599, 0.3661, 0.1016, 0.2724],
+        [0.2877, 0.2444, 0.1124, 0.3555],
+        [0.4203, 0.3907, 0.1329, 0.0562],
+        [0.2111, 0.5578, 0.1734, 0.0577],
+        [0.6567, 0.1675, 0.0958, 0.0800]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">p_vector</span> <span class="o">=</span> <span class="n">sample</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="n">sample</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">p_vector</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([0.3671, 0.3453, 0.1232, 0.1644])
+</code></pre></div></div>
+
+<p>as you can see the experts have imbalanced distribution of probabilities, the objective of including P vector is to make this p vector’s distribution uniform</p>
+
+<h4 id="loss-function">loss function</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">N</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.0</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">loss</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">N</span> <span class="o">*</span> <span class="p">(</span><span class="n">p_vector</span><span class="o">*</span><span class="n">f_vector</span><span class="p">).</span><span class="nf">sum</span><span class="p">()</span>
+<span class="n">loss</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor(1.2714)
+</code></pre></div></div>
+
+<p><img src="fig10.png" alt="fig10" /></p>
+
+<h3 id="deepseekmoe-paper">DeepSeekMoE (<a href="https://arxiv.org/pdf/2401.06066">paper</a>)</h3>
+
+<p>One of the recent MoE paper.</p>
+
+<p><img src="fig11.png" alt="fig11" /></p>
+
+<p>There were these limitations.</p>
+
+<ol>
+  <li>Knowledge Hybridity: models utilize small experts (N), information is shared among these experts, and experts can’t be specialized.</li>
+  <li>Knowledge Redundancy: They may train same tokens resulting in experts that learn same concepts, ultimately there is redundancy of knowledge.</li>
+</ol>
+
+<p>In this paper, they propose two changes.</p>
+
+<ol>
+  <li>Fie-grained Expert Segmentation: i.e divide the hidden dimension of current MoE layer to 1/m and create separate mxN number of experts (total parameters remains the same). Doing so will result in greater possibility of choosing experts for a token and experts can be specialized.</li>
+  <li>Shared Expert Isolation: There must be expert that should process some general knowledge task. for that reason they separate out some experts for this knowledge sharing. By sharing knowledge, the fine grained experts don’t need to acquire extra knowledge, enabling them to specialize in specific tasks.</li>
+</ol>
+
+<p><img src="fig12.png" alt="fig12" /></p>
+
+<p>The output representation for a batch, will look like this.</p>
+
+<p>The loss is similar to what we read in switch transformers but incorporating the changes that we made i.e dividing expert into m expert and assigning a common expert. The also include device level balance loss, which is for balancing load across devices. I haven’t read more into how load is balanced in devices, which I leave it for future studies.</p>
+
+<h3 id="references">References</h3>
+
+<ul>
+  <li><a href="https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts">A Visual Guide to Mixture of Experts (MoE)</a></li>
+  <li><a href="https://www.cs.toronto.edu/~hinton/absps/jjnh91.pdf">Adaptive Mixture of Local Experts</a></li>
+  <li><a href="https://arxiv.org/pdf/1701.06538">OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER</a></li>
+  <li><a href="https://arxiv.org/pdf/2101.03961">Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity</a></li>
+  <li><a href="https://arxiv.org/pdf/2401.06066">DeepSeekMoE: Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models</a>)</li>
+</ul>
+</div>
+
+  
+  <div class="tags">
+    
+    <span class="tag">blog</span>
+    
+    <span class="tag">architecture</span>
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+---
+layout: home
+---
+
+<!-- <section class="blogs">
+  <h2>Blogs</h2>
+  <ul>
+    <li>Skill 1 </li>
+    <li>Skill 2</li>
+    <li>Skill 3</li>
+  </ul>
+</section> -->
+
+<h1>Latest Posts</h1>
+<p>All unstructured blogs/posts/notes</p>
+<section class="blogs">
+  <ul>
+    {% for post in site.posts %}
+    <a href="{{ post.url }}">
+      <li>
+        <h2>{{ post.title }}</h2>
+        {{post.excerpt | strip_html | strip_newlines| truncate: 160}}
+      </li></a
+    >
+    {% endfor %}
+  </ul>
+</section>

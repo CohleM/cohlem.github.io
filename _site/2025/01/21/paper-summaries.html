@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Paper Summaries - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Paper Summaries</h1>
+<p>21 Jan 2025 - cohlem</p>
+
+<p>Papers that I’ve read with their respective notes.</p>
+
+<h3 id="llama-open-and-efficient-foundation-language-models"><a href="https://arxiv.org/pdf/2302.13971">LLaMA: Open and Efficient Foundation Language Models</a></h3>
+
+<ul>
+  <li>Trained on 1.4T tokens.</li>
+  <li>Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences)</li>
+  <li>use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly.</li>
+</ul>
+
+<h3 id="smollm2"><a href="https://arxiv.org/pdf/2502.02737">SmolLM2</a></h3>
+
+<ul>
+  <li>including specific data eg. math doesn’t only do well in math, but also seems to improve reasoning.</li>
+  <li>rather than training on one specific dataset, training on mixture of datasets yields better results, for instance, 60-40 mixture of FineWeb-Edu and DCLM yielded almost similar performance to only training on FineWeb-Edu</li>
+  <li>
+    <p>decontamination of curated dataset is generally done, using some bi-gram matching using the eval dataset.</p>
+  </li>
+  <li>they do a multi-stage training approach rather than fixed-data mixture.</li>
+</ul>
+
+<p>LR decay</p>
+
+<ul>
+  <li><strong>Warmup Phase (Steps 0–2,000)</strong>:
+    <ul>
+      <li>Learning rate increases linearly from near 0 to 5.0×10−45.0×10−4.</li>
+    </ul>
+  </li>
+  <li><strong>Stable Phase (Steps 2,000–N)</strong>:
+    <ul>
+      <li>Learning rate remains constant at 5.0×10−45.0×10−4.</li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Decay Phase (Last 10% of Steps)</strong>:</p>
+
+    <ul>
+      <li>Learning rate decreases linearly from 5.0×10−45.0×10−4 to 0.</li>
+    </ul>
+  </li>
+  <li>had loss spikes during stage 3, which remained persistent even after rewinding the trianing, and changing the data that caused the spike. The cause of spike remains undetermined, however the eval metrics recovered in the end.</li>
+  <li>They include high quality math data in the end, and decay the to 0</li>
+  <li>They expand the context length from 2k to 8k before the final 75 billion tokens of training and the mixture was adjusted to include 40% long-context documents</li>
+  <li>they curate their own instruction dataset named SmolTalk, because of low performance after training on previously available dataset i.e MagPie-Pro and OpenHermes2.5.</li>
+  <li>Filter high conversational dataset and deduplicate using gte-large embedding models.</li>
+  <li>in short they do a lot of decontamination (using bi-gram overlaps), deduplication, filtering,</li>
+  <li>For smaller models during sft, they filter smoltalk dataset (e.g., function calling) and hard examples from MagPie-Ultra to better align with the models’ capacity and do DPO on UltraFeedback dataset.</li>
+</ul>
+
+<p><img src="p2.png" alt="p2" />
+<img src="p3.png" alt="p3" /></p>
+
+<h3 id="sweet-rl-training-multi-turn-llm-agents-on-collaborative-reasoning-tasks"><a href="https://arxiv.org/abs/2503.15478">SWEET-RL: Training Multi-Turn LLM Agents on Collaborative Reasoning Tasks</a></h3>
+
+<p>backend questions Train set : question, reference answer, 10 sample tests
+generate trajectories from the Train set, sample sequence is like this</p>
+
+<p>question, agent’s answer, human simulator’s answer–&gt; agent’s answer, human simulator’s answer –&gt; end. run the final solution through their 10 sample tests–&gt; record reward. 1 if passed all test else 0. sample 15k of these</p>
+
+<p>now train advantage llm using bradley terry loss.
+<img src="p4.png" alt="p4" />
+$o_t^+$ is from those trajectories which had higher reward,</p>
+
+<p><img src="p5.png" alt="p5" /></p>
+
+<p>Now train the policy using DPO loss,
+use that 15k samples trajectories and each</p>
+
+<p>for each $o_t$ sample 16 $a_t$ then rate it using advantage llm, take top50% as $a_+$ remaining as $a_-$
+then calculate loss for those actions. $\log \pi (a^+|o_t)$ is the joint probability of all the tokens in $a^+$
+<img src="p6.png" alt="p6" /></p>
+
+<p>Notably, process-only filtering consistently yields the highest accuracy, suggesting that focusing on the procedural aspects of data refinement is more important than the correctness of a training trajectory.</p>
+
+<p>process filtering (filtering trajectory based on whether its action at step a is plausible or not) yields better performance.</p>
+
+<p>filtering for correctness usually harms performance (filtering based on its final answer)</p>
+
+\[r*t = –| log p*θ(A*truth_t | &lt;think&gt;, A_truth*{&lt;t})– log p*θ(ŷ_t | &lt;think&gt;, ŷ*{&lt;t}) |\]
+
+<p>veRL algorithm
+just to know how the variables provided in the .sh file play out in the main algorithm.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">total_epoch</span><span class="p">:</span>
+	<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_dataloader</span><span class="p">:</span> <span class="c1"># each batch size is provided by train_batch_size
+</span>		<span class="nf">generate_rollout</span><span class="p">()</span> <span class="c1"># if GRPO use actor.rollout.n variable
+</span>		<span class="nf">generate_old_logprobs</span><span class="p">()</span>
+		<span class="nf">generate_ref_logprobs</span><span class="p">()</span>
+		<span class="nf">calculate_advantages</span><span class="p">()</span>
+
+		<span class="c1"># split batch into mini_batches.
+</span>		<span class="n">minibatch_dataloader</span> <span class="o">=</span> <span class="n">batch</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="n">ppo_mini_batch_size</span><span class="p">)</span> <span class="c1"># this is a dataloader with each minibatch of size ppo_mini_batch_size
+</span>		<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ppo_epoch</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">minibatch</span> <span class="ow">in</span> <span class="n">minibatch_dataloader</span><span class="p">:</span>
+				<span class="c1">#split minibatch into microbatches if needed to train on different GPUs
+</span>				<span class="n">micro_batches</span> <span class="o">=</span> <span class="n">minibatch</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="n">ppo_micro_batch_size_per_gpu</span><span class="p">)</span>
+				<span class="n">gradient_accumulation</span> <span class="o">=</span> <span class="n">ppo_mini_batch_size</span> <span class="o">//</span> <span class="n">ppo_micro_batch_size_per_gpu</span>
+				<span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">micro_batches</span><span class="p">:</span>
+					<span class="nf">generate_logprobs</span><span class="p">()</span>
+					<span class="n">loss</span> <span class="o">=</span> <span class="nf">calculate_ppo_loss</span><span class="p">()</span> <span class="o">/</span> <span class="n">gradient_accumulation</span>
+					<span class="n">loss</span><span class="p">.</span><span class="nf">backward</span><span class="p">()</span>
+				<span class="n">optimizer</span><span class="p">.</span><span class="nf">step</span><span class="p">()</span>
+
+
+</code></pre></div></div>
+
+<p>gradient_accumulation step is not used in a sense that we generally do while pretraining, it just maintains the count total number of micro batches that are processed in separate GPU, by dividing loss by gradient_accumulation we obtain loss as if the minibatch was processed directly without using any micro batch splits</p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Paper Summaries</h1>
+    <time datetime="2025-01-21T00:00:00+05:45">
+      January 21, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><p>Papers that I’ve read with their respective notes.</p>
+
+<h3 id="llama-open-and-efficient-foundation-language-models"><a href="https://arxiv.org/pdf/2302.13971">LLaMA: Open and Efficient Foundation Language Models</a></h3>
+
+<ul>
+  <li>Trained on 1.4T tokens.</li>
+  <li>Wikipedia and Books domain trained for 2 epochs (maybe because its cleaner, smaller, offers coherent long sequences)</li>
+  <li>use manual backprop for training efficiency i.e save checkpoints of activations that take longer to compute (linear layers) and use them during backprop and generate others such as (ReLu) on the fly.</li>
+</ul>
+
+<h3 id="smollm2"><a href="https://arxiv.org/pdf/2502.02737">SmolLM2</a></h3>
+
+<ul>
+  <li>including specific data eg. math doesn’t only do well in math, but also seems to improve reasoning.</li>
+  <li>rather than training on one specific dataset, training on mixture of datasets yields better results, for instance, 60-40 mixture of FineWeb-Edu and DCLM yielded almost similar performance to only training on FineWeb-Edu</li>
+  <li>
+    <p>decontamination of curated dataset is generally done, using some bi-gram matching using the eval dataset.</p>
+  </li>
+  <li>they do a multi-stage training approach rather than fixed-data mixture.</li>
+</ul>
+
+<p>LR decay</p>
+
+<ul>
+  <li><strong>Warmup Phase (Steps 0–2,000)</strong>:
+    <ul>
+      <li>Learning rate increases linearly from near 0 to 5.0×10−45.0×10−4.</li>
+    </ul>
+  </li>
+  <li><strong>Stable Phase (Steps 2,000–N)</strong>:
+    <ul>
+      <li>Learning rate remains constant at 5.0×10−45.0×10−4.</li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Decay Phase (Last 10% of Steps)</strong>:</p>
+
+    <ul>
+      <li>Learning rate decreases linearly from 5.0×10−45.0×10−4 to 0.</li>
+    </ul>
+  </li>
+  <li>had loss spikes during stage 3, which remained persistent even after rewinding the trianing, and changing the data that caused the spike. The cause of spike remains undetermined, however the eval metrics recovered in the end.</li>
+  <li>They include high quality math data in the end, and decay the to 0</li>
+  <li>They expand the context length from 2k to 8k before the final 75 billion tokens of training and the mixture was adjusted to include 40% long-context documents</li>
+  <li>they curate their own instruction dataset named SmolTalk, because of low performance after training on previously available dataset i.e MagPie-Pro and OpenHermes2.5.</li>
+  <li>Filter high conversational dataset and deduplicate using gte-large embedding models.</li>
+  <li>in short they do a lot of decontamination (using bi-gram overlaps), deduplication, filtering,</li>
+  <li>For smaller models during sft, they filter smoltalk dataset (e.g., function calling) and hard examples from MagPie-Ultra to better align with the models’ capacity and do DPO on UltraFeedback dataset.</li>
+</ul>
+
+<p><img src="p2.png" alt="p2" />
+<img src="p3.png" alt="p3" /></p>
+
+<h3 id="sweet-rl-training-multi-turn-llm-agents-on-collaborative-reasoning-tasks"><a href="https://arxiv.org/abs/2503.15478">SWEET-RL: Training Multi-Turn LLM Agents on Collaborative Reasoning Tasks</a></h3>
+
+<p>backend questions Train set : question, reference answer, 10 sample tests
+generate trajectories from the Train set, sample sequence is like this</p>
+
+<p>question, agent’s answer, human simulator’s answer–&gt; agent’s answer, human simulator’s answer –&gt; end. run the final solution through their 10 sample tests–&gt; record reward. 1 if passed all test else 0. sample 15k of these</p>
+
+<p>now train advantage llm using bradley terry loss.
+<img src="p4.png" alt="p4" />
+$o_t^+$ is from those trajectories which had higher reward,</p>
+
+<p><img src="p5.png" alt="p5" /></p>
+
+<p>Now train the policy using DPO loss,
+use that 15k samples trajectories and each</p>
+
+<p>for each $o_t$ sample 16 $a_t$ then rate it using advantage llm, take top50% as $a_+$ remaining as $a_-$
+then calculate loss for those actions. $\log \pi (a^+|o_t)$ is the joint probability of all the tokens in $a^+$
+<img src="p6.png" alt="p6" /></p>
+
+<p>Notably, process-only filtering consistently yields the highest accuracy, suggesting that focusing on the procedural aspects of data refinement is more important than the correctness of a training trajectory.</p>
+
+<p>process filtering (filtering trajectory based on whether its action at step a is plausible or not) yields better performance.</p>
+
+<p>filtering for correctness usually harms performance (filtering based on its final answer)</p>
+
+\[r*t = –| log p*θ(A*truth_t | &lt;think&gt;, A_truth*{&lt;t})– log p*θ(ŷ_t | &lt;think&gt;, ŷ*{&lt;t}) |\]
+
+<p>veRL algorithm
+just to know how the variables provided in the .sh file play out in the main algorithm.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">total_epoch</span><span class="p">:</span>
+	<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_dataloader</span><span class="p">:</span> <span class="c1"># each batch size is provided by train_batch_size
+</span>		<span class="nf">generate_rollout</span><span class="p">()</span> <span class="c1"># if GRPO use actor.rollout.n variable
+</span>		<span class="nf">generate_old_logprobs</span><span class="p">()</span>
+		<span class="nf">generate_ref_logprobs</span><span class="p">()</span>
+		<span class="nf">calculate_advantages</span><span class="p">()</span>
+
+		<span class="c1"># split batch into mini_batches.
+</span>		<span class="n">minibatch_dataloader</span> <span class="o">=</span> <span class="n">batch</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="n">ppo_mini_batch_size</span><span class="p">)</span> <span class="c1"># this is a dataloader with each minibatch of size ppo_mini_batch_size
+</span>		<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ppo_epoch</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">minibatch</span> <span class="ow">in</span> <span class="n">minibatch_dataloader</span><span class="p">:</span>
+				<span class="c1">#split minibatch into microbatches if needed to train on different GPUs
+</span>				<span class="n">micro_batches</span> <span class="o">=</span> <span class="n">minibatch</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="n">ppo_micro_batch_size_per_gpu</span><span class="p">)</span>
+				<span class="n">gradient_accumulation</span> <span class="o">=</span> <span class="n">ppo_mini_batch_size</span> <span class="o">//</span> <span class="n">ppo_micro_batch_size_per_gpu</span>
+				<span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">micro_batches</span><span class="p">:</span>
+					<span class="nf">generate_logprobs</span><span class="p">()</span>
+					<span class="n">loss</span> <span class="o">=</span> <span class="nf">calculate_ppo_loss</span><span class="p">()</span> <span class="o">/</span> <span class="n">gradient_accumulation</span>
+					<span class="n">loss</span><span class="p">.</span><span class="nf">backward</span><span class="p">()</span>
+				<span class="n">optimizer</span><span class="p">.</span><span class="nf">step</span><span class="p">()</span>
+
+
+</code></pre></div></div>
+
+<p>gradient_accumulation step is not used in a sense that we generally do while pretraining, it just maintains the count total number of micro batches that are processed in separate GPU, by dividing loss by gradient_accumulation we obtain loss as if the minibatch was processed directly without using any micro batch splits</p>
+</div>
+
+  
+  <div class="tags">
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Building Lillm - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Building Lillm</h1>
+<p>29 Jan 2025 - cohlem</p>
+
+<h2 id="pre-training">Pre-training</h2>
+
+<h3 id="document-packing">Document packing</h3>
+
+<p>while pretraining, different documents could be packed inside a sequence. For instance, a model with context_length 1024 can have 256 tokens from one doc and rest from the other. Demilited by EOS token.</p>
+
+<p>The samples may contaminate the attention, for which cross sample attention masking is used.
+But, it isn’t used by DeepSeek v3, lets not use it.</p>
+
+<p>while packing documents. we simply pack them as they appear in order and then add EOS token (used by GPT-2,3). But DeekSeek also uses FIM (Fill in middle) strategy using this Prefix-Suffix-Middle (PSM) framework.</p>
+
+<p><code class="language-plaintext highlighter-rouge">&lt;|fim_begin|&gt; 𝑓pre &lt;|fim_hole|&gt; 𝑓suf &lt;|fim_end|&gt; 𝑓middle &lt;|eos_token|&gt;.</code></p>
+
+<p>adopted for 0.1% of data, generally used for overfitting or limiting the model from using the same general method.</p>
+
+<ul>
+  <li>Do vibe check once in a while</li>
+</ul>
+
+<p>commands</p>
+
+<p>change num_proc in process.py</p>
+
+<p>python process.py –tokenizer_path /model/tokenizer</p>
+
+<p>training run
+torchrun –standalone –nproc_per_node=2 pretrain.py</p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Building Lillm</h1>
+    <time datetime="2025-01-29T00:00:00+05:45">
+      January 29, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><h2 id="pre-training">Pre-training</h2>
+
+<h3 id="document-packing">Document packing</h3>
+
+<p>while pretraining, different documents could be packed inside a sequence. For instance, a model with context_length 1024 can have 256 tokens from one doc and rest from the other. Demilited by EOS token.</p>
+
+<p>The samples may contaminate the attention, for which cross sample attention masking is used.
+But, it isn’t used by DeepSeek v3, lets not use it.</p>
+
+<p>while packing documents. we simply pack them as they appear in order and then add EOS token (used by GPT-2,3). But DeekSeek also uses FIM (Fill in middle) strategy using this Prefix-Suffix-Middle (PSM) framework.</p>
+
+<p><code class="language-plaintext highlighter-rouge">&lt;|fim_begin|&gt; 𝑓pre &lt;|fim_hole|&gt; 𝑓suf &lt;|fim_end|&gt; 𝑓middle &lt;|eos_token|&gt;.</code></p>
+
+<p>adopted for 0.1% of data, generally used for overfitting or limiting the model from using the same general method.</p>
+
+<ul>
+  <li>Do vibe check once in a while</li>
+</ul>
+
+<p>commands</p>
+
+<p>change num_proc in process.py</p>
+
+<p>python process.py –tokenizer_path /model/tokenizer</p>
+
+<p>training run
+torchrun –standalone –nproc_per_node=2 pretrain.py</p>
+</div>
+
+  
+  <div class="tags">
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

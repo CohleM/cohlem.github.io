@@ -49,16 +49,33 @@ title: Home
   </section>
   
 
-<section class="blogs">
+<!-- <section class="blogs">
   <h2>Blogs</h2>
   <ul>
     <li>Skill 1 </li>
     <li>Skill 2</li>
     <li>Skill 3</li>
   </ul>
-</section>
+</section> -->
+
+<section class="blogs">
+    <h2>Blogs</h2>
+    <ul>
+      {% assign blog_posts = site.posts | where_exp: "post", "post.tags contains 'blog'" %}
+      {% for post in blog_posts limit:3 %}
+      <a href="{{ post.url | relative_url }}">
+        <li>
+          <p>{{ post.title }}</p>
+        </li>
+      </a>
+      {% endfor %}
+    </ul>
+    <a href="{{ '/blogs' | relative_url }}">[See more]</a>
+  </section>
+
+
 
 <section class="contact">
-  <h2>Get in Touch</h2>
+  <h2>Socials</h2>
   <p>Email: your@email.com</p>
 </section>

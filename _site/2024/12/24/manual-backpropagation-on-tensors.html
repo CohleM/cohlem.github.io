@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manual Backpropagation On Tensors - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Manual Backpropagation On Tensors</h1>
+<p>24 Dec 2024 - cohlem</p>
+
+<h3 id="main-code">Main code</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>n_embd = 10 # the dimensionality of the character embedding vectors
+n_hidden = 64 # the number of neurons in the hidden layer of the MLP
+
+g = torch.Generator().manual_seed(2147483647) # for reproducibility
+C  = torch.randn((vocab_size, n_embd),            generator=g)
+# Layer 1
+W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5)
+b1 = torch.randn(n_hidden,                        generator=g) * 0.1 # using b1 just for fun, it's useless because of BN
+# Layer 2
+W2 = torch.randn((n_hidden, vocab_size),          generator=g) * 0.1
+b2 = torch.randn(vocab_size,                      generator=g) * 0.1
+# BatchNorm parameters
+bngain = torch.randn((1, n_hidden))*0.1 + 1.0
+bnbias = torch.randn((1, n_hidden))*0.1
+
+# Note: I am initializating many of these parameters in non-standard ways
+# because sometimes initializating with e.g. all zeros could mask an incorrect
+# implementation of the backward pass.
+
+parameters = [C, W1, b1, W2, b2, bngain, bnbias]
+print(sum(p.nelement() for p in parameters)) # number of parameters in total
+for p in parameters:
+  p.requires_grad = True
+
+
+
+batch_size = 32
+n = batch_size # a shorter variable also, for convenience
+# construct a minibatch
+ix = torch.randint(0, Xtr.shape[0], (batch_size,), generator=g)
+Xb, Yb = Xtr[ix], Ytr[ix] # batch X,Y
+
+
+# forward pass, "chunkated" into smaller steps that are possible to backward one at a time
+
+emb = C[Xb] # embed the characters into vectors
+embcat = emb.view(emb.shape[0], -1) # concatenate the vectors
+# Linear layer 1
+hprebn = embcat @ W1 + b1 # hidden layer pre-activation
+# BatchNorm layer
+bnmeani = 1/n*hprebn.sum(0, keepdim=True)
+bndiff = hprebn - bnmeani
+bndiff2 = bndiff**2
+bnvar = 1/(n-1)*(bndiff2).sum(0, keepdim=True) # note: Bessel's correction (dividing by n-1, not n)
+bnvar_inv = (bnvar + 1e-5)**-0.5
+bnraw = bndiff * bnvar_inv
+hpreact = bngain * bnraw + bnbias
+# Non-linearity
+h = torch.tanh(hpreact) # hidden layer
+# Linear layer 2
+logits = h @ W2 + b2 # output layer
+# cross entropy loss (same as F.cross_entropy(logits, Yb))
+logit_maxes = logits.max(1, keepdim=True).values
+norm_logits = logits - logit_maxes # subtract max for numerical stability
+counts = norm_logits.exp()
+counts_sum = counts.sum(1, keepdims=True)
+counts_sum_inv = counts_sum**-1 # if I use (1.0 / counts_sum) instead then I can't get backprop to be bit exact...
+probs = counts * counts_sum_inv
+logprobs = probs.log()
+loss = -logprobs[range(n), Yb].mean()
+
+# PyTorch backward pass
+for p in parameters:
+  p.grad = None
+for t in [logprobs, probs, counts, counts_sum, counts_sum_inv, # afaik there is no cleaner way
+          norm_logits, logit_maxes, logits, h, hpreact, bnraw,
+         bnvar_inv, bnvar, bndiff2, bndiff, hprebn, bnmeani,
+         embcat, emb]:
+  t.retain_grad()
+loss.backward()
+loss
+</code></pre></div></div>
+
+<p>Initially we have this forward pass of a NN, how do we backpropagate through this?
+We simply call loss.backward() which is an abstraction of pytorch’s autograd engine, it’ll construct computation graph and calculate gradients for all the nodes under the hood.</p>
+
+<p>How can we do it manually?</p>
+
+<p>here’s how</p>
+
+<h3 id="manual-backprop">Manual Backprop</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Exercise 1: backprop through the whole thing manually,
+# backpropagating through exactly all of the variables
+# as they are defined in the forward pass above, one by one
+</span>
+<span class="c1"># -----------------
+# YOUR CODE HERE :)
+</span><span class="n">dlogprobs</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">logprobs</span><span class="p">)</span>
+<span class="n">dlogprobs</span><span class="p">[</span><span class="nf">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">Yb</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">logprobs</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># 1
+</span>
+<span class="n">dprobs</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">probs</span><span class="p">)</span><span class="o">*</span><span class="n">dlogprobs</span> <span class="c1"># 2
+</span><span class="n">dcounts_sum_inv</span> <span class="o">=</span> <span class="p">(</span><span class="n">dprobs</span><span class="o">*</span><span class="n">counts</span><span class="p">).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+<span class="n">dcounts</span> <span class="o">=</span> <span class="n">dprobs</span> <span class="o">*</span> <span class="n">counts_sum_inv</span>
+<span class="n">dcounts_sum</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">*</span><span class="p">((</span><span class="n">counts_sum</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">))</span><span class="o">*</span><span class="n">dcounts_sum_inv</span>
+<span class="n">dcounts</span> <span class="o">+=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">counts_sum</span><span class="p">)</span><span class="o">*</span><span class="n">dcounts_sum</span>
+<span class="n">dnorm_logits</span> <span class="o">=</span> <span class="n">norm_logits</span><span class="p">.</span><span class="nf">exp</span><span class="p">()</span><span class="o">*</span><span class="n">dcounts</span>
+<span class="n">dlogit_maxes</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="o">*</span><span class="n">dnorm_logits</span><span class="p">).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">dlogits</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">*</span><span class="n">dnorm_logits</span><span class="p">)</span>
+
+<span class="n">dlogits</span> <span class="o">+=</span> <span class="n">F</span><span class="p">.</span><span class="nf">one_hot</span><span class="p">(</span><span class="n">logits</span><span class="p">.</span><span class="nf">max</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">indices</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">logits</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">dlogit_maxes</span>
+<span class="n">db2</span> <span class="o">=</span> <span class="p">(</span><span class="n">dlogits</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">logits</span><span class="p">)).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dh</span> <span class="o">=</span> <span class="n">dlogits</span> <span class="o">@</span> <span class="n">W2</span><span class="p">.</span><span class="n">T</span>
+<span class="n">dW2</span> <span class="o">=</span> <span class="n">h</span><span class="p">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">dlogits</span>
+<span class="n">dhpreact</span> <span class="o">=</span> <span class="n">dh</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">h</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">dbnbias</span> <span class="o">=</span> <span class="p">(</span><span class="n">dhpreact</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bnraw</span><span class="p">)).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+<span class="n">dbngain</span> <span class="o">=</span> <span class="p">(</span><span class="n">dhpreact</span><span class="o">*</span><span class="n">bnraw</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bnraw</span><span class="p">)).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">dbnraw</span> <span class="o">=</span> <span class="n">dhpreact</span><span class="o">*</span><span class="n">bngain</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bnraw</span><span class="p">)</span>
+<span class="n">dbnvar_inv</span> <span class="o">=</span> <span class="p">(</span><span class="n">dbnraw</span><span class="o">*</span> <span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bndiff</span><span class="p">)</span> <span class="o">*</span> <span class="n">bndiff</span><span class="p">)).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">dbndiff</span> <span class="o">=</span> <span class="p">(</span><span class="n">dbnraw</span><span class="o">*</span> <span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bndiff</span><span class="p">)</span> <span class="o">*</span> <span class="n">bnvar_inv</span><span class="p">))</span>
+<span class="n">dbnvar</span> <span class="o">=</span> <span class="n">dbnvar_inv</span><span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span><span class="o">*</span><span class="p">(((</span><span class="n">bnvar</span> <span class="o">+</span> <span class="mf">1e-5</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">))</span>
+<span class="n">dbndiff2</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bndiff2</span><span class="p">)</span> <span class="o">*</span> <span class="n">dbnvar</span>
+<span class="n">dbndiff</span> <span class="o">+=</span> <span class="n">dbndiff2</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">bndiff</span><span class="p">)</span>
+<span class="n">dhprebn</span> <span class="o">=</span> <span class="n">dbndiff</span><span class="o">*</span><span class="mf">1.0</span>
+<span class="n">dbnmeani</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">hprebn</span><span class="p">)</span><span class="o">*-</span><span class="mf">1.0</span><span class="o">*</span><span class="n">dbndiff</span><span class="p">).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+<span class="n">dhprebn</span> <span class="o">+=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">hprebn</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">dbnmeani</span>
+<span class="n">db1</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">dhprebn</span><span class="p">)</span><span class="o">*</span><span class="n">dhprebn</span><span class="p">).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dembcat</span> <span class="o">=</span> <span class="n">dhprebn</span> <span class="o">@</span> <span class="n">W1</span><span class="p">.</span><span class="n">T</span>
+<span class="n">dW1</span> <span class="o">=</span> <span class="n">embcat</span><span class="p">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">dhprebn</span>
+<span class="n">demb</span> <span class="o">=</span> <span class="n">dembcat</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">emb</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">emb</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">emb</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">dC</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">Xb</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">Xb</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">dC</span><span class="p">[</span><span class="n">Xb</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">demb</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+<span class="c1">#         print(demb[i,j].shape)
+# -----------------
+</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">logprobs</span><span class="sh">'</span><span class="p">,</span> <span class="n">dlogprobs</span><span class="p">,</span> <span class="n">logprobs</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">probs</span><span class="sh">'</span><span class="p">,</span> <span class="n">dprobs</span><span class="p">,</span> <span class="n">probs</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">counts_sum_inv</span><span class="sh">'</span><span class="p">,</span> <span class="n">dcounts_sum_inv</span><span class="p">,</span> <span class="n">counts_sum_inv</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">counts_sum</span><span class="sh">'</span><span class="p">,</span> <span class="n">dcounts_sum</span><span class="p">,</span> <span class="n">counts_sum</span><span class="p">)</span>
+
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">counts</span><span class="sh">'</span><span class="p">,</span> <span class="n">dcounts</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">norm_logits</span><span class="sh">'</span><span class="p">,</span> <span class="n">dnorm_logits</span><span class="p">,</span> <span class="n">norm_logits</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">logit_maxes</span><span class="sh">'</span><span class="p">,</span> <span class="n">dlogit_maxes</span><span class="p">,</span> <span class="n">logit_maxes</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">logits</span><span class="sh">'</span><span class="p">,</span> <span class="n">dlogits</span><span class="p">,</span> <span class="n">logits</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">h</span><span class="sh">'</span><span class="p">,</span> <span class="n">dh</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">W2</span><span class="sh">'</span><span class="p">,</span> <span class="n">dW2</span><span class="p">,</span> <span class="n">W2</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">b2</span><span class="sh">'</span><span class="p">,</span> <span class="n">db2</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">hpreact</span><span class="sh">'</span><span class="p">,</span> <span class="n">dhpreact</span><span class="p">,</span> <span class="n">hpreact</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bngain</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbngain</span><span class="p">,</span> <span class="n">bngain</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bnbias</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbnbias</span><span class="p">,</span> <span class="n">bnbias</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bnraw</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbnraw</span><span class="p">,</span> <span class="n">bnraw</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bnvar_inv</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbnvar_inv</span><span class="p">,</span> <span class="n">bnvar_inv</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bnvar</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbnvar</span><span class="p">,</span> <span class="n">bnvar</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bndiff2</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbndiff2</span><span class="p">,</span> <span class="n">bndiff2</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bndiff</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbndiff</span><span class="p">,</span> <span class="n">bndiff</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bnmeani</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbnmeani</span><span class="p">,</span> <span class="n">bnmeani</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">hprebn</span><span class="sh">'</span><span class="p">,</span> <span class="n">dhprebn</span><span class="p">,</span> <span class="n">hprebn</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">embcat</span><span class="sh">'</span><span class="p">,</span> <span class="n">dembcat</span><span class="p">,</span> <span class="n">embcat</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">W1</span><span class="sh">'</span><span class="p">,</span> <span class="n">dW1</span><span class="p">,</span> <span class="n">W1</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">b1</span><span class="sh">'</span><span class="p">,</span> <span class="n">db1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">emb</span><span class="sh">'</span><span class="p">,</span> <span class="n">demb</span><span class="p">,</span> <span class="n">emb</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">C</span><span class="sh">'</span><span class="p">,</span> <span class="n">dC</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="results">Results</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>logprobs        | exact: True  | approximate: True  | maxdiff: 0.0
+probs           | exact: True  | approximate: True  | maxdiff: 0.0
+counts_sum_inv  | exact: True  | approximate: True  | maxdiff: 0.0
+counts_sum      | exact: True  | approximate: True  | maxdiff: 0.0
+counts          | exact: True  | approximate: True  | maxdiff: 0.0
+norm_logits     | exact: True  | approximate: True  | maxdiff: 0.0
+logit_maxes     | exact: True  | approximate: True  | maxdiff: 0.0
+logits          | exact: True  | approximate: True  | maxdiff: 0.0
+h               | exact: True  | approximate: True  | maxdiff: 0.0
+W2              | exact: True  | approximate: True  | maxdiff: 0.0
+b2              | exact: True  | approximate: True  | maxdiff: 0.0
+hpreact         | exact: True  | approximate: True  | maxdiff: 0.0
+bngain          | exact: True  | approximate: True  | maxdiff: 0.0
+bnbias          | exact: True  | approximate: True  | maxdiff: 0.0
+bnraw           | exact: True  | approximate: True  | maxdiff: 0.0
+bnvar_inv       | exact: True  | approximate: True  | maxdiff: 0.0
+bnvar           | exact: True  | approximate: True  | maxdiff: 0.0
+bndiff2         | exact: True  | approximate: True  | maxdiff: 0.0
+bndiff          | exact: True  | approximate: True  | maxdiff: 0.0
+bnmeani         | exact: True  | approximate: True  | maxdiff: 0.0
+hprebn          | exact: True  | approximate: True  | maxdiff: 0.0
+embcat          | exact: True  | approximate: True  | maxdiff: 0.0
+W1              | exact: True  | approximate: True  | maxdiff: 0.0
+b1              | exact: True  | approximate: True  | maxdiff: 0.0
+emb             | exact: True  | approximate: True  | maxdiff: 0.0
+C               | exact: True  | approximate: True  | maxdiff: 0.0
+</code></pre></div></div>
+
+<p>The result verifies that our gradients matches pytorch’s.</p>
+
+<h3 id="step-by-step-calculation">Step-by-step calculation</h3>
+
+<p>Backpropagating on scalars is pretty straightforward as we did in our <a href="https://cohlem.github.io/sub-notes/backpropagation-from-scratch/">first note</a> but when it comes to tensors, we need to make sure every element’s gradient in a tensor is calculated precisely.</p>
+
+<p>let’s understand it line by line.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>loss = -logprobs[range(n), Yb].mean()
+</code></pre></div></div>
+
+<p>now we calculate the derivative of loss (L) w.r.t logprobs, (NOTE: d(loss)/d(loss) is 1).
+here</p>
+
+<p>we have: d(L)/dL
+to find: d(L)/dlogprobs</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d(L)/dlogprobs = d(L)/dL x d(L)/dlogprobs # d(L)/dlogprobs is local gradient
+d(L)/dlogprobs  = 1.0 * d(L)/dlogprobs
+</code></pre></div></div>
+
+<p>Now what could be the d(L)/dlogprobs?
+let’s break it down by representing it into a simple matrix.
+let’s say logprobs is a matrix and using indexing [range(n), Yb] we pluck out it’s corresponding values and then we average it. let’s consider the plucked out values are</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>a1 , b1 , c1
+</code></pre></div></div>
+
+<p>it’s mean would be</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1/3 x a1 + 1/3 x b1 + 1/3 x c1
+</code></pre></div></div>
+
+<p>the derivative of d(L)/da1 = 1/3 , d(L)/db1 = 1/3 , d(L)/dc1 = 1/3
+we see a pattern here, derivate of every element is 1/total_no_of_elements.</p>
+
+<p>so</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dlogprobs = torch.zeros_like(logprobs) # because all the other elements will have 0 gradient as they'll be considered constant
+dlogprobs[range(n), Yb]  = 1.0 * 1/(-logprobs).shape[0]
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>logprobs = probs.log()
+</code></pre></div></div>
+
+<p>to find : dprobs</p>
+
+<p>we know d(logx)/dx = 1/x, so its fairly simple.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dprobs = 1/probs * dlogprobs # don't forget to add the dlogprobs because its the gradient's that propagated
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>probs = counts * counts_sum_inv
+</code></pre></div></div>
+
+<p>let’s find dcounts_sum_inv
+we need to make sure that the gradient of any tensor should have the same size as that tensor.
+the shape of counts_sum_inv is (32,1)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dcounts_sum_inv
+ = (dprobs *torch.ones_like(count) * counts).sum(1, keepdim = True)
+</code></pre></div></div>
+
+<p>why do we sum it across rows?
+this is because in probs = counts * counts_sum_inv,</p>
+
+<p>counts has shape (32,27) and counts<em>sum_inv has (32,1), so first the counts_sum_inv is broadcasted and is made into shape (32,27) by copying the column and then finally is multiplied with counts. There are two operations that take place in order (broadcasting and addition). So, when we backpropagate through this equation the order should be addition and broadcasting.
+so the dcounts_sum_inv is (dprobs * torch.ones</em>like(count) * counts), but this is of shape (32,27), as we have seen the columns in counts_sum_inv are broadcasted, which mean one column is used 27 times, so we know that from our <a href="https://cohlem.github.io/sub-notes/backpropagation-from-scratch/">first note</a> that when a variable is used more than once it’s derivate is added up, so we sum across the rows (sum it 27 times).</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dcounts_sum_inv = (dprobs*  torch.ones_like(count) * counts).sum(1, keepdim = True)
+</code></pre></div></div>
+
+<p>Similarly, we can now calculate the gradients for tensors that were broadcasted in our forward pass. All the other gradient calculation is relatively straightforward except this equation</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>logits = h @ W2 + b2 # output layer
+</code></pre></div></div>
+
+<p>why? because if we go deep into matrix multiplication, we see there are two operations involved i.e multiplication and addition. The formula for calculating gradient for the equation above is derived in the picture below.</p>
+
+<p><img src="one.jpg" alt="one" /></p>
+
+<p><img src="two.jpg" alt="two" />
+We come up with a simple equation.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dh = dlogits @ W2.T
+dW2 = h.T @ dlogits
+</code></pre></div></div>
+
+<p>I believe these were the main gradient calculation steps and gradients for other nodes can be calculated in a similar manner.</p>
+
+<p>A more detailed code can be found <a href="https://github.com/karpathy/nn-zero-to-hero/blob/master/lectures/makemore/makemore_part4_backprop.ipynb">here</a></p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Manual Backpropagation On Tensors</h1>
+    <time datetime="2024-12-24T00:00:00+05:45">
+      December 24, 2024
+    </time>
+  </header>
+
+  <div class="post-content"><h3 id="main-code">Main code</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>n_embd = 10 # the dimensionality of the character embedding vectors
+n_hidden = 64 # the number of neurons in the hidden layer of the MLP
+
+g = torch.Generator().manual_seed(2147483647) # for reproducibility
+C  = torch.randn((vocab_size, n_embd),            generator=g)
+# Layer 1
+W1 = torch.randn((n_embd * block_size, n_hidden), generator=g) * (5/3)/((n_embd * block_size)**0.5)
+b1 = torch.randn(n_hidden,                        generator=g) * 0.1 # using b1 just for fun, it's useless because of BN
+# Layer 2
+W2 = torch.randn((n_hidden, vocab_size),          generator=g) * 0.1
+b2 = torch.randn(vocab_size,                      generator=g) * 0.1
+# BatchNorm parameters
+bngain = torch.randn((1, n_hidden))*0.1 + 1.0
+bnbias = torch.randn((1, n_hidden))*0.1
+
+# Note: I am initializating many of these parameters in non-standard ways
+# because sometimes initializating with e.g. all zeros could mask an incorrect
+# implementation of the backward pass.
+
+parameters = [C, W1, b1, W2, b2, bngain, bnbias]
+print(sum(p.nelement() for p in parameters)) # number of parameters in total
+for p in parameters:
+  p.requires_grad = True
+
+
+
+batch_size = 32
+n = batch_size # a shorter variable also, for convenience
+# construct a minibatch
+ix = torch.randint(0, Xtr.shape[0], (batch_size,), generator=g)
+Xb, Yb = Xtr[ix], Ytr[ix] # batch X,Y
+
+
+# forward pass, "chunkated" into smaller steps that are possible to backward one at a time
+
+emb = C[Xb] # embed the characters into vectors
+embcat = emb.view(emb.shape[0], -1) # concatenate the vectors
+# Linear layer 1
+hprebn = embcat @ W1 + b1 # hidden layer pre-activation
+# BatchNorm layer
+bnmeani = 1/n*hprebn.sum(0, keepdim=True)
+bndiff = hprebn - bnmeani
+bndiff2 = bndiff**2
+bnvar = 1/(n-1)*(bndiff2).sum(0, keepdim=True) # note: Bessel's correction (dividing by n-1, not n)
+bnvar_inv = (bnvar + 1e-5)**-0.5
+bnraw = bndiff * bnvar_inv
+hpreact = bngain * bnraw + bnbias
+# Non-linearity
+h = torch.tanh(hpreact) # hidden layer
+# Linear layer 2
+logits = h @ W2 + b2 # output layer
+# cross entropy loss (same as F.cross_entropy(logits, Yb))
+logit_maxes = logits.max(1, keepdim=True).values
+norm_logits = logits - logit_maxes # subtract max for numerical stability
+counts = norm_logits.exp()
+counts_sum = counts.sum(1, keepdims=True)
+counts_sum_inv = counts_sum**-1 # if I use (1.0 / counts_sum) instead then I can't get backprop to be bit exact...
+probs = counts * counts_sum_inv
+logprobs = probs.log()
+loss = -logprobs[range(n), Yb].mean()
+
+# PyTorch backward pass
+for p in parameters:
+  p.grad = None
+for t in [logprobs, probs, counts, counts_sum, counts_sum_inv, # afaik there is no cleaner way
+          norm_logits, logit_maxes, logits, h, hpreact, bnraw,
+         bnvar_inv, bnvar, bndiff2, bndiff, hprebn, bnmeani,
+         embcat, emb]:
+  t.retain_grad()
+loss.backward()
+loss
+</code></pre></div></div>
+
+<p>Initially we have this forward pass of a NN, how do we backpropagate through this?
+We simply call loss.backward() which is an abstraction of pytorch’s autograd engine, it’ll construct computation graph and calculate gradients for all the nodes under the hood.</p>
+
+<p>How can we do it manually?</p>
+
+<p>here’s how</p>
+
+<h3 id="manual-backprop">Manual Backprop</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Exercise 1: backprop through the whole thing manually,
+# backpropagating through exactly all of the variables
+# as they are defined in the forward pass above, one by one
+</span>
+<span class="c1"># -----------------
+# YOUR CODE HERE :)
+</span><span class="n">dlogprobs</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">logprobs</span><span class="p">)</span>
+<span class="n">dlogprobs</span><span class="p">[</span><span class="nf">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">Yb</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">logprobs</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># 1
+</span>
+<span class="n">dprobs</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">probs</span><span class="p">)</span><span class="o">*</span><span class="n">dlogprobs</span> <span class="c1"># 2
+</span><span class="n">dcounts_sum_inv</span> <span class="o">=</span> <span class="p">(</span><span class="n">dprobs</span><span class="o">*</span><span class="n">counts</span><span class="p">).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+<span class="n">dcounts</span> <span class="o">=</span> <span class="n">dprobs</span> <span class="o">*</span> <span class="n">counts_sum_inv</span>
+<span class="n">dcounts_sum</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">*</span><span class="p">((</span><span class="n">counts_sum</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">))</span><span class="o">*</span><span class="n">dcounts_sum_inv</span>
+<span class="n">dcounts</span> <span class="o">+=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">counts_sum</span><span class="p">)</span><span class="o">*</span><span class="n">dcounts_sum</span>
+<span class="n">dnorm_logits</span> <span class="o">=</span> <span class="n">norm_logits</span><span class="p">.</span><span class="nf">exp</span><span class="p">()</span><span class="o">*</span><span class="n">dcounts</span>
+<span class="n">dlogit_maxes</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="o">*</span><span class="n">dnorm_logits</span><span class="p">).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">dlogits</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">*</span><span class="n">dnorm_logits</span><span class="p">)</span>
+
+<span class="n">dlogits</span> <span class="o">+=</span> <span class="n">F</span><span class="p">.</span><span class="nf">one_hot</span><span class="p">(</span><span class="n">logits</span><span class="p">.</span><span class="nf">max</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">indices</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">logits</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">dlogit_maxes</span>
+<span class="n">db2</span> <span class="o">=</span> <span class="p">(</span><span class="n">dlogits</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">logits</span><span class="p">)).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dh</span> <span class="o">=</span> <span class="n">dlogits</span> <span class="o">@</span> <span class="n">W2</span><span class="p">.</span><span class="n">T</span>
+<span class="n">dW2</span> <span class="o">=</span> <span class="n">h</span><span class="p">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">dlogits</span>
+<span class="n">dhpreact</span> <span class="o">=</span> <span class="n">dh</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">h</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">dbnbias</span> <span class="o">=</span> <span class="p">(</span><span class="n">dhpreact</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bnraw</span><span class="p">)).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+<span class="n">dbngain</span> <span class="o">=</span> <span class="p">(</span><span class="n">dhpreact</span><span class="o">*</span><span class="n">bnraw</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bnraw</span><span class="p">)).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">dbnraw</span> <span class="o">=</span> <span class="n">dhpreact</span><span class="o">*</span><span class="n">bngain</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bnraw</span><span class="p">)</span>
+<span class="n">dbnvar_inv</span> <span class="o">=</span> <span class="p">(</span><span class="n">dbnraw</span><span class="o">*</span> <span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bndiff</span><span class="p">)</span> <span class="o">*</span> <span class="n">bndiff</span><span class="p">)).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">dbndiff</span> <span class="o">=</span> <span class="p">(</span><span class="n">dbnraw</span><span class="o">*</span> <span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bndiff</span><span class="p">)</span> <span class="o">*</span> <span class="n">bnvar_inv</span><span class="p">))</span>
+<span class="n">dbnvar</span> <span class="o">=</span> <span class="n">dbnvar_inv</span><span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span><span class="o">*</span><span class="p">(((</span><span class="n">bnvar</span> <span class="o">+</span> <span class="mf">1e-5</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">))</span>
+<span class="n">dbndiff2</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">bndiff2</span><span class="p">)</span> <span class="o">*</span> <span class="n">dbnvar</span>
+<span class="n">dbndiff</span> <span class="o">+=</span> <span class="n">dbndiff2</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">bndiff</span><span class="p">)</span>
+<span class="n">dhprebn</span> <span class="o">=</span> <span class="n">dbndiff</span><span class="o">*</span><span class="mf">1.0</span>
+<span class="n">dbnmeani</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">hprebn</span><span class="p">)</span><span class="o">*-</span><span class="mf">1.0</span><span class="o">*</span><span class="n">dbndiff</span><span class="p">).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+<span class="n">dhprebn</span> <span class="o">+=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">hprebn</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">dbnmeani</span>
+<span class="n">db1</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">dhprebn</span><span class="p">)</span><span class="o">*</span><span class="n">dhprebn</span><span class="p">).</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dembcat</span> <span class="o">=</span> <span class="n">dhprebn</span> <span class="o">@</span> <span class="n">W1</span><span class="p">.</span><span class="n">T</span>
+<span class="n">dW1</span> <span class="o">=</span> <span class="n">embcat</span><span class="p">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">dhprebn</span>
+<span class="n">demb</span> <span class="o">=</span> <span class="n">dembcat</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">emb</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">emb</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">emb</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">dC</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros_like</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">Xb</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">Xb</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">dC</span><span class="p">[</span><span class="n">Xb</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">demb</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+<span class="c1">#         print(demb[i,j].shape)
+# -----------------
+</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">logprobs</span><span class="sh">'</span><span class="p">,</span> <span class="n">dlogprobs</span><span class="p">,</span> <span class="n">logprobs</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">probs</span><span class="sh">'</span><span class="p">,</span> <span class="n">dprobs</span><span class="p">,</span> <span class="n">probs</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">counts_sum_inv</span><span class="sh">'</span><span class="p">,</span> <span class="n">dcounts_sum_inv</span><span class="p">,</span> <span class="n">counts_sum_inv</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">counts_sum</span><span class="sh">'</span><span class="p">,</span> <span class="n">dcounts_sum</span><span class="p">,</span> <span class="n">counts_sum</span><span class="p">)</span>
+
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">counts</span><span class="sh">'</span><span class="p">,</span> <span class="n">dcounts</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">norm_logits</span><span class="sh">'</span><span class="p">,</span> <span class="n">dnorm_logits</span><span class="p">,</span> <span class="n">norm_logits</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">logit_maxes</span><span class="sh">'</span><span class="p">,</span> <span class="n">dlogit_maxes</span><span class="p">,</span> <span class="n">logit_maxes</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">logits</span><span class="sh">'</span><span class="p">,</span> <span class="n">dlogits</span><span class="p">,</span> <span class="n">logits</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">h</span><span class="sh">'</span><span class="p">,</span> <span class="n">dh</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">W2</span><span class="sh">'</span><span class="p">,</span> <span class="n">dW2</span><span class="p">,</span> <span class="n">W2</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">b2</span><span class="sh">'</span><span class="p">,</span> <span class="n">db2</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">hpreact</span><span class="sh">'</span><span class="p">,</span> <span class="n">dhpreact</span><span class="p">,</span> <span class="n">hpreact</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bngain</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbngain</span><span class="p">,</span> <span class="n">bngain</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bnbias</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbnbias</span><span class="p">,</span> <span class="n">bnbias</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bnraw</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbnraw</span><span class="p">,</span> <span class="n">bnraw</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bnvar_inv</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbnvar_inv</span><span class="p">,</span> <span class="n">bnvar_inv</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bnvar</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbnvar</span><span class="p">,</span> <span class="n">bnvar</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bndiff2</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbndiff2</span><span class="p">,</span> <span class="n">bndiff2</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bndiff</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbndiff</span><span class="p">,</span> <span class="n">bndiff</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">bnmeani</span><span class="sh">'</span><span class="p">,</span> <span class="n">dbnmeani</span><span class="p">,</span> <span class="n">bnmeani</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">hprebn</span><span class="sh">'</span><span class="p">,</span> <span class="n">dhprebn</span><span class="p">,</span> <span class="n">hprebn</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">embcat</span><span class="sh">'</span><span class="p">,</span> <span class="n">dembcat</span><span class="p">,</span> <span class="n">embcat</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">W1</span><span class="sh">'</span><span class="p">,</span> <span class="n">dW1</span><span class="p">,</span> <span class="n">W1</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">b1</span><span class="sh">'</span><span class="p">,</span> <span class="n">db1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">emb</span><span class="sh">'</span><span class="p">,</span> <span class="n">demb</span><span class="p">,</span> <span class="n">emb</span><span class="p">)</span>
+<span class="nf">cmp</span><span class="p">(</span><span class="sh">'</span><span class="s">C</span><span class="sh">'</span><span class="p">,</span> <span class="n">dC</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="results">Results</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>logprobs        | exact: True  | approximate: True  | maxdiff: 0.0
+probs           | exact: True  | approximate: True  | maxdiff: 0.0
+counts_sum_inv  | exact: True  | approximate: True  | maxdiff: 0.0
+counts_sum      | exact: True  | approximate: True  | maxdiff: 0.0
+counts          | exact: True  | approximate: True  | maxdiff: 0.0
+norm_logits     | exact: True  | approximate: True  | maxdiff: 0.0
+logit_maxes     | exact: True  | approximate: True  | maxdiff: 0.0
+logits          | exact: True  | approximate: True  | maxdiff: 0.0
+h               | exact: True  | approximate: True  | maxdiff: 0.0
+W2              | exact: True  | approximate: True  | maxdiff: 0.0
+b2              | exact: True  | approximate: True  | maxdiff: 0.0
+hpreact         | exact: True  | approximate: True  | maxdiff: 0.0
+bngain          | exact: True  | approximate: True  | maxdiff: 0.0
+bnbias          | exact: True  | approximate: True  | maxdiff: 0.0
+bnraw           | exact: True  | approximate: True  | maxdiff: 0.0
+bnvar_inv       | exact: True  | approximate: True  | maxdiff: 0.0
+bnvar           | exact: True  | approximate: True  | maxdiff: 0.0
+bndiff2         | exact: True  | approximate: True  | maxdiff: 0.0
+bndiff          | exact: True  | approximate: True  | maxdiff: 0.0
+bnmeani         | exact: True  | approximate: True  | maxdiff: 0.0
+hprebn          | exact: True  | approximate: True  | maxdiff: 0.0
+embcat          | exact: True  | approximate: True  | maxdiff: 0.0
+W1              | exact: True  | approximate: True  | maxdiff: 0.0
+b1              | exact: True  | approximate: True  | maxdiff: 0.0
+emb             | exact: True  | approximate: True  | maxdiff: 0.0
+C               | exact: True  | approximate: True  | maxdiff: 0.0
+</code></pre></div></div>
+
+<p>The result verifies that our gradients matches pytorch’s.</p>
+
+<h3 id="step-by-step-calculation">Step-by-step calculation</h3>
+
+<p>Backpropagating on scalars is pretty straightforward as we did in our <a href="https://cohlem.github.io/sub-notes/backpropagation-from-scratch/">first note</a> but when it comes to tensors, we need to make sure every element’s gradient in a tensor is calculated precisely.</p>
+
+<p>let’s understand it line by line.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>loss = -logprobs[range(n), Yb].mean()
+</code></pre></div></div>
+
+<p>now we calculate the derivative of loss (L) w.r.t logprobs, (NOTE: d(loss)/d(loss) is 1).
+here</p>
+
+<p>we have: d(L)/dL
+to find: d(L)/dlogprobs</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d(L)/dlogprobs = d(L)/dL x d(L)/dlogprobs # d(L)/dlogprobs is local gradient
+d(L)/dlogprobs  = 1.0 * d(L)/dlogprobs
+</code></pre></div></div>
+
+<p>Now what could be the d(L)/dlogprobs?
+let’s break it down by representing it into a simple matrix.
+let’s say logprobs is a matrix and using indexing [range(n), Yb] we pluck out it’s corresponding values and then we average it. let’s consider the plucked out values are</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>a1 , b1 , c1
+</code></pre></div></div>
+
+<p>it’s mean would be</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1/3 x a1 + 1/3 x b1 + 1/3 x c1
+</code></pre></div></div>
+
+<p>the derivative of d(L)/da1 = 1/3 , d(L)/db1 = 1/3 , d(L)/dc1 = 1/3
+we see a pattern here, derivate of every element is 1/total_no_of_elements.</p>
+
+<p>so</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dlogprobs = torch.zeros_like(logprobs) # because all the other elements will have 0 gradient as they'll be considered constant
+dlogprobs[range(n), Yb]  = 1.0 * 1/(-logprobs).shape[0]
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>logprobs = probs.log()
+</code></pre></div></div>
+
+<p>to find : dprobs</p>
+
+<p>we know d(logx)/dx = 1/x, so its fairly simple.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dprobs = 1/probs * dlogprobs # don't forget to add the dlogprobs because its the gradient's that propagated
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>probs = counts * counts_sum_inv
+</code></pre></div></div>
+
+<p>let’s find dcounts_sum_inv
+we need to make sure that the gradient of any tensor should have the same size as that tensor.
+the shape of counts_sum_inv is (32,1)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dcounts_sum_inv
+ = (dprobs *torch.ones_like(count) * counts).sum(1, keepdim = True)
+</code></pre></div></div>
+
+<p>why do we sum it across rows?
+this is because in probs = counts * counts_sum_inv,</p>
+
+<p>counts has shape (32,27) and counts<em>sum_inv has (32,1), so first the counts_sum_inv is broadcasted and is made into shape (32,27) by copying the column and then finally is multiplied with counts. There are two operations that take place in order (broadcasting and addition). So, when we backpropagate through this equation the order should be addition and broadcasting.
+so the dcounts_sum_inv is (dprobs * torch.ones</em>like(count) * counts), but this is of shape (32,27), as we have seen the columns in counts_sum_inv are broadcasted, which mean one column is used 27 times, so we know that from our <a href="https://cohlem.github.io/sub-notes/backpropagation-from-scratch/">first note</a> that when a variable is used more than once it’s derivate is added up, so we sum across the rows (sum it 27 times).</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dcounts_sum_inv = (dprobs*  torch.ones_like(count) * counts).sum(1, keepdim = True)
+</code></pre></div></div>
+
+<p>Similarly, we can now calculate the gradients for tensors that were broadcasted in our forward pass. All the other gradient calculation is relatively straightforward except this equation</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>logits = h @ W2 + b2 # output layer
+</code></pre></div></div>
+
+<p>why? because if we go deep into matrix multiplication, we see there are two operations involved i.e multiplication and addition. The formula for calculating gradient for the equation above is derived in the picture below.</p>
+
+<p><img src="one.jpg" alt="one" /></p>
+
+<p><img src="two.jpg" alt="two" />
+We come up with a simple equation.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dh = dlogits @ W2.T
+dW2 = h.T @ dlogits
+</code></pre></div></div>
+
+<p>I believe these were the main gradient calculation steps and gradients for other nodes can be calculated in a similar manner.</p>
+
+<p>A more detailed code can be found <a href="https://github.com/karpathy/nn-zero-to-hero/blob/master/lectures/makemore/makemore_part4_backprop.ipynb">here</a></p>
+</div>
+
+  
+  <div class="tags">
+    
+    <span class="tag">backpropagation</span>
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

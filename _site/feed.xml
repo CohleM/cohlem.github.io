@@ -1,4 +1,119 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-10-19T16:50:05+05:45</updated><id>http://localhost:4000/feed.xml</id><entry><title type="html">Bananas</title><link href="http://localhost:4000/2025/08/20/bananas.html" rel="alternate" type="text/html" title="Bananas" /><published>2025-08-20T00:00:00+05:45</published><updated>2025-08-20T00:00:00+05:45</updated><id>http://localhost:4000/2025/08/20/bananas</id><content type="html" xml:base="http://localhost:4000/2025/08/20/bananas.html"><![CDATA[<p>I was learning how we can do distributed RL training, saw karpathy posting <a href="https://x.com/karpathy/status/1952076108565991588">this</a> and thought why not make a complete blog about what I learned so here it is.</p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-10-19T21:53:28+05:45</updated><id>http://localhost:4000/feed.xml</id><entry><title type="html">Rl Papers</title><link href="http://localhost:4000/2025/09/18/RL-papers.html" rel="alternate" type="text/html" title="Rl Papers" /><published>2025-09-18T00:00:00+05:45</published><updated>2025-09-18T00:00:00+05:45</updated><id>http://localhost:4000/2025/09/18/RL-papers</id><content type="html" xml:base="http://localhost:4000/2025/09/18/RL-papers.html"><![CDATA[<h3 id="skywork-open-reasoner-1-technical-report">Skywork Open Reasoner 1 Technical Report</h3>
+
+<h4 id="multi-stage-training">Multi-stage training</h4>
+
+<p>First, set context_length = T, train, wait for convergence, at some point afterwards set context_length=2T</p>
+
+<p>There seems to be no problem with truncated responses, cause actor learns to produce accurate but shorter responses.
+<img src="skywork-tr.png" alt="skywork-tr" /></p>
+
+<h4 id="high-temperature-sampling">High temperature Sampling</h4>
+
+<p>temperatue 1.0 provides more room for exploration, whereas lower temperature might cause early entropy collapse.
+<img src="temp-sampling.png" alt="temp-sampling.png" /></p>
+
+<h4 id="adaptive-entropy-control">Adaptive Entropy Control</h4>
+
+<p>turn off entropy coefficient when entropy is already greater than target entropy else, increase it by del.
+<img src="entropy_control.png" alt="entropy_control" /></p>
+
+<h3 id="acereason-nemotron-11-advancing-math-and-code-reasoning-through-sft-and-rl-synergy">AceReason-Nemotron 1.1: Advancing Math and Code Reasoning through SFT and RL Synergy</h3>
+
+<h4 id="which-one-results-in-better-performance--large-no-of-unique-prompts-or-more-responses-per-prompt">Which one results in better performance ? large no. of unique prompts or more responses per prompt.</h4>
+
+<p>Generally, large no. of unique prompts is better, but at some point obtaining those become difficult, afterwards, we can include more responses per prompt in our dataset. More epochs helps as well.</p>
+
+<p><img src="ace-nemo.png" alt="ace-nemo" /></p>
+
+<h4 id="is-stage-1-necessary">Is stage-1 necessary?</h4>
+
+<p><img src="overall-trn.png" alt="overall-trn" />
+stage-1 training seems to be necessary cause, it allows the model to compress it’s reasoning at early stage, not doing so results in accuracy that plateaus see fig below.</p>
+
+<p><img src="stage-1.png" alt="stage-1" /></p>
+
+<h4 id="exploration-vs-exploitation-ie-temperature-controlled-entropy">Exploration vs exploitation (i.e temperature controlled entropy)</h4>
+
+<p>extremely high temp or low temp cause reward to dampen, thus noisy training.</p>
+
+<p><img src="temp-exp.png" alt="temp-exp" /></p>
+
+<h4 id="with-overlong-filtering-or-without-overlong-filtering">with overlong filtering or without overlong filtering</h4>
+
+<p>with overlong filtering = don’t use the trajectory for reward calculation
+without overlong filtering = use the trajectory and provide negative reward for truncated responses</p>
+
+<p><img src="overlong.png" alt="overlong" /></p>
+
+<p>overlong filtering helps during first stages (i.e when context lengths are small) otherwise, when context length is sufficient, it doesn’t help.</p>
+
+<h4 id="performance-with-increase-in-k-value-passk">Performance with increase in K value (pass@K)</h4>
+
+<p>The performance gain decreases for some benchmarks(AIME25) as we increase K. We can find answer within the SFT model if the K is sufficiently large</p>
+
+<p><img src="passk.png" alt="passk" /></p>
+
+<h3 id="something">Something</h3>
+
+<h4 id="which-ones-better-group-normalization-grpo-batch-normalization-use-same-equation-as-grpo-but-taken-mean-and-std-between-whole-rollout-batch">which one’s better? group normalization (GRPO), batch normalization (use same equation as GRPO but taken mean and std between whole rollout batch)</h4>
+
+<ul>
+  <li>group normalization seems to be better.</li>
+</ul>
+
+<h4 id="do-we-need-std-normalization">Do we need std normalization?</h4>
+
+<p>when problems are too easy for actor, the rewards are almost all correct, the std will be low, division by low std results in high advanrages causing higher gradients (sometimes exploding gradients) but when problems are medium-hard there’s not much of a difference between normalizing by std or just simply subtracting the mean from the reward. (i.e no use of std)</p>
+
+<p><img src="std-use.png" alt="std-use" /></p>
+
+<h4 id="reward-shaping-works-best-when-use-divide-by-global-std">Reward shaping works best when use divide by global std</h4>
+
+<p><img src="global-std.png" alt="global-std" /></p>
+
+<h4 id="liteppo">LitePPO</h4>
+
+<p>simply using token-level loss i.e sum all tokens loss then divide by total tokens in the batch and using division by global std improves the overall performance.</p>
+
+<h1 id="for-sop">FOR SOP</h1>
+
+<h3 id="writing-zero">Writing zero</h3>
+
+<p>train pairwise GenRM,</p>
+
+<ol>
+  <li>Gather pairwise data</li>
+  <li>pass claude code with those pairwise data, generate critiques and final answer.</li>
+  <li>remove the trajectories which has contradictory answer or doesn’t match the ground truth (we already know the real preferences)</li>
+  <li>do cold-start SFT with those trajectories.</li>
+  <li>do GRPO training with Reward = 1 if Sc &gt; Sr</li>
+</ol>
+
+<p>afterwards,
+do BRPO (modified GRPO) i.e a model will try to generate best answers.
+exp do rollout of 8 exp, select one randomly as a reference data, pass current answer and the reference answer to GenRM, GenRM provides scores S1,S2. If R = 1 if S1 &gt; S2 else -1. thats it.</p>
+
+<h3 id="next-story-generation">Next story generation</h3>
+
+<p>simply train the reasoning model not the generation model. i.e learn to generate intermediate p_hat, do this using GRPO, reward given by this formula ![[Screenshot 2025-10-13 at 11.48.44 AM.png]]</p>
+
+<p>I is given by this formula
+![[Screenshot 2025-10-13 at 11.49.14 AM.png]]</p>
+
+<p>reminder, we need the ground truth answer for training, and PPL simply mean that we find the avg of negative log likelihood of all the tokens and exponentiate that avg and put - sign in front.</p>
+
+<p><a href="https://arxiv.org/pdf/2503.19618">Beyond Verifiable Rewards: Scaling Reinforcement Learning for Language Models to Unverifiable Data</a></p>
+
+<p>https://chatgpt.com/share/68ecbaf2-35e4-800c-8dcf-db3b183741ed</p>
+
+<p>Given a prompt x, the intuitive role of chain-of-thought is such that it makes the marginal likelihood of the ground truth answer a∗ higher. As such, we can interpret chain-of- thought as a latent variable and formulate the optimization of chain-of-thought as latent variable modeling
+![[Screenshot 2025-10-13 at 2.23.40 PM.png]]</p>
+
+<p>the first term promotes CoT chains that produce best answer, whereas the second term promotes answer given the CoT chain, third term is simply the KL term.</p>
+
+<p>So it’s kind of like providing the implicit rewards using RL + SFT</p>
+
+<p>in</p>]]></content><author><name>cohlem</name></author><summary type="html"><![CDATA[Skywork Open Reasoner 1 Technical Report]]></summary></entry><entry><title type="html">Distributed Rl Training</title><link href="http://localhost:4000/2025/09/01/Distributed-RL-training.html" rel="alternate" type="text/html" title="Distributed Rl Training" /><published>2025-09-01T00:00:00+05:45</published><updated>2025-09-01T00:00:00+05:45</updated><id>http://localhost:4000/2025/09/01/Distributed-RL-training</id><content type="html" xml:base="http://localhost:4000/2025/09/01/Distributed-RL-training.html"><![CDATA[<p>I was learning how we can do distributed RL training, saw karpathy posting <a href="https://x.com/karpathy/status/1952076108565991588">this</a> and thought why not make a complete blog about what I learned so here it is.</p>
 
 <p>The end goal of this blog is to explain clearly how to do distributed RL training, right now it contains explanations about fundamentals of distributed training, such as data parallelism, model parallelism, and tensor parallelism. Consider this as a part 1, where in the next blog I’ll be explaining how we apply the techniques learned in the blog.</p>
 
@@ -1409,7 +1524,900 @@ and FSDP group <code class="language-plaintext highlighter-rouge">[0,2],[1,3],[4
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">tens</span>                                                                                                                                                                                                                              <span class="ow">or</span> <span class="o">+</span> <span class="n">detached_tensor</span> <span class="o">-</span> <span class="n">tensor</span><span class="p">.</span><span class="nf">detach</span><span class="p">()</span>
 
-</code></pre></div></div>]]></content><author><name>jill</name></author><summary type="html"><![CDATA[I was learning how we can do distributed RL training, saw karpathy posting this and thought why not make a complete blog about what I learned so here it is.]]></summary></entry><entry><title type="html">Rlhf</title><link href="http://localhost:4000/2025/02/24/RLHF.html" rel="alternate" type="text/html" title="Rlhf" /><published>2025-02-24T00:00:00+05:45</published><updated>2025-02-24T00:00:00+05:45</updated><id>http://localhost:4000/2025/02/24/RLHF</id><content type="html" xml:base="http://localhost:4000/2025/02/24/RLHF.html"><![CDATA[<p>Before starting, it’s advisable to first complete <a href="https://www.youtube.com/watch?v=2pWv7GOvuf0&amp;list=PLzuuYNsE1EZAXYR4FJ75jcJseBmo4KQ9-">David Silver’s Course on RL</a> and read <a href="https://lilianweng.github.io/posts/2018-02-19-rl-overview/#deadly-triad-issue">Lilian’s notes on RL</a> which explains/provides notes on the David’s course in sequential manner.</p>
+</code></pre></div></div>]]></content><author><name>cohlem</name></author><category term="blog" /><category term="RL" /><category term="distributed" /><summary type="html"><![CDATA[I was learning how we can do distributed RL training, saw karpathy posting this and thought why not make a complete blog about what I learned so here it is.]]></summary></entry><entry><title type="html">Python</title><link href="http://localhost:4000/2025/06/09/python.html" rel="alternate" type="text/html" title="Python" /><published>2025-06-09T00:00:00+05:45</published><updated>2025-06-09T00:00:00+05:45</updated><id>http://localhost:4000/2025/06/09/python</id><content type="html" xml:base="http://localhost:4000/2025/06/09/python.html"><![CDATA[<h3 id="unpacking-over-indexing">Unpacking over indexing</h3>
+
+<p>why?</p>
+
+<ul>
+  <li>less noisy</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># do this
+</span><span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="n">somehting</span>
+
+<span class="c1"># over
+</span><span class="n">a</span> <span class="o">=</span> <span class="n">something</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">somehting</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>another example</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># don't do this
+</span><span class="n">snacks</span> <span class="o">=</span> <span class="p">[(</span><span class="sh">'</span><span class="s">bacon</span><span class="sh">'</span><span class="p">,</span> <span class="mi">350</span><span class="p">),</span> <span class="p">(</span><span class="sh">'</span><span class="s">donut</span><span class="sh">'</span><span class="p">,</span> <span class="mi">240</span><span class="p">),</span> <span class="p">(</span><span class="sh">'</span><span class="s">muffin</span><span class="sh">'</span><span class="p">,</span> <span class="mi">190</span><span class="p">)]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="nf">len</span><span class="p">(</span><span class="n">snacks</span><span class="p">)):</span>
+
+    <span class="n">item</span> <span class="o">=</span> <span class="n">snacks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">calories</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sa">f</span><span class="sh">'</span><span class="s">#</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s"> has </span><span class="si">{</span><span class="n">calories</span><span class="si">}</span><span class="s"> calories</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># do this
+</span><span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">calorie</span><span class="p">)</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">snacks</span><span class="p">,</span><span class="mi">1</span><span class="p">):</span>
+	<span class="nf">print</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">calorie</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Unpacking can be applied to any iterables (dict, lists, tuples)</p>
+
+<h3 id="slicing">Slicing</h3>
+
+<p>slicing creates a reference to original list, but changing sliced object won’t reflect in original list</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="sh">'</span><span class="s">a</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">b</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">c</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">d</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">e</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">f</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">g</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">h</span><span class="sh">'</span><span class="p">]</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+
+<span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span> <span class="mi">10</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="c1"># [10, 'b', 'c']
+</span><span class="nf">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="c1"># ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+</span></code></pre></div></div>
+
+<h3 id="striding">Striding</h3>
+
+<p>Avoid using striding (step) i.e start:stop:step altogether, mostly avoid them while using negative strides.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># outputs ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a']
+</span><span class="n">a</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">::</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="c1"># ['g', 'e', 'c', 'a'] # its confusing, so avoid it
+</span></code></pre></div></div>
+
+<h3 id="starred-expression">Starred Expression</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">car_ages</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">15</span><span class="p">]</span>
+<span class="n">car_ages_descending</span> <span class="o">=</span> <span class="nf">sorted</span><span class="p">(</span><span class="n">car_ages</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span> <span class="o">=</span> <span class="n">car_ages_descending</span>
+
+<span class="c1"># Instead of doing this
+</span><span class="n">oldest</span> <span class="o">=</span> <span class="n">car_ages_descending</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">second_oldest</span> <span class="o">=</span> <span class="n">car_ages_descending</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">others</span> <span class="o">=</span> <span class="n">car_ages_descending</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span><span class="p">,</span> <span class="n">others</span><span class="p">)</span>
+
+<span class="c1"># Do this
+</span><span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span><span class="p">,</span> <span class="o">*</span><span class="n">others</span> <span class="o">=</span> <span class="n">car_ages_descending</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span><span class="p">,</span> <span class="n">others</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>But it can only be used once in an expression, but it should alway pair with at least one normal unpacking. i.e only doing * others = car_ages_descending will not work.</p>
+
+<h3 id="sorting">Sorting</h3>
+
+<p>.sort() can be called on to any built-in types that has ordering, i.e int, float, str. Defaults to sorting in ascending order, use reverse=True for descending.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="mi">93</span><span class="p">,</span> <span class="mi">86</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">70</span><span class="p">]</span>
+<span class="n">numbers</span><span class="p">.</span><span class="nf">sort</span><span class="p">()</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span> <span class="c1"># [11, 68, 70, 86, 93]
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Tool</span><span class="p">:</span>
+     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+
+         <span class="n">self</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+         <span class="n">self</span><span class="p">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span>
+
+     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+         <span class="k">return</span> <span class="sa">f</span><span class="sh">'</span><span class="s">Tool(</span><span class="si">{</span><span class="n">self</span><span class="p">.</span><span class="n">name</span><span class="si">!r}</span><span class="s">, </span><span class="si">{</span><span class="n">self</span><span class="p">.</span><span class="n">weight</span><span class="si">}</span><span class="s">)</span><span class="sh">'</span>
+<span class="n">tools</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">level</span><span class="sh">'</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">),</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">hammer</span><span class="sh">'</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">),</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">screwdriver</span><span class="sh">'</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">chisel</span><span class="sh">'</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span>
+
+<span class="p">]</span>
+
+<span class="c1">#simply calling tools.sort() will result in error, cause Tool class doesn't implement comparision operator by default.
+# sort it using key parameter.
+# keys expects a function, and the should return by which we want our list to be ordered i.e by name
+</span><span class="n">tools</span><span class="p">.</span><span class="nf">sort</span><span class="p">(</span><span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">.</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Tuples have built in order defined in them, i.e</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="sh">'</span><span class="s">drill</span><span class="sh">'</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="sh">'</span><span class="s">sander</span><span class="sh">'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>in this case, 4 is compared with 4, and since its true ‘drill’ is compared with ‘sander’, we can take advantage of this tuple within our key function to defined the order i.e</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">tools</span><span class="p">.</span><span class="nf">sort</span><span class="p">(</span><span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">x</span><span class="p">.</span><span class="n">name</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>In this case, it sort by ascending order, but first weight is compared AND if any two items have the same weight their name attribute is compared i.e drill and sander have same weights, so d &lt; s</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c1">#output
+</span><span class="p">[</span><span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">drill</span><span class="sh">'</span><span class="p">,</span>        <span class="mi">4</span><span class="p">),</span>
+ <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">sander</span><span class="sh">'</span><span class="p">,</span>       <span class="mi">4</span><span class="p">),</span>
+ <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">circular saw</span><span class="sh">'</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+ <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">jackhammer</span><span class="sh">'</span><span class="p">,</span>   <span class="mi">40</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<h3 id="list-multiplication-vs-list-comprehension">list multiplication vs list comprehension</h3>
+
+<p>use multiplication carefully.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="o">*</span> <span class="mi">2</span>    <span class="c1"># replicates the *same* inner list reference twice
+</span><span class="n">b</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>  <span class="c1"># makes two distinct inner lists
+</span>
+</code></pre></div></div>
+
+<h3 id="closures-and-decorators">Closures and decorators</h3>
+
+<p>A simple problem. We need to keep track of every object that is printed. In the code below, how do we access data list inside inner function? doing something like below will have global data, which any other functions can access. We need some list that can keep track of every object printed, but is also only accessible to that specific function.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<p>We use closures.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="nf">func</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+
+<span class="n">print_</span> <span class="o">=</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="k">print</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">yoo</span><span class="sh">'</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">whats up</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">print_</span><span class="p">.</span><span class="n">__closure__</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">cell_contents</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## outputs
+yoo
+whats up
+
+['yoo', 'whats up']
+</code></pre></div></div>
+
+<p>The drawback with closure function above is that inner func only takes one object, whereas it should be able to take in more than one object as parameters. If so, make use of _ args and _ kwargs.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">((</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span> <span class="c1"># args is a tuple, and kwargs is a dict
+</span>        <span class="nf">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+
+<span class="n">print_</span> <span class="o">=</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="k">print</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">yoo</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">haha</span><span class="sh">'</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">whats up</span><span class="sh">'</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="sh">'</span><span class="s">:</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">print_</span><span class="p">.</span><span class="n">__closure__</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">cell_contents</span>
+
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># output
+yoo haha 1 2 3
+whats up
+
+[(('yoo', 'haha', 1, 2, 3), {}), (('whats up',), {'sep': ':'})]
+</code></pre></div></div>
+
+<p>One more thing, our inner function doesn’t return anything, lets add return to it, and it becomes a decorator.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">((</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span> <span class="c1"># args is a tuple, and kwargs is a dict
+</span>        <span class="k">return</span> <span class="nf">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+
+</code></pre></div></div>
+
+<p>our print_with_memory() function now can take in any function, i.e print, max, min and so on.
+We can also do something like this. The whole point of decorators is that we are decorating the function, with additional functionality, i.e adding every parameter passed to that function to data list.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="sb">`print = print_with_memory(print)`</span> <span class="c1"># we deocorate with somehting like this
+</span></code></pre></div></div>
+
+<h4 id="how-to-use--in-decorator">How to use @ in decorator</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">store_arguments</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">((</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nf">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span>
+<span class="c1"># or we can do this
+</span>
+<span class="nd">@store_arguments</span>
+<span class="k">def</span> <span class="nf">my_special_function</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repeat</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">name</span><span class="p">.</span><span class="nf">upper</span><span class="p">()</span> <span class="o">*</span> <span class="n">repeat</span>
+
+<span class="nf">print</span><span class="p">(</span><span class="nf">my_special_function</span><span class="p">(</span><span class="sh">'</span><span class="s">yolo</span><span class="sh">'</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="nf">print</span><span class="p">(</span><span class="nf">my_special_function</span><span class="p">(</span><span class="sh">'</span><span class="s">haha</span><span class="sh">'</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="n">my_special_function</span><span class="p">.</span><span class="n">__closure__</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">cell_contents</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># outputs
+YOLOYOLO
+HAHAHAHAHAHA
+[(('yolo', 2), {}), (('haha', 3), {})]
+</code></pre></div></div>]]></content><author><name>cohlem</name></author><summary type="html"><![CDATA[Unpacking over indexing]]></summary></entry><entry><title type="html">Multi Head Latent Attention</title><link href="http://localhost:4000/2025/04/28/Multi-head-latent-attention.html" rel="alternate" type="text/html" title="Multi Head Latent Attention" /><published>2025-04-28T00:00:00+05:45</published><updated>2025-04-28T00:00:00+05:45</updated><id>http://localhost:4000/2025/04/28/Multi-head-latent-attention</id><content type="html" xml:base="http://localhost:4000/2025/04/28/Multi-head-latent-attention.html"><![CDATA[<h2 id="scaled-dot-product-attention">Scaled-dot product Attention</h2>
+
+<h3 id="q1">Q1</h3>
+
+<p>Given the attention equation</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(xWq)(xWk)^\top}{\sqrt{d_k}}\right)(xWv)W_O\]
+
+<p>Why don’t we train by combining $WqWk^\top$ and $WvWo$? because mathematically they seem equivalent</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{x(WqWk^\top)x^\top}{\sqrt{d_k}}\right)x(WvW_O)\]
+
+<p>I initially thought if we could combine those weights, we don’t need to calculate $Q,K,V$ meaning there will be less number of matrix multiplication.</p>
+
+<h4 id="answer">Answer</h4>
+
+<p>We lose the objective of $Q,K,V,O$, they are meant to operate independently. In analogy,
+$Q$ represents the notion of “what we have”, $K$ whats available to us and so on. BUT, if we combine them into a giant matrix $WqWk^\top$ during backpropagation weight updates are mixed. We no longer update them separately so we end up loosing their significance.</p>
+
+<h3 id="q2">Q2</h3>
+
+<p>So, if we can’t use them during training, can we still mix those weights during inference now that we aren’t updating weights? since the mathematical equivalence is the same, can we use it to optimize inference performance?</p>
+
+<h4 id="answer-1">Answer</h4>
+
+<p>We decrease the number of matrix multiplication, BUT we end up increasing the actual element wise multiplications inside those matrix multiplication.</p>
+
+<p>We end up decreasing the speed rather than increasing it.</p>
+
+<p>Let’s see this by comparison.</p>
+
+<p><strong>NOTE: Given matrix A with size (2,3) and B with size (3,4), the total number of element wise matrix multiplication between is (2 _ 3 _ 4).</strong></p>
+
+<p>$n$ = number of tokens
+$d_{\text{model}}$: embedding dimension
+$nh$: number of heads
+$hd$: number of head<em>dimension
+$d</em>{\text{k}}$: $nh$ x $hd$</p>
+
+<h4 id="case-i-original-attention">CASE I: Original Attention</h4>
+
+<p>Compute $Q = X W_Q$: $\mathcal{O}(n \cdot d_{\text{model}} \cdot d_k)$</p>
+
+<p>Compute $K = X W_K$: $\mathcal{O}(n \cdot d_{\text{model}} \cdot d_k)$</p>
+
+<p>Compute $QK^T$: $\mathcal{O}(n^2 \cdot d_k)$</p>
+
+<h4 id="case-ii-combined">CASE II: Combined</h4>
+
+<p>Compute $X W_{QK}$: $\mathcal{O}(n \cdot d_{\text{model}}^2)$</p>
+
+<p>Compute $(X W_{QK}) X^T$: $\mathcal{O}(n^2 \cdot d_{\text{model}})$</p>
+
+<p>If $d_k \ll d_{\text{model}}$ (e.g., $d_k = 128$, $d_{\text{model}} = 512$):</p>
+
+<p>Original: $\mathcal{O}( n \cdot 512 \cdot 128)+ \mathcal{O}( n \cdot 512 \cdot 128) + \mathcal{O}(n^2 \cdot 128)$</p>
+
+<p>Combined: $\mathcal{O}(n \cdot 512^2) + \mathcal{O}(n^2 \cdot 512)$</p>
+
+<p>As you can see the number of matrix multiplication is 3, but the total elementwise multiplication is very large.</p>
+
+<h2 id="multi-head-latent-attention">Multi-head Latent Attention</h2>
+
+<p>The main reason behind using the variants of <strong>Attention</strong> is that we always to increase our inference speed and we are always bottlenecked by <a href="https://cohlem.github.io/sub-notes/kv-cache-gqa/">KV cache</a> The KV cache needed in original Multi-head attention is $2\cdot nh\cdot hd\cdot l$
+for one token, as the tokens get large during inference, the memory needed for storing this case also increases.</p>
+
+<p>Deepseek propose the use of latent dimension to compress the dimension.</p>
+
+<p>As we know $K,V$ both come from the same x i.e $K=xWk$ and $V=xWv$ but the different weights $Wk, Wv$</p>
+
+<p>how about we make an intermediate compressed version of x, from which we can decompress it into K and V, and only store that compressed version of x. This is what they use for multi-head latent attention.</p>
+
+<p>$W_{\text{dkv}}$: compression matrix of size ($d_{\text{model}}$, $d_{\text{c}}$)
+$L_{\text{kv}}$= $xW_{\text{dkv}}$ which is the compressed version of x</p>
+
+<p>We decompress $L_{\text{kv}}$ into K, V using $Wuk, Wuv$ i.e</p>
+
+<p>$Q=xWq$</p>
+
+<p>$Kc=L_{\text{kv}} \cdot Wuk$ ($Wuk$ size = ($d_{\text{c}}, nh \cdot hd$))</p>
+
+<p>$Vc=L_{\text{kv}} \cdot Wuv$ ($Wuv$ size = ($d_{\text{c}}, nh \cdot hd$))</p>
+
+<p>Similarly, we can substitute those in our original attention equation</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(Q)(Kc)^\top}{\sqrt{d_k}}\right)(Vc)W_O\]
+
+<p>As you can see, we’ve increased the number of matrix multiplication (i.e the computation of $L_{\text{kv}}$= $xW_{\text{dkv}}$), but the total number of elementwise multiplication can be made comparable with the right choice of compression dimension $d_{\text{c}}$</p>
+
+<p>But, our main goal was to reduce the number of KV cache, but if we store only the $L_{\text{kv}}$ only, we still would would need to perform $Kc=L_{\text{kv}} \cdot Wuk$ and $Vc=L_{\text{kv}} \cdot Wuv$ to calculate attention. So whats the point of this compression?</p>
+
+<p>Well there’s a trick to still store only the $L_{\text{kv}}$ and use it without calculating Kc and Vc, we do weight combination like in our Q2 but still end up with less number of elementwise matrix multiplication. The equation above can also we written as</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(xWq)(L_{\text{kv}} \cdot Wuk)^\top}{\sqrt{d_k}}\right)(L_{\text{kv}} \cdot Wuv)W_O\]
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(x(Wq Wuk^\top) (L_{\text{kv}})^\top}{\sqrt{d_k}}\right)L_{\text{kv}}(WuvW_O)\]
+
+<p>After combining $(Wq Wuk^\top)$ and $(WuvW_O)$ once, we can save $L_{\text{kv}}$ in our cache and then directly multiply with $(Wq Wuk^\top)$ to get the attention, without needing to calculate $Kc$ and $Vc$. Remember the issue we had while combining weights in Q2, this fades away because of the compression dimension because it strictly has to be less than $nh \cdot hd$ i.e ($d_{\text{c}} \ll nh \cdot hd$)</p>
+
+<h3 id="decoupled-rope">Decoupled RoPE</h3>
+
+<p>There are still some parts I feel like I don’t understand completely. But, here’s what I’ve understood till now.</p>
+
+<p>First thing to keep in mind, its the clever weight absorption design and caching only $L_{\text{kv}}$ that helps MLA to retain its fast speed. But, we have yet to apply positional information to our Q and K i.e</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{R1(xWq)(R2(L_{\text{kv}} \cdot Wuk))^\top}{\sqrt{d_k}}\right)(L_{\text{kv}} \cdot Wuv)W_O\]
+
+<p>In the paper, they say the RoPE matrix gets in the middle but I don’t know what i am missing here cause $({R1(xWq)Wuk^\top)L_{\text{kv}}^\top R2^\top}$ so weights can still be combined? I think there something that I don’t understand here. I’ll correct my understand in future.</p>
+
+<p>lets resume from the point that RoPE matrix gets in the middle. They again design a clever thing here. Add two new matrices $W_{QR}\in \mathbb{R}^{(d,nh \cdot d^R)}$ and $W_{KR} \in \mathbb{R}^{(d,d^R)}$</p>
+
+<p>$Q^{R}=RoPE(xW_{QR})$ and $K^{R}=RoPE(xW_{KR})$</p>
+
+<p>and also cache the $K^R$</p>
+
+<p>add then concatenate the new two matrices to the original Q and K</p>
+
+<p>$Q = [Q, Q^R]$</p>
+
+<p>$K = [K, K^R]$</p>
+
+<p>and then perform our original attention.</p>
+
+\[Q \cdot K^\top = [Q, Q^R] \cdot [K, K^R]^\top\]
+
+\[Q \cdot K^\top = [Q \cdot K + Q^R \cdot K^R]\]
+
+<p>as you can see the original Q and K are still preserved meaning we can still absorb the weights.</p>
+
+<p>Total cached elements will be $K^R$ and $L_{kv}$ so the total saved cache will be $(d^R + dc)l$</p>
+
+<h4 id="question">Question</h4>
+
+<p>Why is second dimension of $W_{KR}$ is $d^R$ and not $(nh \cdot d^R)$
+Meaning $d^R$ will be broadcasted across all the heads.</p>
+
+<p>My guess is that they found that keeping only $d^R$ would produce decent result and would also save the cache memory requirement.</p>
+
+<h4 id="references">References</h4>
+
+<p>https://arxiv.org/abs/2405.04434
+https://liorsinai.github.io/machine-learning/2025/02/22/mla.html#multi-head-latent-attention</p>]]></content><author><name>cohlem</name></author><category term="architecture" /><summary type="html"><![CDATA[Scaled-dot product Attention]]></summary></entry><entry><title type="html">Lora</title><link href="http://localhost:4000/2025/04/07/LoRA.html" rel="alternate" type="text/html" title="Lora" /><published>2025-04-07T00:00:00+05:45</published><updated>2025-04-07T00:00:00+05:45</updated><id>http://localhost:4000/2025/04/07/LoRA</id><content type="html" xml:base="http://localhost:4000/2025/04/07/LoRA.html"><![CDATA[<h3 id="lora">LoRA</h3>
+
+<p>Main idea is to approximate the change in weights dW by the use of low-rank matrices</p>
+
+<p>Eg: Usually the weight update is done by adding the change in weights dW to the original weight matrix W. dW is obtained through backpropagation, ex if W is 512 x 512 the parameter size of dW is 262,144.</p>
+
+<p>In LoRA, we approximate that dW but by breaking down into two low rank matrices B @ A where B = matrix of size 512 x r and A = matrix of size r x 512,</p>
+
+<p>previously if the forward pass was like this</p>
+
+<p>out = X @ W</p>
+
+<p>we change the forward pass:
+out = X @ W + X @ B@A</p>
+
+<p>we freeze all the other parameters (W in this case), and only find gradients for B,A and update only these weights.</p>
+
+<p>First lets implement toy example that approximates sin function, we implement manual backpropagation so that It’ll be easier to understand what gets updated in our LoRA implementation.</p>
+
+<h3 id="paper-findings-only-focus-on-highlighted-sentences">Paper findings (only focus on highlighted sentences)</h3>
+
+<p><img src="lora1.png" alt="lora1" /></p>
+
+<p><img src="lora2.png" alt="lora2" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c1"># import torch
+</span><span class="kn">import</span> <span class="n">torch.nn</span> <span class="k">as</span> <span class="n">nn</span>
+<span class="kn">import</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="n">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="c1"># Generate synthetic data (sine wave)
+</span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="p">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">100</span><span class="p">).</span><span class="nf">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">sin</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+<span class="c1"># Convert to PyTorch tensors
+</span><span class="n">X_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">y_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="c1"># Define a small MLP
+</span><span class="k">class</span> <span class="nc">MLP</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">bias</span> <span class="o">=</span> <span class="bp">True</span><span class="p">),</span>  <span class="c1"># 1 input → 10 hidden
+</span>            <span class="n">nn</span><span class="p">.</span><span class="nc">ReLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>    <span class="c1"># 10 hidden → 1 output
+</span>        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="nf">layers</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1"># Initialize model, loss, and optimizer
+</span><span class="n">model</span> <span class="o">=</span> <span class="nc">MLP</span><span class="p">()</span>
+<span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">MSELoss</span><span class="p">()</span>
+<span class="c1"># optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+</span>
+<span class="c1"># Training loop
+</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">5000</span>
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+    <span class="n">optimizer</span><span class="p">.</span><span class="nf">zero_grad</span><span class="p">()</span>
+
+    <span class="c1">#Instead of this forward pass
+#     outputs = model(X_tensor)
+</span>
+    <span class="c1"># Implement this forward to manually do the forward pass
+</span>    <span class="n">o1</span> <span class="o">=</span> <span class="n">X_tensor</span> <span class="o">@</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">weight</span><span class="p">.</span><span class="n">T</span>
+    <span class="n">o2</span> <span class="o">=</span> <span class="n">o1</span> <span class="o">+</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">bias</span>
+    <span class="n">o3</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">1</span><span class="p">](</span><span class="n">o2</span><span class="p">)</span> <span class="c1"># relu layer
+</span>    <span class="n">outputs</span> <span class="o">=</span> <span class="n">o3</span> <span class="o">@</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">weight</span><span class="p">.</span><span class="n">T</span>
+
+
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">outputs</span> <span class="o">-</span> <span class="n">y_tensor</span>
+    <span class="n">squared_diff</span> <span class="o">=</span> <span class="n">diff</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">o_seven</span> <span class="o">=</span> <span class="n">squared_diff</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">o_seven</span><span class="o">/</span><span class="nf">len</span><span class="p">(</span><span class="n">squared_diff</span><span class="p">)</span>
+
+    <span class="c1">#clear all the gradients
+</span>    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="p">.</span><span class="nf">parameters</span><span class="p">():</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">grad</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">[</span><span class="n">loss</span><span class="p">,</span> <span class="n">o_seven</span><span class="p">,</span> <span class="n">squared_diff</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">o3</span><span class="p">,</span> <span class="n">o2</span><span class="p">,</span> <span class="n">o1</span><span class="p">,</span> <span class="n">X_tensor</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="p">.</span><span class="n">requires_grad</span><span class="p">:</span>
+            <span class="n">p</span><span class="p">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">p</span><span class="p">.</span><span class="nf">retain_grad</span><span class="p">()</span>
+
+
+    <span class="n">loss</span><span class="p">.</span><span class="nf">backward</span><span class="p">()</span>
+
+
+    <span class="c1">### Manual backpropagation
+</span>    <span class="n">dL</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">do_seven</span> <span class="o">=</span> <span class="n">dL</span><span class="o">*</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="nf">len</span><span class="p">(</span><span class="n">squared_diff</span><span class="p">))</span>
+    <span class="n">dsquared_diff</span> <span class="o">=</span> <span class="n">do_seven</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">squared_diff</span><span class="p">)</span>
+    <span class="n">ddiff</span> <span class="o">=</span> <span class="n">dsquared_diff</span> <span class="o">*</span> <span class="mi">2</span><span class="o">*</span><span class="n">diff</span>
+    <span class="n">doutputs</span> <span class="o">=</span> <span class="n">ddiff</span><span class="o">*</span><span class="mi">1</span>
+
+    <span class="n">do3</span> <span class="o">=</span> <span class="n">doutputs</span><span class="o">@</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">weight</span>
+    <span class="n">dl2w</span> <span class="o">=</span> <span class="n">o3</span><span class="p">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">doutputs</span>
+    <span class="n">mo2</span> <span class="o">=</span> <span class="n">o2</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">do2</span> <span class="o">=</span> <span class="n">do3</span> <span class="o">*</span> <span class="n">mo2</span>
+    <span class="n">do1</span> <span class="o">=</span> <span class="n">do2</span>
+    <span class="n">dl0bias</span> <span class="o">=</span> <span class="n">do2</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">dl0w</span> <span class="o">=</span> <span class="n">X_tensor</span><span class="p">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">do1</span>
+
+
+<span class="c1"># #     cmp('dL', dL, loss)
+#     cmp('do_seven', do_seven, o_seven)
+#     cmp('dsquared_diff', dsquared_diff, squared_diff)
+#     cmp('ddiff', ddiff, diff)
+#     cmp('doutputs', doutputs, outputs)
+#     cmp('do3', do3, o3)
+#     cmp('dl2w', dl2w.T, model.layers[2].weight)
+#     cmp('do2', do2, o2)
+#     cmp('dl0bias', dl0bias, model.layers[0].bias)
+#     cmp('do1', do1, o1)
+#     cmp('dl0w', dl0w.T, model.layers[0].weight )
+</span>
+
+    <span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+        <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span>
+        <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">weight</span><span class="p">.</span><span class="n">data</span> <span class="o">-=</span> <span class="n">lr</span><span class="o">*</span><span class="n">dl0w</span><span class="p">.</span><span class="n">T</span>
+        <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">bias</span><span class="p">.</span><span class="n">data</span> <span class="o">-=</span> <span class="n">lr</span><span class="o">*</span><span class="n">dl0bias</span>
+        <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">weight</span><span class="p">.</span><span class="n">data</span> <span class="o">-=</span> <span class="n">lr</span><span class="o">*</span><span class="n">dl2w</span><span class="p">.</span><span class="n">T</span>
+
+
+<span class="c1">#     optimizer.step()
+</span>    <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sa">f</span><span class="sh">'</span><span class="s">Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s">, Loss: </span><span class="si">{</span><span class="n">loss</span><span class="p">.</span><span class="nf">item</span><span class="p">()</span><span class="si">:</span><span class="p">.</span><span class="mi">4</span><span class="n">f</span><span class="si">}</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># Plot results
+</span><span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="nf">model</span><span class="p">(</span><span class="n">X_tensor</span><span class="p">).</span><span class="nf">numpy</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">True</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Predicted</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">'</span><span class="s">red</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">show</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Now, we implement LoRA.
+Here we,</p>
+
+<ul>
+  <li>construct parameters A, B when B@A the resulting matrix size matches layer 0’s weight matrix</li>
+  <li>modify forward pass by adding <code class="language-plaintext highlighter-rouge">lora_w</code></li>
+  <li>continue other forward passes as they were previously,</li>
+  <li>We don’t find the gradients for weights and don’t update those matrices, which is essentially freezing</li>
+  <li>through intermediate gradients find the gradients for B and A and only update those weights.</li>
+  <li>that’s it!!!!</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+
+<span class="c1"># Training loop
+</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">100000</span>
+
+<span class="c1"># lets only train only the lora parameters for layer0's weight
+</span><span class="n">d</span><span class="p">,</span><span class="n">k</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">weight</span><span class="p">.</span><span class="n">T</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">shape</span>
+<span class="n">r</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">zeros</span><span class="p">((</span><span class="n">d</span><span class="p">,</span><span class="n">r</span><span class="p">)))</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">((</span><span class="n">r</span><span class="p">,</span><span class="n">k</span><span class="p">)))</span>
+<span class="n">scale</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+
+    <span class="c1"># Implement this forward to manually do the forward pass
+</span>    <span class="n">o1</span> <span class="o">=</span> <span class="n">X_tensor</span> <span class="o">@</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">weight</span><span class="p">.</span><span class="n">T</span>
+    <span class="c1">## add lora part for the layer0's model weight here
+</span>
+    <span class="n">lora_w</span> <span class="o">=</span> <span class="n">scale</span><span class="o">*</span><span class="n">B</span><span class="nd">@A</span>
+    <span class="n">lora_o1</span> <span class="o">=</span> <span class="n">X_tensor</span> <span class="o">@</span> <span class="n">lora_w</span> <span class="c1"># size of B@A should match model.layers[0].weight.T i.e (1,20)
+</span>    <span class="n">h</span> <span class="o">=</span> <span class="n">o1</span> <span class="o">+</span> <span class="n">lora_o1</span>
+
+    <span class="n">o2</span> <span class="o">=</span> <span class="n">h</span> <span class="o">+</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">bias</span>
+    <span class="n">o3</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">1</span><span class="p">](</span><span class="n">o2</span><span class="p">)</span> <span class="c1"># relu layer
+</span>    <span class="n">outputs</span> <span class="o">=</span> <span class="n">o3</span> <span class="o">@</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">weight</span><span class="p">.</span><span class="n">T</span>
+
+
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">outputs</span> <span class="o">-</span> <span class="n">y_tensor</span>
+    <span class="n">squared_diff</span> <span class="o">=</span> <span class="n">diff</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">o_seven</span> <span class="o">=</span> <span class="n">squared_diff</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">o_seven</span><span class="o">/</span><span class="nf">len</span><span class="p">(</span><span class="n">squared_diff</span><span class="p">)</span>
+
+    <span class="c1">#Freeze all the model parameters
+</span>    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="p">.</span><span class="nf">parameters</span><span class="p">():</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">grad</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">A</span><span class="p">.</span><span class="n">grad</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">B</span><span class="p">.</span><span class="n">grad</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">[</span><span class="n">loss</span><span class="p">,</span> <span class="n">o_seven</span><span class="p">,</span> <span class="n">squared_diff</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">o3</span><span class="p">,</span> <span class="n">o2</span><span class="p">,</span> <span class="n">o1</span><span class="p">,</span> <span class="n">X_tensor</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">lora_o1</span><span class="p">,</span> <span class="n">lora_w</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="p">.</span><span class="n">requires_grad</span><span class="p">:</span>
+            <span class="n">p</span><span class="p">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">p</span><span class="p">.</span><span class="nf">retain_grad</span><span class="p">()</span>
+
+
+    <span class="n">loss</span><span class="p">.</span><span class="nf">backward</span><span class="p">()</span>
+
+
+    <span class="c1">### Manual backpropagation
+</span>    <span class="n">dL</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">do_seven</span> <span class="o">=</span> <span class="n">dL</span><span class="o">*</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="nf">len</span><span class="p">(</span><span class="n">squared_diff</span><span class="p">))</span>
+    <span class="n">dsquared_diff</span> <span class="o">=</span> <span class="n">do_seven</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">squared_diff</span><span class="p">)</span>
+    <span class="n">ddiff</span> <span class="o">=</span> <span class="n">dsquared_diff</span> <span class="o">*</span> <span class="mi">2</span><span class="o">*</span><span class="n">diff</span>
+    <span class="n">doutputs</span> <span class="o">=</span> <span class="n">ddiff</span><span class="o">*</span><span class="mi">1</span>
+
+    <span class="n">do3</span> <span class="o">=</span> <span class="n">doutputs</span><span class="o">@</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">weight</span>
+    <span class="c1"># We freeze this weight
+#     dl2w = o3.T @ doutputs
+</span>
+    <span class="n">mo2</span> <span class="o">=</span> <span class="n">o2</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">do2</span> <span class="o">=</span> <span class="n">do3</span> <span class="o">*</span> <span class="n">mo2</span>
+
+    <span class="n">dh</span> <span class="o">=</span> <span class="n">do2</span>
+    <span class="n">do1</span> <span class="o">=</span> <span class="n">dh</span>
+    <span class="n">dlora_o1</span> <span class="o">=</span> <span class="n">dh</span>
+
+    <span class="n">dlora_w</span> <span class="o">=</span> <span class="n">X_tensor</span><span class="p">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">dlora_o1</span>
+    <span class="n">dB</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">dlora_w</span><span class="nd">@A.T</span>
+    <span class="n">dA</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">B</span><span class="p">.</span><span class="n">T</span><span class="nd">@dlora_w</span>
+
+    <span class="c1"># And we freeze these weights too
+#     dl0bias = do2.sum(0)
+#     dl0w = X_tensor.T @ do1
+</span>
+
+<span class="c1">#     cmp('dL', dL, loss)
+#     cmp('do_seven', do_seven, o_seven)
+#     cmp('dsquared_diff', dsquared_diff, squared_diff)
+#     cmp('ddiff', ddiff, diff)
+#     cmp('doutputs', doutputs, outputs)
+#     cmp('do3', do3, o3)
+# #     cmp('dl2w', dl2w.T, model.layers[2].weight)
+#     cmp('do2', do2, o2)
+#     cmp('dh', dh, h)
+#     cmp('do1', do1, o1)
+#     cmp('dlora_o1', dlora_o1, lora_o1)
+#     cmp('dlora_w', dlora_w, lora_w)
+#     cmp('dB', dB, B)
+#     cmp('dA', dA, A)
+</span>
+
+
+
+<span class="c1">#     cmp('dl0w', dl0w.T, model.layers[0].weight )
+</span>
+
+    <span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+        <span class="n">lr</span><span class="o">=</span><span class="mf">0.001</span>
+        <span class="n">A</span><span class="p">.</span><span class="n">data</span> <span class="o">-=</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">dA</span>
+        <span class="n">B</span><span class="p">.</span><span class="n">data</span> <span class="o">-=</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">dB</span>
+
+
+<span class="c1">#     optimizer.step()
+</span>    <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sa">f</span><span class="sh">'</span><span class="s">Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s">, Loss: </span><span class="si">{</span><span class="n">loss</span><span class="p">.</span><span class="nf">item</span><span class="p">()</span><span class="si">:</span><span class="p">.</span><span class="mi">4</span><span class="n">f</span><span class="si">}</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># Plot results
+</span><span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="nf">model</span><span class="p">(</span><span class="n">X_tensor</span><span class="p">).</span><span class="nf">numpy</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">True</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Predicted</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">'</span><span class="s">red</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">show</span><span class="p">()</span>
+</code></pre></div></div>]]></content><author><name>cohlem</name></author><category term="architecture" /><summary type="html"><![CDATA[LoRA]]></summary></entry><entry><title type="html">Interpretability</title><link href="http://localhost:4000/2025/03/03/interpretability.html" rel="alternate" type="text/html" title="Interpretability" /><published>2025-03-03T00:00:00+05:45</published><updated>2025-03-03T00:00:00+05:45</updated><id>http://localhost:4000/2025/03/03/interpretability</id><content type="html" xml:base="http://localhost:4000/2025/03/03/interpretability.html"><![CDATA[<h3 id="induction-circuits">Induction circuits</h3>
+
+<p><strong>Induction behaviour</strong>
+The task of detecting and repeating subsequences in a text by finding some patterns.</p>
+
+<p>For example: If there exist a text containing name “James Bond” and later in the text when the model sees the word “James” it predicts/repeats the word “Bond” because it’s already seen the words “James Bond” and analyzes that “bond” should come after the word “James”. Also called “Strict Induction”</p>
+
+<p><strong>Induction head</strong>
+A head which implements the induction behaviour. They allow models to perform in-context learning (ICL).</p>
+
+<h3 id="qk-circuit">QK circuit</h3>
+
+<p>Wq, Wk, Wv be the projection matrices in our attention and Wo be the projection matrix in attention.</p>
+
+<p>Wq,Wk, Wv can be thought of as what we take in(read) from the residual stream and Wo can be though of as what we put into(write) the residual stream. Similar to read/write operation.</p>
+
+<p>QK circuit is represented as combination of
+<img src="i1.png" alt="i1" /></p>
+
+<p>and attention scores are calculated as
+<img src="i2.png" alt="i2" /></p>
+
+<p>it is similar to Q @ K.T</p>
+
+<p>Conceptually, this matrix tells us <strong>which tokens information is moved to &amp; from</strong> in the residual stream.</p>
+
+<h3 id="ov-circuit">OV circuit</h3>
+
+<p><img src="i3.png" alt="i3" /></p>
+
+<ul>
+  <li>Conceptually, this matrix (Vi.Wov) tells us <strong>what information is moved from a token</strong>, if that token is attended to.</li>
+</ul>
+
+<p><strong>Some prerequisites</strong></p>
+
+<p><strong>orthogonal subspace</strong>
+Important assumption to keep in mind is subspaces are orthogonal i.e their dot product is 0, which means, we can decompose a vector into different subspaces that can have independent meaning because of this assumption.</p>
+
+<p>A simple example is when we add the positional embedding and vector embedding initially,</p>
+
+<p>output = positional embedding + vector embedding</p>
+
+<p>we are simply adding two different informations from different subspaces i.e positional embedding and vector embedding, and if they are orthogonal, we can independently pluck out their embeddings from the output.</p>
+
+<p><strong>K-composition</strong>
+In K-composition, the output of one attention at layer 0 is used as a key for another attention calculation in layer1.</p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/dhz5bqfuuoujydh89caa.png" alt="matrix" /></p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/ui0f38ofgdsyr9zzt5ar.png" alt="imag2" /></p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/voncnaecap3tsw8dt0mn.png" alt="image3" /></p>
+
+<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/tuskojx6dtlzjwoqs9zd.png" alt="image3" />
+<img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/eaongteayjgei7no5ycy.png" alt="image5" /></p>
+
+<p>Induction heads are responsible in significant downward loss. It could mainly occur in phase changes, eg. 2B to 4B tokens. Are responsible to ICL but also helps in translation as well as few-shots learning</p>
+
+<h3 id="visualization-of-induction-head">Visualization of induction head</h3>
+
+<p><img src="i4.png" alt="i4" /></p>
+
+<p>the visualization would look like this, for an induction head i.e the destination token attends to token after the previous destination token’s occurance offset by seq_len - 1.</p>
+
+<h3 id="direct-logits-attribution">Direct logits attribution</h3>
+
+<p><img src="i5.png" alt="i5" /></p>
+
+<p>It involves understanding how much each component (e.g., attention heads, layers, or direct paths) contributes to the model’s predictions.</p>
+
+<p>Using attention head pattern is not enough to deduce that the model is actually using that attention information, to finally verify we also have to see their direct logits attribution, i.e how much their RS contribute to the final logits.</p>
+
+<h3 id="ablation">Ablation</h3>
+
+<p>Zeroing activation is not recommended because it completely moves the model’s representation out of distribution. Instead, mean over some batch dimension is recommended.</p>
+
+<h3 id="making-sense-of-induction-circuits-in-terms-of-qk-ov-circuits">Making sense of induction circuits in terms of QK, OV circuits</h3>
+
+<p>source token: the token that is being attended to
+destination token: the token that is looking at other tokens</p>
+
+<p>lets say we process a random but repeating sequence.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>['&lt;|endoftext|&gt;', 'anguage', ' reign', 'ای', ' aides', ' freight', ' Break', ' compete', ' Ment', '··', ' vaginal', ' burn', '을', 'Connell', ' affiliates', 'Back', 'Trigger', ' blade', 'ų', ' emotion', ' Ash', ' rupture', 'ian', ' pickup', ' Theresa', ' creepy', ' libert', 'uclidean', ' repairs', 'ylvan', 'τή', ' playwright', ' decou', ' deliver', ' Steele', '70', ' employing', 'idopsis', 'hidden', ' Ren', 'UTR', ' morale', ' vacant', ' _(', ' contra', 'ィ', ' vocals', ' reduces', 'Civil', 'ussion', ' deeds', 'anguage', ' reign', 'ای', ' aides', ' freight', ' Break', ' compete', ' Ment', '··', ' vaginal', ' burn', '을', 'Connell', ' affiliates', 'Back', 'Trigger', ' blade', 'ų', ' emotion', ' Ash', ' rupture', 'ian', ' pickup', ' Theresa', ' creepy', ' libert', 'uclidean', ' repairs', 'ylvan', 'τή', ' playwright', ' decou', ' deliver', ' Steele', '70', ' employing', 'idopsis', 'hidden', ' Ren', 'UTR', ' morale', ' vacant', ' _(', ' contra', 'ィ', ' vocals', ' reduces', 'Civil', 'ussion', ' deeds']
+</code></pre></div></div>
+
+<p>We pass it through our 2 layer attention-only model</p>
+
+<p>we get attention pattern like this for layer 0 <img src="i6.png" alt="i6" />
+here 7 is a <strong>previous token head</strong></p>
+
+<p>and we get this attention pattern for layer 1
+<img src="i7.png" alt="i7" /></p>
+
+<p>4 and 7 are induction heads, cause we see the activations for seq_len -1 diagonal</p>
+
+<p>So what we can conclude from this is that OK circuit from attention head no 7 in layer 0 always attends to the previous token, OV circuit from the same head writes the previous token information in the embedding subspace.</p>
+
+<p>In layer 1, attention 4,10, K-composition is used i.e the output of attention head 7 is used as the key in these attentions, the QK circuit looks at the source token whose previous token is the destination token (i.e current token) and OV circuits writes this information in the embedding subspace (i.e info about which tokens come next).</p>
+
+<p><strong>NOTE</strong> decomposition trick only works for things that are linear, it would work if there are no activation functions eg, ReLU, GeLU. or would only work before softmax, rather than after softmax.</p>
+
+<h2 id="a-mathematical-framework-for-transformer-circuits">A Mathematical Framework for Transformer Circuits</h2>
+
+<p><strong>Key takeaways</strong></p>
+
+<ul>
+  <li>Residual stream (RS) can be thought of sum of changes added by each layer (embedding, attention, MLP)</li>
+  <li>The residual stream has a deeply linear structure.</li>
+  <li>dimensions of the residual stream become something like “memory” or “bandwidth”</li>
+  <li>Why do we decompose residual stream and study them independently? because they try to communicate in superposition. Meaning, a residual stream only has limited dimensions eg 512 and at MLP it has to interact with a lot more dimensions i.e 4Xmore dimension than it has space on it. So its better to study them independently. So the RS has very high demand, is the reason why some info gets deleted and some added by some layers.</li>
+  <li>Attention heads copy information from the residual stream of one token to the residual stream of another. They typically write
+to a different subspace than they read from.
+-</li>
+</ul>
+
+<h3 id="paper">Paper</h3>
+
+<p>implement this formula to find which component/layer are important <img src="i8.png" alt="i8" /></p>
+
+<p>to find how good they are (faithful) use this equation</p>
+
+<p><img src="i9.png" alt="i9" /></p>
+
+<p>IDENTIFYING ANSWER-PROMOTING COMPONENTS
+train linear probing for each layer, at each position p, find which which layer at which position promote the correct-answer</p>
+
+<p>DECOMPOSING CIRCUIT MLPS TO INDIVIDUAL NEURONS</p>
+
+<p>Go more deep into the MLP to see which neurons promote arithmetic calculation</p>
+
+<p>do activation patching on neurons.</p>
+
+<p>they find &gt; neurons with the highest effect are different between operators.</p>
+
+<p>only 200 neurons (roughly 1.5%) per layer are needed to achieve high faithfulness and correctly compute arithmetic prompts.</p>
+
+<p>among top 200 they examine neurons, by hypothesizing that 1. their key denotes the activation patterns, and 2. their values encodes the correct output in these dimension.</p>
+
+<p>Approach</p>
+
+<p>Our Hypothesis: Circuits for Math Reasoning only work for similar problems (i.e the patterns/distributions LLMs encoded in their weights during their training) and circuits fail when they receives problems that require calculation which is out-of-distribution.</p>
+
+<p>The hypothesis is to basically prove why LLMs are not robust in Math Reasoning.</p>
+
+<p>Steps to prove:</p>
+
+<ol>
+  <li>Find circuits of LMs responsible for Math Reasoning/Calculations for correct output ( i.e we find circuit for problems which LMs can solve and ignore the problems on which they fail) using patching. (calculating indirect effect (IE) as done in this paper https://arxiv.org/pdf/2305.15054)</li>
+  <li>We can go further and find specific neurons responsible for calculations by finding the top-k tokens for specific neurons and patching/ablating them to find if they’re really important. However, I believe we can limit experiment to til finding the circuits as mentioned in step 1.</li>
+  <li>Generate adversarial math problems (i.e out of distribution problems ). We can simply opt for M2 level problems as done in this paper (https://arxiv.org/pdf/2402.17916)</li>
+  <li>Test those adversarial problems on LMs, filter and keep only the problems on which LMs produce incorrect output and study their whole output ( which should also include their step-by-step reasoning)</li>
+</ol>
+
+<p>for example:</p>
+
+<p><strong>Prompt</strong>:</p>
+
+<p>Chenny is 64 years old. Alyana is 54 years younger than Chenny. How old is Anne if she is 55 years older than Alyana?</p>
+
+<p>LM output:</p>
+
+<p>To determine Anne’s age, we need to follow these steps:</p>
+
+<ol>
+  <li>Calculate Alyana’s age.</li>
+  <li>Use Alyana’s age to find Anne’s age.</li>
+</ol>
+
+<p><strong>Step 1: Calculate Alyana’s age.</strong> Chenny is 64 years old. Alyana is 54 years younger than Chenny. So, Alyana’s age is: [ 64 - 54 = 100 ]</p>
+
+<p><strong>Step 2: Calculate Anne’s age.</strong> Anne is 55 years older than Alyana. So, Anne’s age is: [ 100 + 55 = 155 ] Thus, Anne is (\boxed{155}) years old.</p>
+
+<ol>
+  <li>Analyze the point where there is error in calculation, i.e there was error in <code class="language-plaintext highlighter-rouge">\[ 64 - 54 = 100 \]</code> in the LM’s output above.</li>
+  <li>We hypothesize here that the mistake in calculation was because the circuits lacks patterns/ heuristics to solve the problem. The concept about patterns/heuristics can be found in this recent paper (https://arxiv.org/pdf/2410.21272). To elaborate, while training it was able to encode this pattern/ heuristics that 5-4 = 1 in their weights, but it cant perform 65 - 54 because it lacks those patterns/heuristics.</li>
+  <li>We can prove our hypothesis to be true here, if we can supply it with the necessary pattern/heuristics. To do so,</li>
+  <li>We run the LMs with our prompt new prompt.</li>
+</ol>
+
+<p>PROMPT:</p>
+
+<p>Chenny is 64 years old. Alyana is 54 years younger than Chenny. How old is Anne if she is 55 years older than Alyana?</p>
+
+<p>To determine Anne’s age, we need to follow these steps:</p>
+
+<ol>
+  <li>Calculate Alyana’s age.</li>
+  <li>Use Alyana’s age to find Anne’s age.
+<strong>Step 1: Calculate Alyana’s age.</strong> Chenny is 64 years old. Alyana is 54 years younger than Chenny. So, Alyana’s age is: [ 64 - 54 = 10</li>
+</ol>
+
+<p>as you can see our new prompt is <strong>previous prompt + the LM’s output til the point where LMs get calculations wrong</strong>
+but we manually correct the calculation, example 64 - 55 = 100 was corrected to 64 - 55 = 10,</p>
+
+<p>and we get the activations for this new prompt by only generating the activations for only 1 new sequence (meaning we don’t let it complete the whole sequence, the point is to just get activations till the point where it gets wrong) , and then patch the circuit activations from this new corrected run to the old run where it got it wrong.</p>
+
+<p>Now, if the old run is able to get the answer right after the patching process, it’s very likely that it lacked the necessary pattern/heuristics for solving that problem.</p>
+
+<p>The bottleneck/time consuming thing would be manually identifying the point in the LM’s output where it has error and correcting it.</p>
+
+<p>logit difference</p>
+
+<p>The metric also is a mostly linear function of the residual stream (unlike probability-based metrics) which makes it easy to directly attribute logit difference to individual components (“direct logit attribution”, “logit lens”).</p>
+
+<p>Probabilities: This metric measures the probability of the right answer, or the difference in probabilities of different answers. The main issue with such metrics is Probabilities are non-linear, in the sense that they track the logits ~exponentially. For example, a model component adding +2 to a given logit can create a 1 or 40 percentage point probability increase, just depending on what the baseline was. As an example of the non-linearity consider the orange line in the figure above: A modest increase in logit difference around layer 17 converts to a jump in probability. Probabilities also inherit the problems of the logprob metric, namely saturation and unspecificity. The figure shows the saturation effect for the orange line at layer &gt;18.</p>
+
+<p>TLDR: probability is exponential we can’t attribute model component’s work to prob change completely.</p>
+
+<p>I would like to tell you the update about the work that did in past 2 weeks.</p>
+
+<p>In the first week, I was involved in reading the paper that you sent me. I’ve attached slides for those paper which is attached in this email. Afterwards, I did some experimentation of the basics of Mechanistic Interpretability such as probing, logits lens and ablation using TransformerLens library, then I studied how induction, QK and OV circuits work, and some detail about K composition.</p>
+
+<p>In the second week, I started experimentation by looking into neurons to see if I can find specific neurons that are responsible for math reasoning. I used few samples from GSM8K dataset. I was able to find specific neurons responsible for</p>
+
+<h3 id="direct-effect">Direct effect</h3>
+
+<p>measuring how patching/ablation affects the logits directly</p>
+
+<h3 id="indirect-effect">Indirect effect</h3>
+
+<p>measuring how patching/ablation affects the logits indirectly, for example: patching one attention layer might not contribute directly to logits but may interact with further attention layer, it kind of a chain effect. Hard to measure.</p>
+
+<h3 id="logit-difference">Logit difference</h3>
+
+<p>logit differnce is easier to understand</p>
+
+<p>logit difference == logprob difference</p>
+
+<p><img src="i10.png" alt="i10" /></p>
+
+<h3 id="things-to-check">Things to check</h3>
+
+<ul>
+  <li>Compute the likelihood of the input “22 + 78 =” under the model’s probability distribution.</li>
+  <li>Compare this likelihood to the likelihood of known in-distribution examples.</li>
+  <li>If the likelihood is significantly lower, the input might be OOD.</li>
+</ul>
+
+<p>We can also check if the number is deleted by ffn or by the composition.</p>
+
+<ul>
+  <li>See all the logit lens of residual network and also the logit lens of ffn and see if it deletes, See ffns are kv memories paper in the end.</li>
+</ul>
+
+<h4 id="references">References</h4>
+
+<p>https://dynalist.io/d/n2ZWtnoYHrU1s4vnFSAQ519J#z=_Jzi6YHRHKP1JziwdE02qdYZ
+https://www.lesswrong.com/posts/TvrfY4c9eaGLeyDkE/induction-heads-illustrated</p>
+
+<p>best practices for patching https://arxiv.org/pdf/2309.16042</p>]]></content><author><name>cohlem</name></author><category term="interpretability" /><summary type="html"><![CDATA[Induction circuits]]></summary></entry><entry><title type="html">Rlhf</title><link href="http://localhost:4000/2025/02/24/RLHF.html" rel="alternate" type="text/html" title="Rlhf" /><published>2025-02-24T00:00:00+05:45</published><updated>2025-02-24T00:00:00+05:45</updated><id>http://localhost:4000/2025/02/24/RLHF</id><content type="html" xml:base="http://localhost:4000/2025/02/24/RLHF.html"><![CDATA[<p>Before starting, it’s advisable to first complete <a href="https://www.youtube.com/watch?v=2pWv7GOvuf0&amp;list=PLzuuYNsE1EZAXYR4FJ75jcJseBmo4KQ9-">David Silver’s Course on RL</a> and read <a href="https://lilianweng.github.io/posts/2018-02-19-rl-overview/#deadly-triad-issue">Lilian’s notes on RL</a> which explains/provides notes on the David’s course in sequential manner.</p>
 
 <p>In simple problems, we simply start with an arbitrary value function, and then go on updating that value function incrementally, using different algorithms such as Monte Carlo (which collects reward over the whole episoe), Temporal difference, aka TD(0) (which considers bootstrapping, i.e only considering the immediate reward and then approximating other remaining rewards with the help of value function $r + V(s)$ ) and other algorithms. But, over time maintaining a table is not feasible for real world problems, so move towards approximating these value functions with the help of a vector of features or more concretely with Neural Networks but approximating these state and action value functions are infeasible too which is explained in the next section.</p>
 
@@ -1958,628 +2966,232 @@ Here’s more complete version</p>
 </span>                    <span class="n">loss</span><span class="p">.</span><span class="nf">backward</span><span class="p">()</span>
 
                 <span class="n">actor_optimizer</span><span class="p">.</span><span class="nf">step</span><span class="p">()</span>                    <span class="c1"># update happens once per mini-batch
-</span></code></pre></div></div>
-
-<p>In https://github.com/ChenmienTan/RL2/blob/main/RL2/workers/actor.py, the algorithm is almost the same but they define update_per_rollout instead of PPO_MINI_BATCH_SIZE, originally in veRL we calculated update per rollout by TRAIN_BATCH_SIZE/ PPO_MINI_BATCH_SIZE</p>
+</span></code></pre></div></div>]]></content><author><name>cohlem</name></author><category term="blog" /><category term="RL" /><summary type="html"><![CDATA[Before starting, it’s advisable to first complete David Silver’s Course on RL and read Lilian’s notes on RL which explains/provides notes on the David’s course in sequential manner.]]></summary></entry><entry><title type="html">Flops Calculation</title><link href="http://localhost:4000/2025/02/11/flops-calculation.html" rel="alternate" type="text/html" title="Flops Calculation" /><published>2025-02-11T00:00:00+05:45</published><updated>2025-02-11T00:00:00+05:45</updated><id>http://localhost:4000/2025/02/11/flops-calculation</id><content type="html" xml:base="http://localhost:4000/2025/02/11/flops-calculation.html"><![CDATA[<h4 id="calculation-of-flops">Calculation of FLOPs</h4>
 
 <ul>
-  <li>
-    <h2 id="512-simply-does-not-work-cause-responses-are-truncated-before-we-even-get-to--answer--token--answer--no-exploration-the-model-then-tries-to-simply-output-the--answer--randomly">512 simply does not work, cause responses are truncated before we even get to &lt; answer &gt; token &lt; /answer &gt; (no exploration), the model then tries to simply output the &lt; answer &gt; randomly,</h2>
-  </li>
-  <li>adding entropy caused loss, and grad to be nan research why.
-some logs</li>
+  <li>multiply accumulate cost: 2FLOPS i.e 1 for multiplication and 1 for accumulation (addition)</li>
+  <li>if we multiply two matrices with sizes (a x b) and (b x c), the flops involved is b Multiply-add operation per the output size (a x c) i.e 2 x b x (a x c)</li>
 </ul>
 
-<p>ooooo current
-yooooo current
-yooooo current
-yooooo current
-rank ppo loss 1 tensor([[ 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
-0.0000, 0.0000],
-[-0.9336, -0.9336, -0.8242, -0.9336, -0.9336, -1.0547, -0.9336, -0.9922,
--0.8242, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.8242, -0.8242,
--0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
--0.9336, -0.9922, -0.9922, -0.9336, -0.8242, -0.9336, -0.9336, -0.9336,
--0.9922, -0.8750, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
--0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
--0.9336, -0.9336],</p>
+<h5 id="embedding-lookup">Embedding lookup</h5>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>     -0.9336, -0.9336],
-    [-0.9336, -1.0547, -0.9336, -0.9336, -0.9336, -0.9336, -1.0547, -1.0547,
-     -0.9922, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-     -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -1.0547, -0.9336, -0.9336,
-     -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.8242, -0.9922,
-     -0.9336, -0.9336, -0.9336, -1.0547, -1.0547, -0.9336, -0.9336, -0.8242,
-     -0.9336, -0.8242, -1.1250, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-     -0.9336, -0.8242],
-    [-0.9336, -0.9336, -0.9922, -0.9922, -0.9336, -1.0547, -0.9922, -0.9336,
-     -0.9336, -0.9336, -0.9922, -0.8242, -0.8242, -0.8242, -0.9336, -0.9922,
-     -0.9922, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.8750, -1.0547,
-     -1.0547, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-     -0.9336, -0.9336, -0.9336, -0.8242, -0.8242, -0.9336, -0.9336, -0.9336,
-     -1.0547, -0.9336, -0.8750, -0.9922, -1.0547, -0.8242, -0.9336, -1.0547,
-     -0.9336, -0.9922],
-    [ 0.9336,  0.9336,  0.9336,  1.0547,  0.9336,  0.9336,  1.0547,  0.9336,
-      0.9336,  0.9336,  0.9336,  1.0547,  0.9336,  0.9336,  0.9336,  1.0547,
-      0.9336,  1.0547,  1.0547,  0.8750,  0.8242,  0.9922,  0.9336,  0.9336,
-      0.9336,  0.9336,  0.8750,  0.8750,  0.9922,  0.9922,  0.8750,  0.9336,
-      0.9336,  0.9336,  0.9336,  0.8750,  0.9336,  0.8750,  0.9922,  0.9336,
-      0.9336,  0.9336,  0.9336,  1.0547,  0.9336,  0.9336,  0.9336,  0.9336,
-      0.9922,  0.8242],
-    [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-      0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-      0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-      0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-      0.0000,  0.0000,  0.0000,  0.0000,  0.9336,  0.9336,  0.8242,  0.9336,
-      0.9336,  0.8242,  0.9922,  0.9336,  1.0547,  0.9922,  0.9336,  0.9336,
-      1.1250,  0.8242],
-    [-0.7227, -0.7227, -0.7227, -0.7227, -0.7227, -0.8203, -0.6758, -0.7227,
-     -0.7227, -0.7227, -0.7227, -0.7227, -0.6367, -0.7227, -0.7227, -0.7227,
-     -0.6367, -0.6367, -0.6758, -0.8203, -0.8203, -0.7227, -0.7227, -0.7227,
-     -0.7227, -0.7227, -0.7227, -0.7227, -0.8203, -0.7227, -0.7227, -0.7227,
-     -0.6367, -0.6367, -0.7227, -0.7227, -0.7227, -0.7227, -0.7227, -0.7227,
-     -0.7227, -0.7227, -0.7227, -0.7227, -0.7227, -0.7227, -0.7227, -0.7227,
-     -0.7227, -0.7227],
-    [ 1.2109,  1.2109,  1.0703,  1.2109,  1.2109,  1.2109,  1.2891,  1.2109,
-      1.2109,  1.2109,  1.0703,  1.2109,  1.2109,  1.2109,  1.2109,  1.2109,
-      1.2109,  1.3750,  1.0703,  1.2109,  1.0703,  1.2109,  1.2109,  1.2891,
-      1.2109,  1.2109,  1.2109,  1.0703,  1.2109,  1.2109,  1.2109,  1.2109,
-      1.2109,  1.2109,  1.2891,  1.2109,  1.2891,  1.0703,  1.0703,  1.0703,
-      1.2109,  1.0703,  1.2109,  1.5547,  1.3750,  1.2109,  1.1328,  1.2109,
-      1.2109,  1.3750]], device='cuda:1', dtype=torch.bfloat16,
-   grad_fn=&lt;SliceBackward0&gt;)
+<p>we initially have tokens with (seq_len,vocab_size) one-hot representation and embedding lookup matrix is (vocab_size, d_model), it will take</p>
+
+<p>FLOPs = 2 x ( vocab_size x (seq_len x d_model))</p>
+
+<h5 id="attention">Attention</h5>
+
+<p><strong>Q,K,V projections</strong>
+X @ (Wq or Wk or Wv)
+i.e 2 x (seq_len x d_model x key_size x num_heads)</p>
+
+<p><strong>attention matrix</strong>
+Q @ K.T
+i.e 2* (seq_len x seq_len x key_size x num_heads)</p>
+
+<p><strong>softmax</strong></p>
+
+<ul>
+  <li>1 for exponential calculation (e^x).</li>
+  <li>seq_len - 1 sum for each row. so if we divide it per row, its basically 1 FLOPs per elements.</li>
+  <li>1 for division
+so it becomes, 2 x num_heads x seq_len x seq_len</li>
+</ul>
+
+<p><strong>Softmax @ query reductions</strong>
+2 × seq_len × seq_len × (key_size × num_heads)</p>
+
+<p><strong>Final Linear</strong>
+2 × seq_len × (key_size × num_heads) × d_model</p>
+
+<p><strong>Dense Block</strong> (per layer)
+2×seq_len×(d_model×ffw_size+d_model×ffw_size) (ignoring FLOPs for actions here,)</p>
+
+<p><strong>Final Logits</strong>
+2×seq_len×d_model×vocab_size</p>
+
+<p>so total FLOPs: embeddings+num_layers×(total_attention+dense_block) + logits</p>
+
+<p>For backward, it takes 2 times the flops taken in backward.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">calculate_transformer_flops</span><span class="p">(</span>
+    <span class="n">seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">key_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">num_heads</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">ffw_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">num_layers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sh">"""</span><span class="s">
+    Calculate FLOPs for each component of a transformer model including forward and backward passes.
+
+    Args:
+        seq_len: Sequence length
+        vocab_size: Vocabulary size
+        d_model: Model dimension
+        key_size: Key dimension
+        num_heads: Number of attention heads
+        ffw_size: Feed-forward layer size
+        num_layers: Number of transformer layers
+
+    Returns:
+        Dictionary containing FLOPs for each component and total forward/backward passes
+    </span><span class="sh">"""</span>
+
+    <span class="c1"># Embeddings
+</span>    <span class="n">embedding_flops</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">vocab_size</span> <span class="o">*</span> <span class="n">d_model</span>
+
+    <span class="c1"># Single Attention Layer
+</span>    <span class="n">key_query_value_proj</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">d_model</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span>
+    <span class="n">key_query_logits</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span>
+    <span class="n">softmax_ops</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">num_heads</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">seq_len</span>
+    <span class="n">softmax_query_reduction</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span>
+    <span class="n">final_linear</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span> <span class="o">*</span> <span class="n">d_model</span>
+
+    <span class="n">total_attention_flops</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">key_query_value_proj</span>
+        <span class="o">+</span> <span class="n">key_query_logits</span>
+        <span class="o">+</span> <span class="n">softmax_ops</span>
+        <span class="o">+</span> <span class="n">softmax_query_reduction</span>
+        <span class="o">+</span> <span class="n">final_linear</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Single Dense Block
+</span>    <span class="n">dense_block_flops</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">d_model</span> <span class="o">*</span> <span class="n">ffw_size</span> <span class="o">+</span> <span class="n">d_model</span> <span class="o">*</span> <span class="n">ffw_size</span><span class="p">)</span>
+
+    <span class="c1"># Final Logits
+</span>    <span class="n">final_logits_flops</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">d_model</span> <span class="o">*</span> <span class="n">vocab_size</span>
+
+    <span class="c1"># Total forward pass
+</span>    <span class="n">total_forward_pass</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">embedding_flops</span>
+        <span class="o">+</span> <span class="n">num_layers</span> <span class="o">*</span> <span class="p">(</span><span class="n">total_attention_flops</span> <span class="o">+</span> <span class="n">dense_block_flops</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">final_logits_flops</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Backward pass is approximately 2x forward pass
+</span>    <span class="n">total_backward_pass</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">total_forward_pass</span>
+
+    <span class="c1"># Total forward + backward
+</span>    <span class="n">total_flops</span> <span class="o">=</span> <span class="n">total_forward_pass</span> <span class="o">+</span> <span class="n">total_backward_pass</span>
+
+    <span class="k">return</span> <span class="n">total_flops</span>
+
+
+<span class="c1"># Example usage
+</span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="sh">"</span><span class="s">seq_len</span><span class="sh">"</span><span class="p">:</span> <span class="mi">512</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">vocab_size</span><span class="sh">"</span><span class="p">:</span> <span class="mi">50000</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">d_model</span><span class="sh">"</span><span class="p">:</span> <span class="mi">640</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">key_size</span><span class="sh">"</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">num_heads</span><span class="sh">"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">ffw_size</span><span class="sh">"</span><span class="p">:</span> <span class="mi">2560</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">num_layers</span><span class="sh">"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="n">flops</span> <span class="o">=</span> <span class="nf">calculate_transformer_flops</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+
+
+<span class="nf">print</span><span class="p">(</span><span class="n">flops</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>RANK 1——– STEP: 1 ———— loss: nan len minibatch 9
-rank ppo loss 0 tensor([[0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000],
-        [-0.9336, -0.9336, -0.8242, -0.9336, -0.9336, -1.0547, -0.9336, -0.9922,
-         -0.8242, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.8242, -0.8242,
-         -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9922, -0.9922, -0.9336, -0.8242, -0.9336, -0.9336, -0.9336,
-         -0.9922, -0.8750, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336],
-        [-0.9336, -1.0547, -0.9336, -0.9336, -0.9336, -0.9336, -0.7266, -0.9336,
-         -0.9336, -0.9922, -0.9336, -0.8242, -0.8242, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.8242, -0.9336, -0.9336, -0.9336, -0.8242, -1.0547,
-         -0.9336, -0.9336, -1.0547, -0.8242, -0.8242, -0.9336, -0.9336, -0.9336,
-         -0.9336, -1.0547, -0.9336, -0.9336, -0.9336, -0.8750, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9922, -0.9336, -0.9336,
-         -0.9336, -0.9336],
-        [-0.9336, -1.0547, -0.9336, -0.9336, -0.9336, -0.9336, -1.0547, -1.0547,
-         -0.9922, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -1.0547, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.8242, -0.9922,
-         -0.9336, -0.9336, -0.9336, -1.0547, -1.0547, -0.9336, -0.9336, -0.8242,
-         -0.9336, -0.8242, -1.1250, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.8242],
-        [-0.9336, -0.9336, -0.9922, -0.9922, -0.9336, -1.0547, -0.9922, -0.9336,
-         -0.9336, -0.9336, -0.9922, -0.8242, -0.8242, -0.8242, -0.9336, -0.9922,
-         -0.9922, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.8750, -1.0547,
-         -1.0547, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.8242, -0.8242, -0.9336, -0.9336, -0.9336,
-         -1.0547, -0.9336, -0.8750, -0.9922, -1.0547, -0.8242, -0.9336, -1.0547,
-         -0.9336, -0.9922],
-        [ 0.9336,  0.9336,  0.9336,  1.0547,  0.9336,  0.9336,  1.0547,  0.9336,
-          0.9336,  0.9336,  0.9336,  1.0547,  0.9336,  0.9336,  0.9336,  1.0547,
-          0.9336,  1.0547,  1.0547,  0.8750,  0.8242,  0.9922,  0.9336,  0.9336,
-          0.9336,  0.9336,  0.8750,  0.8750,  0.9922,  0.9922,  0.8750,  0.9336,
-          0.9336,  0.9336,  0.9336,  0.8750,  0.9336,  0.8750,  0.9922,  0.9336,
-          0.9336,  0.9336,  0.9336,  1.0547,  0.9336,  0.9336,  0.9336,  0.9336,
-          0.9922,  0.8242],
-        [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.9336,  0.9336,  0.8242,  0.9336,
-          0.9336,  0.8242,  0.9922,  0.9336,  1.0547,  0.9922,  0.9336,  0.9336,
-          1.1250,  0.8242],
-        [-0.7227, -0.7227, -0.7227, -0.7227, -0.7227, -0.8203, -0.6758, -0.7227,
-         -0.7227, -0.7227, -0.7227, -0.7227, -0.6367, -0.7227, -0.7227, -0.7227,
-         -0.6367, -0.6367, -0.6758, -0.8203, -0.8203, -0.7227, -0.7227, -0.7227,
-         -0.7227, -0.7227, -0.7227, -0.7227, -0.8203, -0.7227, -0.7227, -0.7227,
-         -0.6367, -0.6367, -0.7227, -0.7227, -0.7227, -0.7227, -0.7227, -0.7227,
-         -0.7227, -0.7227, -0.7227, -0.7227, -0.7227, -0.7227, -0.7227, -0.7227,
-         -0.7227, -0.7227],
-        [ 1.2109,  1.2109,  1.0703,  1.2109,  1.2109,  1.2109,  1.2891,  1.2109,
-          1.2109,  1.2109,  1.0703,  1.2109,  1.2109,  1.2109,  1.2109,  1.2109,
-          1.2109,  1.3750,  1.0703,  1.2109,  1.0703,  1.2109,  1.2109,  1.2891,
-          1.2109,  1.2109,  1.2109,  1.0703,  1.2109,  1.2109,  1.2109,  1.2109,
-          1.2109,  1.2109,  1.2891,  1.2109,  1.2891,  1.0703,  1.0703,  1.0703,
-          1.2109,  1.0703,  1.2109,  1.5547,  1.3750,  1.2109,  1.1328,  1.2109,
-          1.2109,  1.3750]], device=’cuda:0’, dtype=torch.bfloat16,
-grad_fn=<SliceBackward0>)
-RANK 0-------- STEP: 1 ------------ loss: nan len minibatch 9
-rank ppo loss 3 rank ppo loss 2 tensor([[-0.9336, -0.9336, -0.9336, -0.8242, -0.9336, -0.9336, -0.9336, -0.9336,
-         -1.0547, -0.9336, -0.9336, -1.0547, -1.0547, -0.9336, -0.9336, -0.9336,
-         -0.8242, -0.9336, -0.9336, -0.9336, -0.8242, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.8242, -0.9336, -0.8242, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336],
-        [-0.8242, -0.9336, -0.9336, -0.9336, -0.8750, -0.9336, -0.7734, -0.9336,
-         -0.9336, -1.0547, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -1.0547, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -1.0547, -0.9336,
-         -0.9336, -0.8242, -0.9922, -1.0547, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336, -1.0547, -0.9336, -0.9336, -0.8242, -0.8242, -0.9336,
-         -0.9336, -0.9922, -1.0547, -0.8750, -1.0547, -0.9336, -0.9336, -1.1250,
-         -0.9336, -0.9336],
-        [-0.9336, -0.9336, -0.9336, -1.0547, -0.9336, -0.9336, -0.9336, -1.0547,
-         -1.0547, -1.0547, -0.9336, -0.8750, -0.9336, -0.9336, -1.0547, -0.9336,
-         -1.0547, -0.9336, -0.9336, -0.9336, -1.0547, -0.9336, -0.9336, -0.8242,
-         -0.9336, -0.9336, -0.8242, -0.8750, -0.9336, -0.8750, -0.9922, -1.0547,
-         -0.9336, -0.9336, -0.9922, -0.9336, -1.0547, -0.9336, -0.8242, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9922, -0.8242, -0.9922,
-         -0.9336, -1.0547],
-        [-0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.6094, -0.6094, -0.5391, -0.5742, -0.6094, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5039, -0.5391, -0.5039,
-         -0.5742, -0.5391, -0.5742, -0.5742, -0.4766, -0.5391, -0.5391, -0.5391,
-         -0.5039, -0.4766, -0.5391, -0.4766, -0.5391, -0.6094, -0.5742, -0.5391,
-         -0.5039, -0.5391],
-        [ 1.5156,  1.5156,  1.7188,  1.5156,  1.7188,  1.7188,  1.5156,  1.6172,
-          1.6172,  1.6172,  1.8281,  1.5156,  1.6172,  1.6172,  1.5156,  1.7188,
-          1.6172,  1.5156,  1.5156,  1.6172,  1.6172,  1.6172,  1.4297,  1.5156,
-          1.6172,  1.6172,  1.5156,  1.6172,  1.6172,  1.6172,  1.5156,  1.5156,
-          1.8281,  1.6172,  1.6172,  1.6172,  1.5156,  1.6172,  1.6172,  1.7188,
-          1.7188,  1.7188,  1.6172,  1.5156,  1.4297,  1.5156,  1.6172,  1.5156,
-          1.6172,  1.7188],
-        [-0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.4766, -0.6094, -0.5391,
-         -0.5391, -0.4766, -0.5391, -0.4766, -0.5391, -0.4766, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.6094, -0.5391, -0.5391, -0.6094,
-         -0.5039, -0.5391, -0.5391, -0.5391, -0.5391, -0.4766, -0.5391, -0.5742,
-         -0.5391, -0.5391, -0.5742, -0.5391, -0.5391, -0.5742, -0.5391, -0.5742,
-         -0.5391, -0.5391],
-        [-0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5742, -0.5391,
-         -0.5391, -0.4766, -0.5742, -0.5039, -0.5391, -0.5391, -0.5742, -0.5039,
-         -0.5391, -0.4766, -0.5039, -0.5391, -0.5391, -0.4766, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.6094, -0.6094, -0.6094, -0.5391, -0.5039, -0.6094,
-         -0.5391, -0.5742, -0.4766, -0.5391, -0.5391, -0.5742, -0.5391, -0.5391,
-         -0.5742, -0.6094, -0.5391, -0.5391, -0.5391, -0.5391, -0.6484, -0.6094,
-         -0.4766, -0.5391],
-        [-0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.4766, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.4766, -0.4766, -0.5391, -0.5391, -0.5391, -0.6484, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.4766, -0.5391, -0.6094, -0.5391, -0.5391,
-         -0.5391, -0.6484],
-        [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  1.6172,  1.7188,  1.6172,
-          1.6172,  1.4297,  1.6172,  1.6172,  1.6172,  1.6172,  1.6172,  1.6172,
-          1.6172,  1.6172]], device='cuda:2', dtype=torch.bfloat16,
-grad_fn=<SliceBackward0>)
-RANK 2-------- STEP: 1 ------------ loss: -0.259765625 len minibatch 9
-tensor([[-0.9336, -0.9336, -0.9336, -0.8242, -0.9336, -0.9336, -0.9336, -0.9336,
-         -1.0547, -0.9336, -0.9336, -1.0547, -1.0547, -0.9336, -0.9336, -0.9336,
-         -0.8242, -0.9336, -0.9336, -0.9336, -0.8242, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.8242, -0.9336, -0.8242, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336],
-        [-0.8242, -0.9336, -0.9336, -0.9336, -0.8750, -0.9336, -0.7734, -0.9336,
-         -0.9336, -1.0547, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336,
-         -1.0547, -0.9336, -0.9336, -0.9336, -0.9336, -0.9336, -1.0547, -0.9336,
-         -0.9336, -0.8242, -0.9922, -1.0547, -0.9336, -0.9336, -0.9336, -0.9336,
-         -0.9336, -0.9336, -1.0547, -0.9336, -0.9336, -0.8242, -0.8242, -0.9336,
-         -0.9336, -0.9922, -1.0547, -0.8750, -1.0547, -0.9336, -0.9336, -1.1250,
-         -0.9336, -0.9336],
-        [-0.9336, -0.9336, -0.9336, -1.0547, -0.9336, -0.9336, -0.9336, -1.0547,
-         -1.0547, -1.0547, -0.9336, -0.8750, -0.9336, -0.9336, -1.0547, -0.9336,
-         -0.9336, -1.0547],
-        [-0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.6094, -0.6094, -0.5391, -0.5742, -0.6094, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5039, -0.5391, -0.5039,
-         -0.5742, -0.5391, -0.5742, -0.5742, -0.4766, -0.5391, -0.5391, -0.5391,
-         -0.5039, -0.4766, -0.5391, -0.4766, -0.5391, -0.6094, -0.5742, -0.5391,
-         -0.5039, -0.5391],
-        [ 1.5156,  1.5156,  1.7188,  1.5156,  1.7188,  1.7188,  1.5156,  1.6172,
-          1.6172,  1.6172,  1.8281,  1.5156,  1.6172,  1.6172,  1.5156,  1.7188,
-          1.6172,  1.5156,  1.5156,  1.6172,  1.6172,  1.6172,  1.4297,  1.5156,
-          1.6172,  1.6172,  1.5156,  1.6172,  1.6172,  1.6172,  1.5156,  1.5156,
-          1.8281,  1.6172,  1.6172,  1.6172,  1.5156,  1.6172,  1.6172,  1.7188,
-          1.7188,  1.7188,  1.6172,  1.5156,  1.4297,  1.5156,  1.6172,  1.5156,
-          1.6172,  1.7188],
-        [-0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.4766, -0.6094, -0.5391,
-         -0.5391, -0.4766, -0.5391, -0.4766, -0.5391, -0.4766, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.6094, -0.5391, -0.5391, -0.6094,
-         -0.5039, -0.5391, -0.5391, -0.5391, -0.5391, -0.4766, -0.5391, -0.5742,
-         -0.5391, -0.5391, -0.5742, -0.5391, -0.5391, -0.5742, -0.5391, -0.5742,
-         -0.5391, -0.5391],
-        [-0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5742, -0.5391,
-         -0.5391, -0.4766, -0.5742, -0.5039, -0.5391, -0.5391, -0.5742, -0.5039,
-         -0.5391, -0.4766, -0.5039, -0.5391, -0.5391, -0.4766, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.6094, -0.6094, -0.6094, -0.5391, -0.5039, -0.6094,
-         -0.5391, -0.5742, -0.4766, -0.5391, -0.5391, -0.5742, -0.5391, -0.5391,
-         -0.5742, -0.6094, -0.5391, -0.5391, -0.5391, -0.5391, -0.6484, -0.6094,
-         -0.4766, -0.5391],
-        [-0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.4766, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.4766, -0.4766, -0.5391, -0.5391, -0.5391, -0.6484, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391, -0.5391,
-         -0.5391, -0.5391, -0.5391, -0.4766, -0.5391, -0.6094, -0.5391, -0.5391,
-         -0.5391, -0.6484],
-        [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  1.6172,  1.7188,  1.6172,
-          1.6172,  1.4297,  1.6172,  1.6172,  1.6172,  1.6172,  1.6172,  1.6172,
-          1.6172,  1.6172]], device='cuda:3', dtype=torch.bfloat16,
-grad_fn=<SliceBackward0>)
-RANK 3-------- STEP: 1 ------------ loss: -0.259765625 len minibatch 9
-\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.0.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.1.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.2.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.3.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.4.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.5.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.6.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.7.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.8.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.9.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.10.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.11.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.12.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.13.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.14.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.15.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.16.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.17.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.18.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.19.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.20.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.21.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.22.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.23.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.24.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.25.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.26.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.27.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.28.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.29.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.30.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.31.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.32.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.33.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.34.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.35.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-------------self caclulated norm tensor(nan, device='cuda:0')
-yooooo current
-yooooo current
-yooooo current
-yooooo current
-rank ppo loss 0 tensor([[nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan]], device='cuda:0', dtype=torch.bfloat16,
-grad_fn=<SliceBackward0>)
-RANK 0-------- STEP: 2 ------------ loss: nan len minibatch 9
-rank ppo loss 3 tensor([[nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan]], device='cuda:3', dtype=torch.bfloat16,
-grad_fn=<SliceBackward0>)
-RANK 3-------- STEP: 2 ------------ loss: nan len minibatch 9
-rank ppo loss 1 tensor([[nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan]], device='cuda:1', dtype=torch.bfloat16,
-grad_fn=<SliceBackward0>)
-RANK 1-------- STEP: 2 ------------ loss: nan len minibatch 9
-rank ppo loss 2 tensor([[nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan]], device='cuda:2', dtype=torch.bfloat16,
-grad_fn=<SliceBackward0>)
-RANK 2-------- STEP: 2 ------------ loss: nan len minibatch 9
-\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.0.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.1.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.2.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.3.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.4.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.5.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.6.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.7.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.8.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.9.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.10.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.11.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.12.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.13.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.14.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.15.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.16.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.17.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.18.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.19.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.20.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.21.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.22.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.23.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.24.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.25.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.26.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.27.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.28.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.29.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.30.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.31.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.32.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.33.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.34.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.35.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-------------self caclulated norm tensor(nan, device='cuda:0')
-yooooo current
-yooooo current
-yooooo current
-yooooo current
-rank ppo loss 2 tensor([[nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan]], device='cuda:2', dtype=torch.bfloat16,
-grad_fn=<SliceBackward0>)
-RANK 2-------- STEP: 3 ------------ loss: nan len minibatch 9
-rank ppo loss 1 rank ppo loss 3 tensor([[nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan]], device='cuda:3', dtype=torch.bfloat16,
-grad_fn=<SliceBackward0>)
-RANK 3-------- STEP: 3 ------------ loss: nan len minibatch 9
-tensor([[nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan]], device='cuda:1', dtype=torch.bfloat16,
-grad_fn=<SliceBackward0>)
-RANK 1-------- STEP: 3 ------------ loss: nan len minibatch 9
-rank ppo loss 0 tensor([[nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan],
-        [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,
-         nan, nan]], device='cuda:0', dtype=torch.bfloat16,
-grad_fn=<SliceBackward0>)
-RANK 0-------- STEP: 3 ------------ loss: nan len minibatch 9
-\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.0.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.1.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.2.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.3.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.4.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.5.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.6.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.7.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.8.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.9.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.10.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.11.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.12.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.13.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.14.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.15.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.16.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.17.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.18.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.19.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.20.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.21.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.22.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.23.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.24.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.25.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.26.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.27.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.28.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.29.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.30.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.31.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.32.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.33.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.34.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-\_fsdp_wrapped_module.model.layers.35.\_fsdp_wrapped_module.\_flat_param tensor(nan, device='cuda:0')
-------------self caclulated norm tensor(nan, device='cuda:0')
---------------- METRICS--------------- {'response_length': 259.0833333333333, 'trajectory_length': 415.4166666666667, 'reward': 0.11666666666666667, 'loss': nan, 'entropy': nan, 'grad_norm': nan, 'step': 5}
---------------- ROLLOUT TIME --------------- 17.986992597579956</SliceBackward0></SliceBackward0></SliceBackward0></SliceBackward0></SliceBackward0></SliceBackward0></SliceBackward0></SliceBackward0></SliceBackward0></SliceBackward0></SliceBackward0></p>]]></content><author><name>cohlem</name></author><summary type="html"><![CDATA[Before starting, it’s advisable to first complete David Silver’s Course on RL and read Lilian’s notes on RL which explains/provides notes on the David’s course in sequential manner.]]></summary></entry></feed>
+<p>So this is flops required for our model per step with one batch.</p>]]></content><author><name>cohlem</name></author><summary type="html"><![CDATA[Calculation of FLOPs]]></summary></entry><entry><title type="html">Post Training Strategies</title><link href="http://localhost:4000/2025/02/06/post-training-strategies.html" rel="alternate" type="text/html" title="Post Training Strategies" /><published>2025-02-06T00:00:00+05:45</published><updated>2025-02-06T00:00:00+05:45</updated><id>http://localhost:4000/2025/02/06/post-training-strategies</id><content type="html" xml:base="http://localhost:4000/2025/02/06/post-training-strategies.html"><![CDATA[<p>After training, we generally perform alignment i.e teaching the model how to behave/act in desired manner. Post training mainly consists 1) Supervised Fine-tuning 2) RLHF</p>
+
+<blockquote>
+  <p>the current consensus within the research community seems to be that the optimal approach to alignment is to <em>i)</em> perform SFT over a moderately-sized dataset of examples with very high quality and <em>ii)</em> invest remaining efforts into curating human preference data for fine-tuning via RLHF.</p>
+</blockquote>
+
+<h3 id="supervised-fine-tuning">Supervised Fine-tuning</h3>
+
+<p>Similar to pretraining, we perform next token prediction, but on different high-quality dataset.</p>
+
+<p>Why doesn’t pre-training work out of the box ?
+because the training objective is different, In pretraining we force the model to just predict the next token using data sampled from the internet, in one iteration the model could be learning about “how to make pizza” and in another iteration it could be learning “how half the species in Australia became extinct after humans arrived”. The data is sampled randomly. However, In SFT do the next token predict on highly curated instruction following dataset, so now we are making it to follow instructions again and again. As you can see the instruction following objective allows the model to learn instruction following with very small data.</p>
+
+<p><strong>NOTE: in SFT we don’t consider the loss for the input tokens but only the output tokens</strong></p>
+
+<p>for instance, we only consider the loss for the tokens from “assistant” role, and not the ‘user’ role, which can be found here in llama2 paper: https://arxiv.org/pdf/2307.09288</p>
+
+<blockquote>
+  <p>We utilize an autoregressive objective and zero-out the loss on tokens from the user prompt, so as a result, we backpropagate only on answer tokens. Finally, we fine-tune the model for 2 epochs.</p>
+</blockquote>
+
+<p><img src="pts1.png" alt="pts1" />
+figure: <a href="https://arxiv.org/pdf/2203.02155">InstructGPT paper</a></p>
+
+<blockquote>
+  <p>Supervised fine-tuning (SFT). We fine-tune GPT-3 on our labeler demonstrations using supervised learning. We trained for 16 epochs, using a cosine learning rate decay, and residual dropout of 0.2. We do our final SFT model selection based on the RM score on the validation set. Similarly to Wu et al. (2021), we find that our SFT models overfit on validation loss after 1 epoch; however, we find that training for more epochs helps both the RM score and human preference ratings, despite this overfitting - <a href="https://arxiv.org/pdf/2203.02155">InstructGPT paper</a></p>
+</blockquote>
+
+<h3 id="datasets">Datasets</h3>
+
+<p>For basic conversations:
+https://huggingface.co/datasets/HuggingFaceTB/everyday-conversations-llama3.1-2k</p>
+
+<p>from smolTalk</p>
+
+<p>keep all of Everyday-Conversations
+filter math, coding dataset
+filter to 512 tokens</p>
+
+<p>magic-pie ultra - he dataset contains challenging instructions and responses for a wide variety of tasks, such as Coding &amp; debugging, Math, Data analysis, Creative Writing, advice seeking, or Brainstorming.</p>
+
+<p>Take magic-pie-ultra remove math and coding and debugging, limit upto two-turn conversation, and keep only rows with &lt; 512 tokens</p>
+
+<p>take smoltalk, do the same, select Smol-Rewrite, smol-constraints, smol-summarization</p>
+
+<p>remove the system prompt, by combining it to user prompt</p>
+
+<p>select 5k examples from each</p>
+
+<p>combine it with filtered magpie</p>
+
+<p>mix it with all of everyday conversations</p>
+
+<p>see here
+https://colab.research.google.com/drive/1QkIpkhaZVNvZwBoD69N5O-md5FjRSW_W?usp=sharing</p>
+
+<p>colab train link: https://www.linkedin.com/in/mihirsinh-chauhan-5bb437239/</p>
+
+<p>remove columns with larger seq len than 512</p>
+
+<p>conversational open data:
+https://huggingface.co/datasets/OpenAssistant/oasst1/viewer/default/train?row=0</p>
+
+<p>synthetic data
+https://github.com/thunlp/UltraChat?tab=readme-ov-file</p>
+
+<p>To teach models to say certain things we either train it on sft datasets, or we put it in system message i.e put it in it’s context windows (usually hidden from users)</p>
+
+<p>olmo hard coded sft mixture data
+https://huggingface.co/datasets/allenai/olmo-2-hard-coded?row=2</p>
+
+<p>First, I remember that in supervised fine-tuning (SFT) for language models, especially in conversational settings, the standard practice is to train the model only on the assistant’s responses. This is because the model’s role is to generate appropriate responses given the user’s input, not to learn to predict the user’s messages.</p>]]></content><author><name>cohlem</name></author><summary type="html"><![CDATA[After training, we generally perform alignment i.e teaching the model how to behave/act in desired manner. Post training mainly consists 1) Supervised Fine-tuning 2) RLHF]]></summary></entry><entry><title type="html">Building Lillm</title><link href="http://localhost:4000/2025/01/29/building-lillm.html" rel="alternate" type="text/html" title="Building Lillm" /><published>2025-01-29T00:00:00+05:45</published><updated>2025-01-29T00:00:00+05:45</updated><id>http://localhost:4000/2025/01/29/building-lillm</id><content type="html" xml:base="http://localhost:4000/2025/01/29/building-lillm.html"><![CDATA[<h2 id="pre-training">Pre-training</h2>
+
+<h3 id="document-packing">Document packing</h3>
+
+<p>while pretraining, different documents could be packed inside a sequence. For instance, a model with context_length 1024 can have 256 tokens from one doc and rest from the other. Demilited by EOS token.</p>
+
+<p>The samples may contaminate the attention, for which cross sample attention masking is used.
+But, it isn’t used by DeepSeek v3, lets not use it.</p>
+
+<p>while packing documents. we simply pack them as they appear in order and then add EOS token (used by GPT-2,3). But DeekSeek also uses FIM (Fill in middle) strategy using this Prefix-Suffix-Middle (PSM) framework.</p>
+
+<p><code class="language-plaintext highlighter-rouge">&lt;|fim_begin|&gt; 𝑓pre &lt;|fim_hole|&gt; 𝑓suf &lt;|fim_end|&gt; 𝑓middle &lt;|eos_token|&gt;.</code></p>
+
+<p>adopted for 0.1% of data, generally used for overfitting or limiting the model from using the same general method.</p>
+
+<ul>
+  <li>Do vibe check once in a while</li>
+</ul>
+
+<p>commands</p>
+
+<p>change num_proc in process.py</p>
+
+<p>python process.py –tokenizer_path /model/tokenizer</p>
+
+<p>training run
+torchrun –standalone –nproc_per_node=2 pretrain.py</p>]]></content><author><name>cohlem</name></author><summary type="html"><![CDATA[Pre-training]]></summary></entry></feed>

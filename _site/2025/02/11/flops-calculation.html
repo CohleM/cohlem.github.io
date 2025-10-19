@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flops Calculation - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Flops Calculation</h1>
+<p>11 Feb 2025 - cohlem</p>
+
+<h4 id="calculation-of-flops">Calculation of FLOPs</h4>
+
+<ul>
+  <li>multiply accumulate cost: 2FLOPS i.e 1 for multiplication and 1 for accumulation (addition)</li>
+  <li>if we multiply two matrices with sizes (a x b) and (b x c), the flops involved is b Multiply-add operation per the output size (a x c) i.e 2 x b x (a x c)</li>
+</ul>
+
+<h5 id="embedding-lookup">Embedding lookup</h5>
+
+<p>we initially have tokens with (seq_len,vocab_size) one-hot representation and embedding lookup matrix is (vocab_size, d_model), it will take</p>
+
+<p>FLOPs = 2 x ( vocab_size x (seq_len x d_model))</p>
+
+<h5 id="attention">Attention</h5>
+
+<p><strong>Q,K,V projections</strong>
+X @ (Wq or Wk or Wv)
+i.e 2 x (seq_len x d_model x key_size x num_heads)</p>
+
+<p><strong>attention matrix</strong>
+Q @ K.T
+i.e 2* (seq_len x seq_len x key_size x num_heads)</p>
+
+<p><strong>softmax</strong></p>
+
+<ul>
+  <li>1 for exponential calculation (e^x).</li>
+  <li>seq_len - 1 sum for each row. so if we divide it per row, its basically 1 FLOPs per elements.</li>
+  <li>1 for division
+so it becomes, 2 x num_heads x seq_len x seq_len</li>
+</ul>
+
+<p><strong>Softmax @ query reductions</strong>
+2 × seq_len × seq_len × (key_size × num_heads)</p>
+
+<p><strong>Final Linear</strong>
+2 × seq_len × (key_size × num_heads) × d_model</p>
+
+<p><strong>Dense Block</strong> (per layer)
+2×seq_len×(d_model×ffw_size+d_model×ffw_size) (ignoring FLOPs for actions here,)</p>
+
+<p><strong>Final Logits</strong>
+2×seq_len×d_model×vocab_size</p>
+
+<p>so total FLOPs: embeddings+num_layers×(total_attention+dense_block) + logits</p>
+
+<p>For backward, it takes 2 times the flops taken in backward.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">calculate_transformer_flops</span><span class="p">(</span>
+    <span class="n">seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">key_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">num_heads</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">ffw_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">num_layers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sh">"""</span><span class="s">
+    Calculate FLOPs for each component of a transformer model including forward and backward passes.
+
+    Args:
+        seq_len: Sequence length
+        vocab_size: Vocabulary size
+        d_model: Model dimension
+        key_size: Key dimension
+        num_heads: Number of attention heads
+        ffw_size: Feed-forward layer size
+        num_layers: Number of transformer layers
+
+    Returns:
+        Dictionary containing FLOPs for each component and total forward/backward passes
+    </span><span class="sh">"""</span>
+
+    <span class="c1"># Embeddings
+</span>    <span class="n">embedding_flops</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">vocab_size</span> <span class="o">*</span> <span class="n">d_model</span>
+
+    <span class="c1"># Single Attention Layer
+</span>    <span class="n">key_query_value_proj</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">d_model</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span>
+    <span class="n">key_query_logits</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span>
+    <span class="n">softmax_ops</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">num_heads</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">seq_len</span>
+    <span class="n">softmax_query_reduction</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span>
+    <span class="n">final_linear</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span> <span class="o">*</span> <span class="n">d_model</span>
+
+    <span class="n">total_attention_flops</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">key_query_value_proj</span>
+        <span class="o">+</span> <span class="n">key_query_logits</span>
+        <span class="o">+</span> <span class="n">softmax_ops</span>
+        <span class="o">+</span> <span class="n">softmax_query_reduction</span>
+        <span class="o">+</span> <span class="n">final_linear</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Single Dense Block
+</span>    <span class="n">dense_block_flops</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">d_model</span> <span class="o">*</span> <span class="n">ffw_size</span> <span class="o">+</span> <span class="n">d_model</span> <span class="o">*</span> <span class="n">ffw_size</span><span class="p">)</span>
+
+    <span class="c1"># Final Logits
+</span>    <span class="n">final_logits_flops</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">d_model</span> <span class="o">*</span> <span class="n">vocab_size</span>
+
+    <span class="c1"># Total forward pass
+</span>    <span class="n">total_forward_pass</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">embedding_flops</span>
+        <span class="o">+</span> <span class="n">num_layers</span> <span class="o">*</span> <span class="p">(</span><span class="n">total_attention_flops</span> <span class="o">+</span> <span class="n">dense_block_flops</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">final_logits_flops</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Backward pass is approximately 2x forward pass
+</span>    <span class="n">total_backward_pass</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">total_forward_pass</span>
+
+    <span class="c1"># Total forward + backward
+</span>    <span class="n">total_flops</span> <span class="o">=</span> <span class="n">total_forward_pass</span> <span class="o">+</span> <span class="n">total_backward_pass</span>
+
+    <span class="k">return</span> <span class="n">total_flops</span>
+
+
+<span class="c1"># Example usage
+</span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="sh">"</span><span class="s">seq_len</span><span class="sh">"</span><span class="p">:</span> <span class="mi">512</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">vocab_size</span><span class="sh">"</span><span class="p">:</span> <span class="mi">50000</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">d_model</span><span class="sh">"</span><span class="p">:</span> <span class="mi">640</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">key_size</span><span class="sh">"</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">num_heads</span><span class="sh">"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">ffw_size</span><span class="sh">"</span><span class="p">:</span> <span class="mi">2560</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">num_layers</span><span class="sh">"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="n">flops</span> <span class="o">=</span> <span class="nf">calculate_transformer_flops</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+
+
+<span class="nf">print</span><span class="p">(</span><span class="n">flops</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>So this is flops required for our model per step with one batch.</p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Flops Calculation</h1>
+    <time datetime="2025-02-11T00:00:00+05:45">
+      February 11, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><h4 id="calculation-of-flops">Calculation of FLOPs</h4>
+
+<ul>
+  <li>multiply accumulate cost: 2FLOPS i.e 1 for multiplication and 1 for accumulation (addition)</li>
+  <li>if we multiply two matrices with sizes (a x b) and (b x c), the flops involved is b Multiply-add operation per the output size (a x c) i.e 2 x b x (a x c)</li>
+</ul>
+
+<h5 id="embedding-lookup">Embedding lookup</h5>
+
+<p>we initially have tokens with (seq_len,vocab_size) one-hot representation and embedding lookup matrix is (vocab_size, d_model), it will take</p>
+
+<p>FLOPs = 2 x ( vocab_size x (seq_len x d_model))</p>
+
+<h5 id="attention">Attention</h5>
+
+<p><strong>Q,K,V projections</strong>
+X @ (Wq or Wk or Wv)
+i.e 2 x (seq_len x d_model x key_size x num_heads)</p>
+
+<p><strong>attention matrix</strong>
+Q @ K.T
+i.e 2* (seq_len x seq_len x key_size x num_heads)</p>
+
+<p><strong>softmax</strong></p>
+
+<ul>
+  <li>1 for exponential calculation (e^x).</li>
+  <li>seq_len - 1 sum for each row. so if we divide it per row, its basically 1 FLOPs per elements.</li>
+  <li>1 for division
+so it becomes, 2 x num_heads x seq_len x seq_len</li>
+</ul>
+
+<p><strong>Softmax @ query reductions</strong>
+2 × seq_len × seq_len × (key_size × num_heads)</p>
+
+<p><strong>Final Linear</strong>
+2 × seq_len × (key_size × num_heads) × d_model</p>
+
+<p><strong>Dense Block</strong> (per layer)
+2×seq_len×(d_model×ffw_size+d_model×ffw_size) (ignoring FLOPs for actions here,)</p>
+
+<p><strong>Final Logits</strong>
+2×seq_len×d_model×vocab_size</p>
+
+<p>so total FLOPs: embeddings+num_layers×(total_attention+dense_block) + logits</p>
+
+<p>For backward, it takes 2 times the flops taken in backward.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">calculate_transformer_flops</span><span class="p">(</span>
+    <span class="n">seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">key_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">num_heads</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">ffw_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">num_layers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sh">"""</span><span class="s">
+    Calculate FLOPs for each component of a transformer model including forward and backward passes.
+
+    Args:
+        seq_len: Sequence length
+        vocab_size: Vocabulary size
+        d_model: Model dimension
+        key_size: Key dimension
+        num_heads: Number of attention heads
+        ffw_size: Feed-forward layer size
+        num_layers: Number of transformer layers
+
+    Returns:
+        Dictionary containing FLOPs for each component and total forward/backward passes
+    </span><span class="sh">"""</span>
+
+    <span class="c1"># Embeddings
+</span>    <span class="n">embedding_flops</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">vocab_size</span> <span class="o">*</span> <span class="n">d_model</span>
+
+    <span class="c1"># Single Attention Layer
+</span>    <span class="n">key_query_value_proj</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">d_model</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span>
+    <span class="n">key_query_logits</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span>
+    <span class="n">softmax_ops</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">num_heads</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">seq_len</span>
+    <span class="n">softmax_query_reduction</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span>
+    <span class="n">final_linear</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">key_size</span> <span class="o">*</span> <span class="n">num_heads</span><span class="p">)</span> <span class="o">*</span> <span class="n">d_model</span>
+
+    <span class="n">total_attention_flops</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">key_query_value_proj</span>
+        <span class="o">+</span> <span class="n">key_query_logits</span>
+        <span class="o">+</span> <span class="n">softmax_ops</span>
+        <span class="o">+</span> <span class="n">softmax_query_reduction</span>
+        <span class="o">+</span> <span class="n">final_linear</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Single Dense Block
+</span>    <span class="n">dense_block_flops</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="p">(</span><span class="n">d_model</span> <span class="o">*</span> <span class="n">ffw_size</span> <span class="o">+</span> <span class="n">d_model</span> <span class="o">*</span> <span class="n">ffw_size</span><span class="p">)</span>
+
+    <span class="c1"># Final Logits
+</span>    <span class="n">final_logits_flops</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">seq_len</span> <span class="o">*</span> <span class="n">d_model</span> <span class="o">*</span> <span class="n">vocab_size</span>
+
+    <span class="c1"># Total forward pass
+</span>    <span class="n">total_forward_pass</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">embedding_flops</span>
+        <span class="o">+</span> <span class="n">num_layers</span> <span class="o">*</span> <span class="p">(</span><span class="n">total_attention_flops</span> <span class="o">+</span> <span class="n">dense_block_flops</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">final_logits_flops</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Backward pass is approximately 2x forward pass
+</span>    <span class="n">total_backward_pass</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">total_forward_pass</span>
+
+    <span class="c1"># Total forward + backward
+</span>    <span class="n">total_flops</span> <span class="o">=</span> <span class="n">total_forward_pass</span> <span class="o">+</span> <span class="n">total_backward_pass</span>
+
+    <span class="k">return</span> <span class="n">total_flops</span>
+
+
+<span class="c1"># Example usage
+</span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="sh">"</span><span class="s">seq_len</span><span class="sh">"</span><span class="p">:</span> <span class="mi">512</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">vocab_size</span><span class="sh">"</span><span class="p">:</span> <span class="mi">50000</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">d_model</span><span class="sh">"</span><span class="p">:</span> <span class="mi">640</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">key_size</span><span class="sh">"</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">num_heads</span><span class="sh">"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">ffw_size</span><span class="sh">"</span><span class="p">:</span> <span class="mi">2560</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">num_layers</span><span class="sh">"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="n">flops</span> <span class="o">=</span> <span class="nf">calculate_transformer_flops</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+
+
+<span class="nf">print</span><span class="p">(</span><span class="n">flops</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>So this is flops required for our model per step with one batch.</p>
+</div>
+
+  
+  <div class="tags">
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

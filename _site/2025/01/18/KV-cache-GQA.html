@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kv Cache Gqa - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Kv Cache Gqa</h1>
+<p>18 Jan 2025 - cohlem</p>
+
+<h2 id="kv-cache">KV Cache</h2>
+
+<h3 id="kv-cache-visual-operation">KV cache visual operation</h3>
+
+<p>In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.</p>
+
+<p>We don’t make use of KV cache while training because we already have data filled for each sequence length, we don’t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one. To understand better look at the notes below.</p>
+
+<p><img src="kvnote1.jpg" alt="kvnote1" /></p>
+
+<p><img src="kvnote2.jpg" alt="kvnote2" />
+<img src="kvnote3.jpg" alt="kvnote3" /></p>
+
+<h3 id="memory-needed-for-storing-kv-cache">Memory needed for storing KV cache</h3>
+
+<p>let’s calculate total memory needed for storing KV cache</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>batch_size = 1 (for inferencing)
+d_model = 4096
+num_of_kv_heads = 32
+head_dim = d_model/num_of_kv_heads = 128
+seq_len = 10000
+precision (fp16) = 2 bytes
+
+2 (for k and v separately) x precision x head_dim x num_of_kv_heads x d_model x seq_len x batch_size = 5,24,28,80,000 bytes close to 5GB
+</code></pre></div></div>
+
+<p>lets say we have 7B parameter model, 7x10^9 x2 (bytes) = 14x10^9 bytes = 14GB</p>
+
+<p>we need almost 1/3 total memory for inferencing.</p>
+
+<p>Let’s explore the code for using KV cache in Llama models.</p>
+
+<p>Please note I’ve modified some part of the original Llama code below to just explain the case of KV cache here.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ModelArgs</span><span class="p">:</span>
+    <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4096</span>
+    <span class="n">n_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">n_heads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">n_kv_heads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span> <span class="c1"># modified to explain GQA
+</span>    <span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># defined later by tokenizer
+</span>    <span class="n">multiple_of</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span>  <span class="c1"># make SwiGLU hidden layer size multiple of large power of 2
+</span>    <span class="n">ffn_dim_multiplier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">norm_eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span>
+
+    <span class="n">max_batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span>
+
+</code></pre></div></div>
+
+<h3 id="attention-architecture-code">Attention Architecture Code</h3>
+
+<p>you might be familiar with the code below if you’ve implemented attention mechanism on your own (more explanation below)</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Attention</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sh">"""</span><span class="s">Multi-head attention module.</span><span class="sh">"""</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="n">ModelArgs</span><span class="p">):</span>
+        <span class="sh">"""</span><span class="s">
+        Initialize the Attention module.
+
+        Args:
+            args (ModelArgs): Model configuration parameters.
+
+        Attributes:
+            n_kv_heads (int): Number of key and value heads.
+            n_local_heads (int): Number of local query heads.
+            n_local_kv_heads (int): Number of local key and value heads.
+            n_rep (int): Number of repetitions for local heads.
+            head_dim (int): Dimension size of each attention head.
+            wq (ColumnParallelLinear): Linear transformation for queries.
+            wk (ColumnParallelLinear): Linear transformation for keys.
+            wv (ColumnParallelLinear): Linear transformation for values.
+            wo (RowParallelLinear): Linear transformation for output.
+            cache_k (torch.Tensor): Cached keys for attention.
+            cache_v (torch.Tensor): Cached values for attention.
+
+        </span><span class="sh">"""</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">n_kv_heads</span> <span class="o">=</span> <span class="n">args</span><span class="p">.</span><span class="n">n_heads</span> <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">n_kv_heads</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">args</span><span class="p">.</span><span class="n">n_kv_heads</span>
+<span class="c1">#         model_parallel_size = fs_init.get_model_parallel_world_size()
+</span>        <span class="n">self</span><span class="p">.</span><span class="n">n_local_heads</span> <span class="o">=</span> <span class="n">args</span><span class="p">.</span><span class="n">n_heads</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">n_kv_heads</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">n_rep</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">n_local_heads</span> <span class="o">//</span> <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span> <span class="o">=</span> <span class="n">args</span><span class="p">.</span><span class="n">dim</span> <span class="o">//</span> <span class="n">args</span><span class="p">.</span><span class="n">n_heads</span>
+
+        <span class="n">self</span><span class="p">.</span><span class="n">wq</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">dim</span><span class="p">,</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">n_heads</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+
+        <span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">wk</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">dim</span><span class="p">,</span>
+            <span class="n">self</span><span class="p">.</span><span class="n">n_kv_heads</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+
+        <span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">wv</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">dim</span><span class="p">,</span>
+            <span class="n">self</span><span class="p">.</span><span class="n">n_kv_heads</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+
+        <span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">wo</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">n_heads</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">dim</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+
+        <span class="p">)</span>
+
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">args</span><span class="p">.</span><span class="n">max_batch_size</span><span class="p">,</span>
+                <span class="n">args</span><span class="p">.</span><span class="n">max_seq_len</span><span class="p">,</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span><span class="p">,</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">args</span><span class="p">.</span><span class="n">max_batch_size</span><span class="p">,</span>
+                <span class="n">args</span><span class="p">.</span><span class="n">max_seq_len</span><span class="p">,</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span><span class="p">,</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="n">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="p">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">start_pos</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="c1">#         freqs_cis: torch.Tensor,
+</span>        <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="p">.</span><span class="n">Tensor</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="sh">"""</span><span class="s">
+        Forward pass of the attention module.
+
+        Args:
+            x (torch.Tensor): Input tensor.
+            start_pos (int): Starting position for caching.
+            freqs_cis (torch.Tensor): Precomputed frequency tensor.
+            mask (torch.Tensor, optional): Attention mask tensor.
+
+        Returns:
+            torch.Tensor: Output tensor after attention.
+
+        </span><span class="sh">"""</span>
+        <span class="n">bsz</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span>
+
+        <span class="n">xq</span><span class="p">,</span> <span class="n">xk</span><span class="p">,</span> <span class="n">xv</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">wq</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">self</span><span class="p">.</span><span class="nf">wk</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">self</span><span class="p">.</span><span class="nf">wv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">xq</span> <span class="o">=</span> <span class="n">xq</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">n_local_heads</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">)</span>
+        <span class="n">xk</span> <span class="o">=</span> <span class="n">xk</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">)</span>
+        <span class="n">xv</span> <span class="o">=</span> <span class="n">xv</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">)</span>
+
+<span class="c1">#         xq, xk = apply_rotary_emb(xq, xk, freqs_cis=freqs_cis)
+</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">.</span><span class="nf">to</span><span class="p">(</span><span class="n">xq</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">.</span><span class="nf">to</span><span class="p">(</span><span class="n">xq</span><span class="p">)</span>
+
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xk</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xv</span>
+
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+
+        <span class="c1"># Grouped Query Attention
+</span>        <span class="c1"># for production use repeat_kv function, it's memory efficient
+</span>        <span class="c1">## Repeat the key, values heads, repeats values at dim =2 self.n_rep times, now keys and values size match query size.
+</span>        <span class="n">keys</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">repeats</span><span class="o">=</span><span class="n">self</span><span class="p">.</span><span class="n">n_rep</span><span class="p">)</span> <span class="c1"># (bs, cache_len + seqlen, n_local_heads, head_dim)
+</span>        <span class="n">values</span><span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">repeats</span><span class="o">=</span><span class="n">self</span><span class="p">.</span><span class="n">n_rep</span><span class="p">)</span> <span class="c1"># (bs, cache_len + seqlen, n_local_heads, head_dim)
+</span>
+
+        <span class="n">xq</span> <span class="o">=</span> <span class="n">xq</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># (bs, n_local_heads, seqlen, head_dim)
+</span>        <span class="n">keys</span> <span class="o">=</span> <span class="n">keys</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c1"># (bs, n_local_heads, cache_len + seqlen, head_dim)
+</span>        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c1"># (bs, n_local_heads, cache_len + seqlen, head_dim)
+</span>
+        <span class="nf">print</span><span class="p">(</span><span class="n">xq</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="n">keys</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">).</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">matmul</span><span class="p">(</span><span class="n">xq</span><span class="p">,</span> <span class="n">keys</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> <span class="o">/</span> <span class="n">math</span><span class="p">.</span><span class="nf">sqrt</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span> <span class="o">+</span> <span class="n">mask</span>  <span class="c1"># (bs, n_local_heads, seqlen, cache_len + seqlen)
+</span>        <span class="n">scores</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">scores</span><span class="p">.</span><span class="nf">float</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">).</span><span class="nf">type_as</span><span class="p">(</span><span class="n">xq</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">matmul</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>  <span class="c1"># (bs, n_local_heads, seqlen, head_dim)
+</span>        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">).</span><span class="nf">contiguous</span><span class="p">().</span><span class="nf">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="nf">wo</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="inferencing-code">Inferencing code</h3>
+
+<p>This code generates embedding for next tokens by passing existing sequence of tokens to our attention layer (not FFNN) and append it to our existing sequence of tokens and pass it again to the attention layer and do it to generate it til 10 tokens.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="n">torch</span>
+<span class="kn">import</span> <span class="n">torch.nn</span> <span class="k">as</span> <span class="n">nn</span>
+<span class="kn">import</span> <span class="n">math</span>
+
+
+
+<span class="c1"># Define a simple ModelArgs class for testing
+</span>
+<span class="c1"># Initialize the Attention module
+</span><span class="n">args</span> <span class="o">=</span> <span class="nc">ModelArgs</span><span class="p">()</span>
+<span class="n">attn</span> <span class="o">=</span> <span class="nc">Attention</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+<span class="c1"># Input sentence and tokenization
+</span><span class="n">sentence</span> <span class="o">=</span> <span class="sh">'</span><span class="s">this is awesome</span><span class="sh">'</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="sh">'</span><span class="s"> </span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># Hyperparameters
+</span><span class="n">B</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Batch size
+</span><span class="n">T</span> <span class="o">=</span> <span class="nf">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>  <span class="c1"># Sequence length
+</span><span class="n">C</span> <span class="o">=</span> <span class="n">args</span><span class="p">.</span><span class="n">dim</span>  <span class="c1"># Feature dimension
+</span>
+<span class="c1"># Initialize input tensor with random values (for demonstration)
+</span><span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">args</span><span class="p">.</span><span class="n">max_seq_len</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>  <span class="c1"># Shape: (batch_size, max_seq_len, feature_dim)
+</span>
+<span class="c1"># Inference loop
+</span><span class="n">start_pos</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">cur_pos</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>  <span class="c1"># Generate tokens up to max_seq_len
+</span>
+    <span class="c1"># Forward pass through the attention module
+</span>    <span class="n">out</span> <span class="o">=</span> <span class="nf">attn</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">start_pos</span><span class="p">:</span><span class="n">cur_pos</span><span class="p">],</span> <span class="n">start_pos</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>  <span class="c1"># Shape: (batch_size, cur_pos - start_pos, feature_dim)
+</span>
+    <span class="c1"># Update the input tensor with the output for the next position
+</span>    <span class="n">x</span><span class="p">[:,</span> <span class="n">cur_pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># Take the last token's output and append it to the sequence
+</span>
+    <span class="c1"># Update start_pos for the next iteration
+</span>    <span class="n">start_pos</span> <span class="o">=</span> <span class="n">cur_pos</span>
+
+<span class="c1"># Final output
+</span><span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">Final output tensor:</span><span class="sh">"</span><span class="p">)</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>let’s break down the whole code one by one</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Initialize the Attention module
+</span><span class="n">args</span> <span class="o">=</span> <span class="nc">ModelArgs</span><span class="p">()</span>
+<span class="n">attn</span> <span class="o">=</span> <span class="nc">Attention</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+<span class="c1"># Input sentence and tokenization
+</span><span class="n">sentence</span> <span class="o">=</span> <span class="sh">'</span><span class="s">this is a</span><span class="sh">'</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="sh">'</span><span class="s"> </span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># Hyperparameters
+</span><span class="n">B</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Batch size
+</span><span class="n">T</span> <span class="o">=</span> <span class="nf">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>  <span class="c1"># Sequence length
+</span><span class="n">C</span> <span class="o">=</span> <span class="n">args</span><span class="p">.</span><span class="n">dim</span>  <span class="c1"># Feature dimension
+</span>
+<span class="c1"># Initialize input tensor with random values (for demonstration)
+</span><span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">args</span><span class="p">.</span><span class="n">max_seq_len</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>  <span class="c1"># Shape: (batch_size, max_seq_len, feature_dim)
+</span></code></pre></div></div>
+
+<p>this is straightforward, we have initial sentence that we pass it to the model i.e “this is awesome”, construct a random input matrix “x” of (batch_size, max_seq_len, feature_dim). In real, these random input matrix is the matrix full of input embeddings.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">start_pos</span> <span class="o">=</span> <span class="mi">0</span>
+</code></pre></div></div>
+
+<p>the is the starting point for caching, since we haven’t cached anything yet, we start from the initial position i.e 0 for token “this”</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">cur_pos</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>  <span class="c1"># Generate tokens up to max_seq_len
+</span>
+    <span class="c1"># Forward pass through the attention module
+</span>    <span class="n">out</span> <span class="o">=</span> <span class="nf">attn</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">start_pos</span><span class="p">:</span><span class="n">cur_pos</span><span class="p">],</span> <span class="n">start_pos</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>  <span class="c1"># Shape: (batch_size, cur_pos - start_pos, feature_dim)
+</span>
+    <span class="c1"># Update the input tensor with the output for the next position
+</span>    <span class="n">x</span><span class="p">[:,</span> <span class="n">cur_pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># Take the last token's output and append it to the sequence
+</span>
+    <span class="c1"># Update start_pos for the next iteration
+</span>    <span class="n">start_pos</span> <span class="o">=</span> <span class="n">cur_pos</span>
+</code></pre></div></div>
+
+<p>we iterate from T,10 because we already have tokens til T and we want to generate 10-T tokens.</p>
+
+<p>we pass the sequence from start_pos:cur_pos to our attn architecture.</p>
+
+<p>first this will be x[:, 0:3] (which is the initial tokens “this is a”, because we first need to calculate the attention for these initial tokens and cache them first.</p>
+
+<p>let’s directly come down to this part of code, because all other are usual code for attention without caching.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xk</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xv</span>
+
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>as you can see we first cache xk to the positions [:bsz, start_pos : start_pos + seqlen]</p>
+
+<p>which is basically caching this index of our input [:1, 0:3] which is basically the initially tokens (‘this is a’)</p>
+
+<p>and then we pluck out the same tokens from our cached keys and cached values</p>
+
+<p>keys = self.cache_k[:bsz, : start_pos + seqlen]</p>
+
+<p>this plucking out will make sense in the next run.</p>
+
+<p>now rest of the code in the attn class is executed and we get output same as the size of query i.e which is prediction for these positions [:bsz, start_pos : start_pos + seqlen]</p>
+
+<p>and then we pluck out the last one, because its want we need and add it in the end of our input x[:, cur_pos] = out[:, -1, :].</p>
+
+<p>now lets say the predicted token was “good”, we now have sequence “this is a good”
+and start_pos=3,
+and now in the next iteration cur_pos=4, we pass this input i.e (x[:, 3:4], 3, None) to our attention</p>
+
+<p>as you can see this is simply the prediction from earlier iteration and this is what we pass, because we only need the embedding for this token “good”.</p>
+
+<p>and then we <strong>only</strong> this new token in the code</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	    <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xk</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xv</span>
+</code></pre></div></div>
+
+<p>self.cache_k[:bsz, 3:3 + 1], as you can see we are just appending this new token to the preivous cache to be used in the later iteration.</p>
+
+<p>now we pluck out this cache</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="n">keys</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>i.e keys = self.cache_k[:bsz, :3+1] which is the key and values cache til that token and simply calculate the attention scores and apply them, and this process goes on until the required sequence is generated (in our case 10)</p>
+
+<p>This is all we need to know about KV cache.</p>
+
+<h2 id="grouped-query-attention">Grouped Query Attention</h2>
+
+<h3 id="explanation">Explanation</h3>
+
+<p>As we know the main bottleneck while training and inferencing is not the amount of operations that our GPU can perform but rather the amount of data our GPU can move between tensor cores and the GPU memory. This is what GQA tries to solve, it tries to achieve balance between the accuracy of Multi-Head Attention (it performs better than these attention variants) and speed of attention calculation.
+<img src="kv1.png" alt="kv1" /></p>
+
+<p>The picture below accurately explains Multi-Head Attention (MHA), Multi-Query Attention (MQA)
+and Grouped Query Attention (GQA)</p>
+
+<p>The main difference between them is:</p>
+
+<ul>
+  <li>MHA : Q,K,V are divided into equal number of heads</li>
+  <li>MQA: Only Q is divided into different heads, whereas K,V remain the same. However, the resulting number of attention heads are the same as MHA. (K,V are same, we don’t have to move data back and forth, this is where it helps in achieving performance gains.)</li>
+  <li>GQA: Query is divided into total number of heads but mainly in groups, and K, V have different number of heads mainly referred to as kv_heads. As shown in the figure, similar group of query interact with their respective heads.
+<img src="kv2.png" alt="kv2" /></li>
+</ul>
+
+<h3 id="code-for-gqa">Code for GQA</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="n">keys</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">repeats</span><span class="o">=</span><span class="n">self</span><span class="p">.</span><span class="n">n_rep</span><span class="p">)</span> <span class="c1"># (bs, cache_len + seqlen, n_local_heads, head_dim)
+</span>        <span class="n">values</span><span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">repeats</span><span class="o">=</span><span class="n">self</span><span class="p">.</span><span class="n">n_rep</span><span class="p">)</span> <span class="c1">#
+</span></code></pre></div></div>
+
+<p>The way this code works is just by duplicating the keys and values across the dim=2, self.n_rep number of times. This self.n_rep is obtained by dividing self.n_local_heads by self.n_local_kv_heads.</p>
+
+<p>For instance, lets say our keys were (2,2,2,4) ( # (bs, cache_len + seqlen, n_local_kv_heads, head_dim))</p>
+
+<p>The dimension across n_local_kv_heads will be repeated self.n_rep times,</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span> <span class="c1"># B,T,n_kv_head, head_dim
+</span><span class="n">a</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[[[ 0.6406, -1.2496,  0.9831, -0.3773],
+          [ 1.0520,  0.5683,  0.6138,  0.0082]],
+
+         [[-0.6792,  1.0518,  0.6339,  0.9386],
+          [-0.0693,  0.8445,  1.8666,  1.6446]]],
+
+
+        [[[-0.5852, -1.5809, -0.3186,  1.2536],
+          [-0.9714,  0.4342, -1.0229,  0.1140]],
+
+         [[-0.4645,  0.6589, -0.6345,  0.9500],
+          [ 0.3443, -0.7342, -0.0163,  0.3242]]]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">torch</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">repeats</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[[[ 0.6406, -1.2496,  0.9831, -0.3773],
+          [ 0.6406, -1.2496,  0.9831, -0.3773],
+          [ 1.0520,  0.5683,  0.6138,  0.0082],
+          [ 1.0520,  0.5683,  0.6138,  0.0082]],
+
+         [[-0.6792,  1.0518,  0.6339,  0.9386],
+          [-0.6792,  1.0518,  0.6339,  0.9386],
+          [-0.0693,  0.8445,  1.8666,  1.6446],
+          [-0.0693,  0.8445,  1.8666,  1.6446]]],
+
+
+        [[[-0.5852, -1.5809, -0.3186,  1.2536],
+          [-0.5852, -1.5809, -0.3186,  1.2536],
+          [-0.9714,  0.4342, -1.0229,  0.1140],
+          [-0.9714,  0.4342, -1.0229,  0.1140]],
+
+         [[-0.4645,  0.6589, -0.6345,  0.9500],
+          [-0.4645,  0.6589, -0.6345,  0.9500],
+          [ 0.3443, -0.7342, -0.0163,  0.3242],
+          [ 0.3443, -0.7342, -0.0163,  0.3242]]]])
+</code></pre></div></div>
+
+<p>you can see how the values are copied one by one 2 times for this scenario.</p>
+
+<p>BUT, this simply copies the numbers twice, there’s another way that’s used in Llama code</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">repeat_kv</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="p">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">n_rep</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="p">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sh">"""</span><span class="s">torch.repeat_interleave(x, dim=2, repeats=n_rep)</span><span class="sh">"""</span>
+    <span class="n">bs</span><span class="p">,</span> <span class="n">slen</span><span class="p">,</span> <span class="n">n_kv_heads</span><span class="p">,</span> <span class="n">head_dim</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">n_rep</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="nf">return </span><span class="p">(</span>
+        <span class="n">x</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="bp">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="p">.</span><span class="nf">expand</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">slen</span><span class="p">,</span> <span class="n">n_kv_heads</span><span class="p">,</span> <span class="n">n_rep</span><span class="p">,</span> <span class="n">head_dim</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">reshape</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">slen</span><span class="p">,</span> <span class="n">n_kv_heads</span> <span class="o">*</span> <span class="n">n_rep</span><span class="p">,</span> <span class="n">head_dim</span><span class="p">)</span>
+    <span class="p">)</span>
+</code></pre></div></div>
+
+<p>It performs the same operation as torch.repeat_interleave, but the in a more memory efficient way.</p>
+
+<p>x[:, :, :, None, :] adding None will add one extra dimension to our vector. its shape will be (2,2,2,1,4)</p>
+
+<p>.expand(bs, slen, n_kv_heads, n_rep, head_dim) will expand(repeat) the the singleton dimension i.e our dimension 3 to n_rep, it will repeat n_rep times but not by copying the same elements but by creating a new view for that dimension which points to the same old memory location, and then we reshape it to (bs, slen, n_kv_heads * n_rep, head_dim).</p>
+
+<p>By not copying and simply creating a new view, it saves memory.</p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Kv Cache Gqa</h1>
+    <time datetime="2025-01-18T00:00:00+05:45">
+      January 18, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><h2 id="kv-cache">KV Cache</h2>
+
+<h3 id="kv-cache-visual-operation">KV cache visual operation</h3>
+
+<p>In the note blow, I first describe how inferencing is done if we simply do operation without KV cache and then describe how KV cache helps removing redundant operations.</p>
+
+<p>We don’t make use of KV cache while training because we already have data filled for each sequence length, we don’t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one. To understand better look at the notes below.</p>
+
+<p><img src="kvnote1.jpg" alt="kvnote1" /></p>
+
+<p><img src="kvnote2.jpg" alt="kvnote2" />
+<img src="kvnote3.jpg" alt="kvnote3" /></p>
+
+<h3 id="memory-needed-for-storing-kv-cache">Memory needed for storing KV cache</h3>
+
+<p>let’s calculate total memory needed for storing KV cache</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>batch_size = 1 (for inferencing)
+d_model = 4096
+num_of_kv_heads = 32
+head_dim = d_model/num_of_kv_heads = 128
+seq_len = 10000
+precision (fp16) = 2 bytes
+
+2 (for k and v separately) x precision x head_dim x num_of_kv_heads x d_model x seq_len x batch_size = 5,24,28,80,000 bytes close to 5GB
+</code></pre></div></div>
+
+<p>lets say we have 7B parameter model, 7x10^9 x2 (bytes) = 14x10^9 bytes = 14GB</p>
+
+<p>we need almost 1/3 total memory for inferencing.</p>
+
+<p>Let’s explore the code for using KV cache in Llama models.</p>
+
+<p>Please note I’ve modified some part of the original Llama code below to just explain the case of KV cache here.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ModelArgs</span><span class="p">:</span>
+    <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4096</span>
+    <span class="n">n_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">n_heads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">n_kv_heads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span> <span class="c1"># modified to explain GQA
+</span>    <span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># defined later by tokenizer
+</span>    <span class="n">multiple_of</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span>  <span class="c1"># make SwiGLU hidden layer size multiple of large power of 2
+</span>    <span class="n">ffn_dim_multiplier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">norm_eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span>
+
+    <span class="n">max_batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span>
+
+</code></pre></div></div>
+
+<h3 id="attention-architecture-code">Attention Architecture Code</h3>
+
+<p>you might be familiar with the code below if you’ve implemented attention mechanism on your own (more explanation below)</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Attention</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sh">"""</span><span class="s">Multi-head attention module.</span><span class="sh">"""</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="n">ModelArgs</span><span class="p">):</span>
+        <span class="sh">"""</span><span class="s">
+        Initialize the Attention module.
+
+        Args:
+            args (ModelArgs): Model configuration parameters.
+
+        Attributes:
+            n_kv_heads (int): Number of key and value heads.
+            n_local_heads (int): Number of local query heads.
+            n_local_kv_heads (int): Number of local key and value heads.
+            n_rep (int): Number of repetitions for local heads.
+            head_dim (int): Dimension size of each attention head.
+            wq (ColumnParallelLinear): Linear transformation for queries.
+            wk (ColumnParallelLinear): Linear transformation for keys.
+            wv (ColumnParallelLinear): Linear transformation for values.
+            wo (RowParallelLinear): Linear transformation for output.
+            cache_k (torch.Tensor): Cached keys for attention.
+            cache_v (torch.Tensor): Cached values for attention.
+
+        </span><span class="sh">"""</span>
+        <span class="nf">super</span><span class="p">().</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">n_kv_heads</span> <span class="o">=</span> <span class="n">args</span><span class="p">.</span><span class="n">n_heads</span> <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">n_kv_heads</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">args</span><span class="p">.</span><span class="n">n_kv_heads</span>
+<span class="c1">#         model_parallel_size = fs_init.get_model_parallel_world_size()
+</span>        <span class="n">self</span><span class="p">.</span><span class="n">n_local_heads</span> <span class="o">=</span> <span class="n">args</span><span class="p">.</span><span class="n">n_heads</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">n_kv_heads</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">n_rep</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">n_local_heads</span> <span class="o">//</span> <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span> <span class="o">=</span> <span class="n">args</span><span class="p">.</span><span class="n">dim</span> <span class="o">//</span> <span class="n">args</span><span class="p">.</span><span class="n">n_heads</span>
+
+        <span class="n">self</span><span class="p">.</span><span class="n">wq</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">dim</span><span class="p">,</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">n_heads</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+
+        <span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">wk</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">dim</span><span class="p">,</span>
+            <span class="n">self</span><span class="p">.</span><span class="n">n_kv_heads</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+
+        <span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">wv</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">dim</span><span class="p">,</span>
+            <span class="n">self</span><span class="p">.</span><span class="n">n_kv_heads</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+
+        <span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">wo</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">n_heads</span> <span class="o">*</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">args</span><span class="p">.</span><span class="n">dim</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+
+        <span class="p">)</span>
+
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">args</span><span class="p">.</span><span class="n">max_batch_size</span><span class="p">,</span>
+                <span class="n">args</span><span class="p">.</span><span class="n">max_seq_len</span><span class="p">,</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span><span class="p">,</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">args</span><span class="p">.</span><span class="n">max_batch_size</span><span class="p">,</span>
+                <span class="n">args</span><span class="p">.</span><span class="n">max_seq_len</span><span class="p">,</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span><span class="p">,</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="n">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="p">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">start_pos</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="c1">#         freqs_cis: torch.Tensor,
+</span>        <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="p">.</span><span class="n">Tensor</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="sh">"""</span><span class="s">
+        Forward pass of the attention module.
+
+        Args:
+            x (torch.Tensor): Input tensor.
+            start_pos (int): Starting position for caching.
+            freqs_cis (torch.Tensor): Precomputed frequency tensor.
+            mask (torch.Tensor, optional): Attention mask tensor.
+
+        Returns:
+            torch.Tensor: Output tensor after attention.
+
+        </span><span class="sh">"""</span>
+        <span class="n">bsz</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span>
+
+        <span class="n">xq</span><span class="p">,</span> <span class="n">xk</span><span class="p">,</span> <span class="n">xv</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">wq</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">self</span><span class="p">.</span><span class="nf">wk</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">self</span><span class="p">.</span><span class="nf">wv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">xq</span> <span class="o">=</span> <span class="n">xq</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">n_local_heads</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">)</span>
+        <span class="n">xk</span> <span class="o">=</span> <span class="n">xk</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">)</span>
+        <span class="n">xv</span> <span class="o">=</span> <span class="n">xv</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">n_local_kv_heads</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">)</span>
+
+<span class="c1">#         xq, xk = apply_rotary_emb(xq, xk, freqs_cis=freqs_cis)
+</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">.</span><span class="nf">to</span><span class="p">(</span><span class="n">xq</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">.</span><span class="nf">to</span><span class="p">(</span><span class="n">xq</span><span class="p">)</span>
+
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xk</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xv</span>
+
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+
+        <span class="c1"># Grouped Query Attention
+</span>        <span class="c1"># for production use repeat_kv function, it's memory efficient
+</span>        <span class="c1">## Repeat the key, values heads, repeats values at dim =2 self.n_rep times, now keys and values size match query size.
+</span>        <span class="n">keys</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">repeats</span><span class="o">=</span><span class="n">self</span><span class="p">.</span><span class="n">n_rep</span><span class="p">)</span> <span class="c1"># (bs, cache_len + seqlen, n_local_heads, head_dim)
+</span>        <span class="n">values</span><span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">repeats</span><span class="o">=</span><span class="n">self</span><span class="p">.</span><span class="n">n_rep</span><span class="p">)</span> <span class="c1"># (bs, cache_len + seqlen, n_local_heads, head_dim)
+</span>
+
+        <span class="n">xq</span> <span class="o">=</span> <span class="n">xq</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># (bs, n_local_heads, seqlen, head_dim)
+</span>        <span class="n">keys</span> <span class="o">=</span> <span class="n">keys</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c1"># (bs, n_local_heads, cache_len + seqlen, head_dim)
+</span>        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c1"># (bs, n_local_heads, cache_len + seqlen, head_dim)
+</span>
+        <span class="nf">print</span><span class="p">(</span><span class="n">xq</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="n">keys</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">).</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">matmul</span><span class="p">(</span><span class="n">xq</span><span class="p">,</span> <span class="n">keys</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> <span class="o">/</span> <span class="n">math</span><span class="p">.</span><span class="nf">sqrt</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">head_dim</span><span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span> <span class="o">+</span> <span class="n">mask</span>  <span class="c1"># (bs, n_local_heads, seqlen, cache_len + seqlen)
+</span>        <span class="n">scores</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">scores</span><span class="p">.</span><span class="nf">float</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">).</span><span class="nf">type_as</span><span class="p">(</span><span class="n">xq</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">matmul</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>  <span class="c1"># (bs, n_local_heads, seqlen, head_dim)
+</span>        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">).</span><span class="nf">contiguous</span><span class="p">().</span><span class="nf">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="nf">wo</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="inferencing-code">Inferencing code</h3>
+
+<p>This code generates embedding for next tokens by passing existing sequence of tokens to our attention layer (not FFNN) and append it to our existing sequence of tokens and pass it again to the attention layer and do it to generate it til 10 tokens.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="n">torch</span>
+<span class="kn">import</span> <span class="n">torch.nn</span> <span class="k">as</span> <span class="n">nn</span>
+<span class="kn">import</span> <span class="n">math</span>
+
+
+
+<span class="c1"># Define a simple ModelArgs class for testing
+</span>
+<span class="c1"># Initialize the Attention module
+</span><span class="n">args</span> <span class="o">=</span> <span class="nc">ModelArgs</span><span class="p">()</span>
+<span class="n">attn</span> <span class="o">=</span> <span class="nc">Attention</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+<span class="c1"># Input sentence and tokenization
+</span><span class="n">sentence</span> <span class="o">=</span> <span class="sh">'</span><span class="s">this is awesome</span><span class="sh">'</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="sh">'</span><span class="s"> </span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># Hyperparameters
+</span><span class="n">B</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Batch size
+</span><span class="n">T</span> <span class="o">=</span> <span class="nf">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>  <span class="c1"># Sequence length
+</span><span class="n">C</span> <span class="o">=</span> <span class="n">args</span><span class="p">.</span><span class="n">dim</span>  <span class="c1"># Feature dimension
+</span>
+<span class="c1"># Initialize input tensor with random values (for demonstration)
+</span><span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">args</span><span class="p">.</span><span class="n">max_seq_len</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>  <span class="c1"># Shape: (batch_size, max_seq_len, feature_dim)
+</span>
+<span class="c1"># Inference loop
+</span><span class="n">start_pos</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">cur_pos</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>  <span class="c1"># Generate tokens up to max_seq_len
+</span>
+    <span class="c1"># Forward pass through the attention module
+</span>    <span class="n">out</span> <span class="o">=</span> <span class="nf">attn</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">start_pos</span><span class="p">:</span><span class="n">cur_pos</span><span class="p">],</span> <span class="n">start_pos</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>  <span class="c1"># Shape: (batch_size, cur_pos - start_pos, feature_dim)
+</span>
+    <span class="c1"># Update the input tensor with the output for the next position
+</span>    <span class="n">x</span><span class="p">[:,</span> <span class="n">cur_pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># Take the last token's output and append it to the sequence
+</span>
+    <span class="c1"># Update start_pos for the next iteration
+</span>    <span class="n">start_pos</span> <span class="o">=</span> <span class="n">cur_pos</span>
+
+<span class="c1"># Final output
+</span><span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">Final output tensor:</span><span class="sh">"</span><span class="p">)</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>let’s break down the whole code one by one</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Initialize the Attention module
+</span><span class="n">args</span> <span class="o">=</span> <span class="nc">ModelArgs</span><span class="p">()</span>
+<span class="n">attn</span> <span class="o">=</span> <span class="nc">Attention</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+<span class="c1"># Input sentence and tokenization
+</span><span class="n">sentence</span> <span class="o">=</span> <span class="sh">'</span><span class="s">this is a</span><span class="sh">'</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="sh">'</span><span class="s"> </span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># Hyperparameters
+</span><span class="n">B</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Batch size
+</span><span class="n">T</span> <span class="o">=</span> <span class="nf">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>  <span class="c1"># Sequence length
+</span><span class="n">C</span> <span class="o">=</span> <span class="n">args</span><span class="p">.</span><span class="n">dim</span>  <span class="c1"># Feature dimension
+</span>
+<span class="c1"># Initialize input tensor with random values (for demonstration)
+</span><span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">args</span><span class="p">.</span><span class="n">max_seq_len</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>  <span class="c1"># Shape: (batch_size, max_seq_len, feature_dim)
+</span></code></pre></div></div>
+
+<p>this is straightforward, we have initial sentence that we pass it to the model i.e “this is awesome”, construct a random input matrix “x” of (batch_size, max_seq_len, feature_dim). In real, these random input matrix is the matrix full of input embeddings.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">start_pos</span> <span class="o">=</span> <span class="mi">0</span>
+</code></pre></div></div>
+
+<p>the is the starting point for caching, since we haven’t cached anything yet, we start from the initial position i.e 0 for token “this”</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">cur_pos</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>  <span class="c1"># Generate tokens up to max_seq_len
+</span>
+    <span class="c1"># Forward pass through the attention module
+</span>    <span class="n">out</span> <span class="o">=</span> <span class="nf">attn</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">start_pos</span><span class="p">:</span><span class="n">cur_pos</span><span class="p">],</span> <span class="n">start_pos</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>  <span class="c1"># Shape: (batch_size, cur_pos - start_pos, feature_dim)
+</span>
+    <span class="c1"># Update the input tensor with the output for the next position
+</span>    <span class="n">x</span><span class="p">[:,</span> <span class="n">cur_pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># Take the last token's output and append it to the sequence
+</span>
+    <span class="c1"># Update start_pos for the next iteration
+</span>    <span class="n">start_pos</span> <span class="o">=</span> <span class="n">cur_pos</span>
+</code></pre></div></div>
+
+<p>we iterate from T,10 because we already have tokens til T and we want to generate 10-T tokens.</p>
+
+<p>we pass the sequence from start_pos:cur_pos to our attn architecture.</p>
+
+<p>first this will be x[:, 0:3] (which is the initial tokens “this is a”, because we first need to calculate the attention for these initial tokens and cache them first.</p>
+
+<p>let’s directly come down to this part of code, because all other are usual code for attention without caching.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xk</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xv</span>
+
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>as you can see we first cache xk to the positions [:bsz, start_pos : start_pos + seqlen]</p>
+
+<p>which is basically caching this index of our input [:1, 0:3] which is basically the initially tokens (‘this is a’)</p>
+
+<p>and then we pluck out the same tokens from our cached keys and cached values</p>
+
+<p>keys = self.cache_k[:bsz, : start_pos + seqlen]</p>
+
+<p>this plucking out will make sense in the next run.</p>
+
+<p>now rest of the code in the attn class is executed and we get output same as the size of query i.e which is prediction for these positions [:bsz, start_pos : start_pos + seqlen]</p>
+
+<p>and then we pluck out the last one, because its want we need and add it in the end of our input x[:, cur_pos] = out[:, -1, :].</p>
+
+<p>now lets say the predicted token was “good”, we now have sequence “this is a good”
+and start_pos=3,
+and now in the next iteration cur_pos=4, we pass this input i.e (x[:, 3:4], 3, None) to our attention</p>
+
+<p>as you can see this is simply the prediction from earlier iteration and this is what we pass, because we only need the embedding for this token “good”.</p>
+
+<p>and then we <strong>only</strong> this new token in the code</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	    <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xk</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="n">start_pos</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span> <span class="o">=</span> <span class="n">xv</span>
+</code></pre></div></div>
+
+<p>self.cache_k[:bsz, 3:3 + 1], as you can see we are just appending this new token to the preivous cache to be used in the later iteration.</p>
+
+<p>now we pluck out this cache</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="n">keys</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_k</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">cache_v</span><span class="p">[:</span><span class="n">bsz</span><span class="p">,</span> <span class="p">:</span> <span class="n">start_pos</span> <span class="o">+</span> <span class="n">seqlen</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>i.e keys = self.cache_k[:bsz, :3+1] which is the key and values cache til that token and simply calculate the attention scores and apply them, and this process goes on until the required sequence is generated (in our case 10)</p>
+
+<p>This is all we need to know about KV cache.</p>
+
+<h2 id="grouped-query-attention">Grouped Query Attention</h2>
+
+<h3 id="explanation">Explanation</h3>
+
+<p>As we know the main bottleneck while training and inferencing is not the amount of operations that our GPU can perform but rather the amount of data our GPU can move between tensor cores and the GPU memory. This is what GQA tries to solve, it tries to achieve balance between the accuracy of Multi-Head Attention (it performs better than these attention variants) and speed of attention calculation.
+<img src="kv1.png" alt="kv1" /></p>
+
+<p>The picture below accurately explains Multi-Head Attention (MHA), Multi-Query Attention (MQA)
+and Grouped Query Attention (GQA)</p>
+
+<p>The main difference between them is:</p>
+
+<ul>
+  <li>MHA : Q,K,V are divided into equal number of heads</li>
+  <li>MQA: Only Q is divided into different heads, whereas K,V remain the same. However, the resulting number of attention heads are the same as MHA. (K,V are same, we don’t have to move data back and forth, this is where it helps in achieving performance gains.)</li>
+  <li>GQA: Query is divided into total number of heads but mainly in groups, and K, V have different number of heads mainly referred to as kv_heads. As shown in the figure, similar group of query interact with their respective heads.
+<img src="kv2.png" alt="kv2" /></li>
+</ul>
+
+<h3 id="code-for-gqa">Code for GQA</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="n">keys</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">repeats</span><span class="o">=</span><span class="n">self</span><span class="p">.</span><span class="n">n_rep</span><span class="p">)</span> <span class="c1"># (bs, cache_len + seqlen, n_local_heads, head_dim)
+</span>        <span class="n">values</span><span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">repeats</span><span class="o">=</span><span class="n">self</span><span class="p">.</span><span class="n">n_rep</span><span class="p">)</span> <span class="c1">#
+</span></code></pre></div></div>
+
+<p>The way this code works is just by duplicating the keys and values across the dim=2, self.n_rep number of times. This self.n_rep is obtained by dividing self.n_local_heads by self.n_local_kv_heads.</p>
+
+<p>For instance, lets say our keys were (2,2,2,4) ( # (bs, cache_len + seqlen, n_local_kv_heads, head_dim))</p>
+
+<p>The dimension across n_local_kv_heads will be repeated self.n_rep times,</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span> <span class="c1"># B,T,n_kv_head, head_dim
+</span><span class="n">a</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[[[ 0.6406, -1.2496,  0.9831, -0.3773],
+          [ 1.0520,  0.5683,  0.6138,  0.0082]],
+
+         [[-0.6792,  1.0518,  0.6339,  0.9386],
+          [-0.0693,  0.8445,  1.8666,  1.6446]]],
+
+
+        [[[-0.5852, -1.5809, -0.3186,  1.2536],
+          [-0.9714,  0.4342, -1.0229,  0.1140]],
+
+         [[-0.4645,  0.6589, -0.6345,  0.9500],
+          [ 0.3443, -0.7342, -0.0163,  0.3242]]]])
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">torch</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">repeats</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor([[[[ 0.6406, -1.2496,  0.9831, -0.3773],
+          [ 0.6406, -1.2496,  0.9831, -0.3773],
+          [ 1.0520,  0.5683,  0.6138,  0.0082],
+          [ 1.0520,  0.5683,  0.6138,  0.0082]],
+
+         [[-0.6792,  1.0518,  0.6339,  0.9386],
+          [-0.6792,  1.0518,  0.6339,  0.9386],
+          [-0.0693,  0.8445,  1.8666,  1.6446],
+          [-0.0693,  0.8445,  1.8666,  1.6446]]],
+
+
+        [[[-0.5852, -1.5809, -0.3186,  1.2536],
+          [-0.5852, -1.5809, -0.3186,  1.2536],
+          [-0.9714,  0.4342, -1.0229,  0.1140],
+          [-0.9714,  0.4342, -1.0229,  0.1140]],
+
+         [[-0.4645,  0.6589, -0.6345,  0.9500],
+          [-0.4645,  0.6589, -0.6345,  0.9500],
+          [ 0.3443, -0.7342, -0.0163,  0.3242],
+          [ 0.3443, -0.7342, -0.0163,  0.3242]]]])
+</code></pre></div></div>
+
+<p>you can see how the values are copied one by one 2 times for this scenario.</p>
+
+<p>BUT, this simply copies the numbers twice, there’s another way that’s used in Llama code</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">repeat_kv</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="p">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">n_rep</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="p">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sh">"""</span><span class="s">torch.repeat_interleave(x, dim=2, repeats=n_rep)</span><span class="sh">"""</span>
+    <span class="n">bs</span><span class="p">,</span> <span class="n">slen</span><span class="p">,</span> <span class="n">n_kv_heads</span><span class="p">,</span> <span class="n">head_dim</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">n_rep</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="nf">return </span><span class="p">(</span>
+        <span class="n">x</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="bp">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="p">.</span><span class="nf">expand</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">slen</span><span class="p">,</span> <span class="n">n_kv_heads</span><span class="p">,</span> <span class="n">n_rep</span><span class="p">,</span> <span class="n">head_dim</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">reshape</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">slen</span><span class="p">,</span> <span class="n">n_kv_heads</span> <span class="o">*</span> <span class="n">n_rep</span><span class="p">,</span> <span class="n">head_dim</span><span class="p">)</span>
+    <span class="p">)</span>
+</code></pre></div></div>
+
+<p>It performs the same operation as torch.repeat_interleave, but the in a more memory efficient way.</p>
+
+<p>x[:, :, :, None, :] adding None will add one extra dimension to our vector. its shape will be (2,2,2,1,4)</p>
+
+<p>.expand(bs, slen, n_kv_heads, n_rep, head_dim) will expand(repeat) the the singleton dimension i.e our dimension 3 to n_rep, it will repeat n_rep times but not by copying the same elements but by creating a new view for that dimension which points to the same old memory location, and then we reshape it to (bs, slen, n_kv_heads * n_rep, head_dim).</p>
+
+<p>By not copying and simply creating a new view, it saves memory.</p>
+</div>
+
+  
+  <div class="tags">
+    
+    <span class="tag">architecture</span>
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

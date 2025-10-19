@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Training Speed Optimization - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Training Speed Optimization</h1>
+<p>02 Jan 2025 - cohlem</p>
+
+<h3 id="precision">Precision</h3>
+
+<p>The more the precision point the less operation (TFLOPS) is performed.</p>
+
+<ul>
+  <li>FP64 used for scientific research purposes, where precision is a must.</li>
+  <li>TF32 and BFLOAT16 are mostly used in NN training.</li>
+  <li>INT8 is used for inference.</li>
+</ul>
+
+<p>Picture below shows specifications of A100 GPU.</p>
+
+<p><img src="sub-notes/training-speed-optimization/fig1.png" alt="GPU precision" /></p>
+
+<p>Using these precision points may have some difference in code.
+See pytorch’s docs</p>
+
+<h3 id="torchcompile">torch.compile</h3>
+
+<p>It works in a similar fashion like the GCC compiler. It works by reducing overheads introduced by the python interpreter and optimizing the GPU read and writes.</p>
+
+<p>For instance</p>
+
+<p><img src="sub-notes/training-speed-optimization/fig2.png" alt="gpu memory" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">gelu</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sh">"""</span><span class="s">
+    Applies the GELU activation function to the input.
+    </span><span class="sh">"""</span>
+    <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tanh</span><span class="p">(</span><span class="n">math</span><span class="p">.</span><span class="nf">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="n">math</span><span class="p">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">0.044715</span> <span class="o">*</span> <span class="n">torch</span><span class="p">.</span><span class="nf">pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">))))</span>
+</code></pre></div></div>
+
+<p>First this operation resides in GPU’s HBM memory, and this part of calculation “torch.pow(x, 3)” is passed to GPU and it performs the operations, one by one, the instructions are sent from HBM to GPU cores and transferred back to HBM one by one. But torch.compiles evaluates that the code is simply operation on input x and some +,* and transfers the code to GPU once and does all the operation and send it back to HBM, in this way it optimizes the training process.</p>
+
+<h3 id="flash-attention">Flash attention</h3>
+
+<p>It is somewhat similar to torch.compile’s process but torch.compile itself cannot comprehend our code(shown below) to perform the optimization.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">aw</span> <span class="o">=</span> <span class="p">(</span><span class="n">Q</span> <span class="o">@</span> <span class="n">torch</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="c1"># for matmul dim of q should be B,T,C and k should be B,C,T
+</span><span class="n">aw</span> <span class="o">=</span> <span class="n">aw</span><span class="o">/</span><span class="p">(</span><span class="n">K</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">tril</span><span class="p">[:,:,:</span><span class="n">T</span><span class="p">,:</span><span class="n">T</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="c1"># generate mask
+</span><span class="n">aw</span> <span class="o">=</span> <span class="n">aw</span><span class="p">.</span><span class="nf">masked_fill_</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="nf">float</span><span class="p">(</span><span class="sh">'</span><span class="s">-inf</span><span class="sh">'</span><span class="p">))</span> <span class="c1"># apply mask i.e fill true values with -inf
+</span><span class="n">aw</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">aw</span><span class="p">,</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># -inf values are converted to 0 and then each row is normalized
+</span><span class="n">cv</span> <span class="o">=</span> <span class="n">aw</span> <span class="o">@</span> <span class="n">V</span> <span class="c1"># context vector
+</span>
+
+</code></pre></div></div>
+
+<p>We have to call <strong><code class="language-plaintext highlighter-rouge">torch.nn.functional.scaled_dot_product_attention</code></strong> combined with torch.compile to use FlashAttention in our code.</p>
+
+<h3 id="remove-ugly-numbers">Remove ugly numbers.</h3>
+
+<p>Always include numbers in our code that have powers of 2 in it.</p>
+
+<p>for instance 16,32,64 work best.</p>
+
+<p><strong>Improvements</strong></p>
+
+<p>for instance, while training GPT-2 our vocab_size is 50257</p>
+
+<p>if we factorize it has divisors</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1 | 29 | 1733 50257
+</code></pre></div></div>
+
+<p>None of it have powers of 2, so the GPU performs operation on that matrix by truncating til the last powers of 2 and then doing the operation on the remaining parts, which is inefficient. We can simply increase that number to be a closed number that has powers of 2 such as 50304 = 2^7 × 3 x 131 which has high number of power of 2.</p>
+
+<p>We can simply increase the training speed by making our numbers in our code have more powers of 2.</p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Training Speed Optimization</h1>
+    <time datetime="2025-01-02T00:00:00+05:45">
+      January 02, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><h3 id="precision">Precision</h3>
+
+<p>The more the precision point the less operation (TFLOPS) is performed.</p>
+
+<ul>
+  <li>FP64 used for scientific research purposes, where precision is a must.</li>
+  <li>TF32 and BFLOAT16 are mostly used in NN training.</li>
+  <li>INT8 is used for inference.</li>
+</ul>
+
+<p>Picture below shows specifications of A100 GPU.</p>
+
+<p><img src="sub-notes/training-speed-optimization/fig1.png" alt="GPU precision" /></p>
+
+<p>Using these precision points may have some difference in code.
+See pytorch’s docs</p>
+
+<h3 id="torchcompile">torch.compile</h3>
+
+<p>It works in a similar fashion like the GCC compiler. It works by reducing overheads introduced by the python interpreter and optimizing the GPU read and writes.</p>
+
+<p>For instance</p>
+
+<p><img src="sub-notes/training-speed-optimization/fig2.png" alt="gpu memory" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">gelu</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sh">"""</span><span class="s">
+    Applies the GELU activation function to the input.
+    </span><span class="sh">"""</span>
+    <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tanh</span><span class="p">(</span><span class="n">math</span><span class="p">.</span><span class="nf">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="n">math</span><span class="p">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">0.044715</span> <span class="o">*</span> <span class="n">torch</span><span class="p">.</span><span class="nf">pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">))))</span>
+</code></pre></div></div>
+
+<p>First this operation resides in GPU’s HBM memory, and this part of calculation “torch.pow(x, 3)” is passed to GPU and it performs the operations, one by one, the instructions are sent from HBM to GPU cores and transferred back to HBM one by one. But torch.compiles evaluates that the code is simply operation on input x and some +,* and transfers the code to GPU once and does all the operation and send it back to HBM, in this way it optimizes the training process.</p>
+
+<h3 id="flash-attention">Flash attention</h3>
+
+<p>It is somewhat similar to torch.compile’s process but torch.compile itself cannot comprehend our code(shown below) to perform the optimization.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">aw</span> <span class="o">=</span> <span class="p">(</span><span class="n">Q</span> <span class="o">@</span> <span class="n">torch</span><span class="p">.</span><span class="nf">transpose</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="c1"># for matmul dim of q should be B,T,C and k should be B,C,T
+</span><span class="n">aw</span> <span class="o">=</span> <span class="n">aw</span><span class="o">/</span><span class="p">(</span><span class="n">K</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">tril</span><span class="p">[:,:,:</span><span class="n">T</span><span class="p">,:</span><span class="n">T</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="c1"># generate mask
+</span><span class="n">aw</span> <span class="o">=</span> <span class="n">aw</span><span class="p">.</span><span class="nf">masked_fill_</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="nf">float</span><span class="p">(</span><span class="sh">'</span><span class="s">-inf</span><span class="sh">'</span><span class="p">))</span> <span class="c1"># apply mask i.e fill true values with -inf
+</span><span class="n">aw</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">softmax</span><span class="p">(</span><span class="n">aw</span><span class="p">,</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># -inf values are converted to 0 and then each row is normalized
+</span><span class="n">cv</span> <span class="o">=</span> <span class="n">aw</span> <span class="o">@</span> <span class="n">V</span> <span class="c1"># context vector
+</span>
+
+</code></pre></div></div>
+
+<p>We have to call <strong><code class="language-plaintext highlighter-rouge">torch.nn.functional.scaled_dot_product_attention</code></strong> combined with torch.compile to use FlashAttention in our code.</p>
+
+<h3 id="remove-ugly-numbers">Remove ugly numbers.</h3>
+
+<p>Always include numbers in our code that have powers of 2 in it.</p>
+
+<p>for instance 16,32,64 work best.</p>
+
+<p><strong>Improvements</strong></p>
+
+<p>for instance, while training GPT-2 our vocab_size is 50257</p>
+
+<p>if we factorize it has divisors</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1 | 29 | 1733 50257
+</code></pre></div></div>
+
+<p>None of it have powers of 2, so the GPU performs operation on that matrix by truncating til the last powers of 2 and then doing the operation on the remaining parts, which is inefficient. We can simply increase that number to be a closed number that has powers of 2 such as 50304 = 2^7 × 3 x 131 which has high number of power of 2.</p>
+
+<p>We can simply increase the training speed by making our numbers in our code have more powers of 2.</p>
+</div>
+
+  
+  <div class="tags">
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

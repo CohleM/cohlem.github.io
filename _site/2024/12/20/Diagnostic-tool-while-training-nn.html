@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Diagnostic Tool While Training Nn - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Diagnostic Tool While Training Nn</h1>
+<p>20 Dec 2024 - cohlem</p>
+
+<p>source: <a href="https://www.youtube.com/watch?v=P6sfmUTpUmc&amp;t=3677s"> Building makemore Part 3: Activations &amp; Gradients, BatchNorm</a></p>
+
+<h2 id="things-to-look-out-for-while-training-nn">Things to look out for while training NN</h2>
+
+<p>Take a look at <a href="http://cohlem.github.io/sub-notes/batchnormalization/">previous notes</a> to understand this note better</p>
+
+<p>consider we have this simple 6 layer NN</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Linear Layer
+</span><span class="n">g</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nc">Generator</span><span class="p">().</span><span class="nf">manual_seed</span><span class="p">(</span><span class="mi">2147483647</span><span class="p">)</span> <span class="c1"># for reproducibility
+</span>
+
+<span class="k">class</span> <span class="nc">Layer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">((</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">),</span><span class="n">generator</span> <span class="o">=</span> <span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">fan_in</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span> <span class="c1"># applying kaiming init
+</span>        <span class="n">self</span><span class="p">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">bias</span>
+        <span class="k">if</span> <span class="n">bias</span><span class="p">:</span>
+            <span class="n">self</span><span class="p">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros</span><span class="p">(</span><span class="n">fan_out</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">x</span> <span class="o">@</span> <span class="n">self</span><span class="p">.</span><span class="n">w</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">b</span> <span class="k">if</span> <span class="n">self</span><span class="p">.</span><span class="n">bias</span> <span class="k">else</span> <span class="n">y</span>
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">out</span>
+
+
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">w</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">b</span><span class="p">]</span> <span class="k">if</span> <span class="n">self</span><span class="p">.</span><span class="n">bias</span> <span class="k">else</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">w</span><span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">Tanh</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+
+
+<span class="k">class</span> <span class="nc">BatchNormalization1</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">nf</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span> <span class="n">mom</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">bngain</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">ones</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">bnbias</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">out</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">mom</span> <span class="o">=</span> <span class="n">mom</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">training</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">running_mean</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">ones</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">running_var</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">self</span><span class="p">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="n">meani</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nf">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+            <span class="n">vari</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nf">var</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">meani</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">running_mean</span>
+            <span class="n">vari</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">running_var</span>
+
+        <span class="k">if</span> <span class="n">self</span><span class="p">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">running_mean</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">self</span><span class="p">.</span><span class="n">mom</span><span class="p">)</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">running_mean</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">mom</span><span class="o">*</span><span class="n">meani</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">running_var</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">self</span><span class="p">.</span><span class="n">mom</span><span class="p">)</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">running_var</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">mom</span><span class="o">*</span><span class="n">vari</span>
+
+        <span class="n">self</span><span class="p">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">bngain</span> <span class="o">*</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">meani</span><span class="p">)</span><span class="o">/</span> <span class="n">torch</span><span class="p">.</span><span class="nf">sqrt</span><span class="p">(</span><span class="n">vari</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">eps</span><span class="p">))</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">bnbias</span>
+
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">bngain</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bnbias</span><span class="p">]</span>
+
+</code></pre></div></div>
+
+<p><strong>Structure</strong></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="n">torch.nn.functional</span> <span class="k">as</span> <span class="n">F</span>
+
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="n">generator</span> <span class="o">=</span> <span class="n">g</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">([</span><span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">26</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">32</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="c1"># Embedding layer,
+</span><span class="n">n_embd</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">n_vocab</span> <span class="o">=</span> <span class="mi">27</span>
+<span class="n">n_dim</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">((</span><span class="n">n_vocab</span><span class="p">,</span><span class="n">n_embd</span><span class="p">))</span>
+
+
+<span class="n">st</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># x shape = 32, 30
+</span>    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_embd</span><span class="o">*</span><span class="n">block_size</span><span class="p">,</span><span class="n">n_dim</span><span class="p">),</span> <span class="nc">Tanh</span><span class="p">(),</span>
+    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">),</span> <span class="nc">Tanh</span><span class="p">(),</span>
+    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">)</span> <span class="p">,</span> <span class="nc">Tanh</span><span class="p">(),</span>
+    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">),</span> <span class="nc">Tanh</span><span class="p">(),</span>
+    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">),</span> <span class="nc">Tanh</span><span class="p">(),</span>
+    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_vocab</span><span class="p">),</span><span class="nc">BatchNormalization1</span><span class="p">(</span><span class="n">n_vocab</span><span class="p">)</span>
+<span class="p">]</span>
+
+
+<span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+    <span class="n">st</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">bngain</span> <span class="o">*=</span> <span class="mf">0.1</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nf">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Layer</span><span class="p">):</span>
+            <span class="n">layer</span><span class="p">.</span><span class="n">w</span> <span class="o">*=</span> <span class="mi">5</span><span class="o">/</span><span class="mi">3</span>
+
+
+
+<span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span><span class="n">C</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">st</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">l</span><span class="p">.</span><span class="nf">parameters</span><span class="p">()]</span>
+<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="bp">True</span>
+</code></pre></div></div>
+
+<p><strong>Training Loop</strong></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">200000</span><span class="p">):</span>
+
+    <span class="c1"># for iteration in range(2000):
+</span>    <span class="n">idx</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Xtr</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">batch_size</span><span class="p">,))</span>
+    <span class="n">x_emb</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="n">Xtr</span><span class="p">[</span><span class="n">idx</span><span class="p">]].</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">block_size</span> <span class="o">*</span> <span class="n">n_embd</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x_emb</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">item</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">st</span><span class="p">):</span>
+<span class="c1">#         print(idx)
+</span>        <span class="n">x</span> <span class="o">=</span> <span class="nf">item</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="nf">cross_entropy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">st</span><span class="p">:</span>
+        <span class="n">layer</span><span class="p">.</span><span class="n">out</span><span class="p">.</span><span class="nf">retain_grad</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">grad</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="n">loss</span><span class="p">.</span><span class="nf">backward</span><span class="p">()</span>
+
+    <span class="n">lr</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="k">if</span> <span class="n">iteration</span> <span class="o">&lt;</span> <span class="mi">150000</span> <span class="k">else</span> <span class="mf">0.01</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+
+        <span class="n">p</span><span class="p">.</span><span class="n">data</span> <span class="o">+=</span> <span class="o">-</span><span class="n">lr</span><span class="o">*</span><span class="n">p</span><span class="p">.</span><span class="n">grad</span>
+
+    <span class="k">if</span> <span class="n">iteration</span> <span class="o">%</span> <span class="mi">10000</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nf">print</span><span class="p">(</span><span class="n">loss</span><span class="p">.</span><span class="n">data</span><span class="p">)</span>
+
+<span class="c1">#     if iteration &gt;= 1000:
+#         break
+</span></code></pre></div></div>
+
+<p>let’s look at our activations before initializing weights using kaiming init.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># these are just part of modified code from the code that's given above.
+</span><span class="k">class</span> <span class="nc">Layer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">((</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">),</span><span class="n">generator</span> <span class="o">=</span> <span class="n">g</span><span class="p">)</span> <span class="c1"># / (fan_in)**(0.5) # commenting our the kaiming init
+</span>
+<span class="c1"># part of code
+</span><span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+    <span class="n">st</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">bngain</span> <span class="o">*=</span> <span class="mf">0.1</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nf">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Layer</span><span class="p">):</span>
+            <span class="n">layer</span><span class="p">.</span><span class="n">w</span> <span class="o">*=</span> <span class="mf">1.0</span> <span class="c1"># setting gains to 1.0 (no gain)
+</span>
+
+</code></pre></div></div>
+
+<h3 id="activation-plot">Activation plot</h3>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig1.png" alt="fig1" /></p>
+
+<p>As you can see almost all the pre activations are saturated, this is because our weight is initialized in such a way that after applying tanh, most of our output values lie in -1 and 1, which will stop gradient propagation.</p>
+
+<p>Now applying kaiming init with with no gain.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># these are just part of modified code from the code that's given above.
+</span><span class="k">class</span> <span class="nc">Layer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">((</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">),</span><span class="n">generator</span> <span class="o">=</span> <span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">fan_in</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span> <span class="c1"># applying the kaiming init
+</span>
+<span class="c1"># part of code
+</span><span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+    <span class="n">st</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">bngain</span> <span class="o">*=</span> <span class="mf">0.1</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nf">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Layer</span><span class="p">):</span>
+            <span class="n">layer</span><span class="p">.</span><span class="n">w</span> <span class="o">*=</span> <span class="mf">1.0</span> <span class="c1"># setting gains to 1.0 (no gain)
+</span>
+
+</code></pre></div></div>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig2.png" alt="fig2" /></p>
+
+<p>The plot is starting to look nicer, because there is less saturation, because now values don’t lie in the extreme values of tanh, and gradient will be propagated. But we still have issue, as we can see the standard deviation is decreasing this is because of the property of tanh, i.e it squashes the values, initially (blue plot) the output was decent but in later layers, the distribution is being shrinked that because of the property of tanh.</p>
+
+<p>now let’s apply kaiming init with gain too, for tanh the gain is 5/3.</p>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig3.png" alt="fig3" />
+Now the values are being evenly distributed, and the standard deviation is stable (doesn’t decrease with iteration).</p>
+
+<p>We have to precisely measure the gains to have a stable training. But the introduction of batch normalization changes the case, and we don’t have to be that much aware for precisely initializing weights.</p>
+
+<p>Let’s now apply the batch normalization but without kaiming init and see the same plot.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>st = [
+    # x shape = 32, 30
+    Layer(n_embd*block_size,n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_vocab),BatchNormalization1(n_vocab)
+]
+</code></pre></div></div>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig4.png" alt="fig4" />
+The output values are properly distributed, with very less saturation and a constant standard deviation.</p>
+
+<h3 id="gradient-plot">Gradient plot</h3>
+
+<p>The gradient distribution at each layers would look like this when the pre activations are batch normalized.
+<img src="sub-notes/Diagnostic-tool-while-training-nn/fig5.png" alt="fig5" /></p>
+
+<h3 id="gradient-to-data-ratio-plot">Gradient to data ratio plot</h3>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig6.png" alt="fig6" />
+This is what the ratio of gradient (calculated after backprop) to data plot looks like.
+x-axis represent iterations, y represent the exponents. Ideally, 1e-3 is suitable and that ratio should lie around that line. If the ratio is below that line it means, we need to step up our learning rate, and if it is higher than that line we need to lower our learning rate.</p>
+
+<p>The gain that we add during kaiming init has direct correlation with this plot.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>with torch.no_grad():
+  # last layer: make less confident
+  layers[-1].gamma *= 0.1
+  #layers[-1].weight *= 0.1
+  # all other layers: apply gain
+  for layer in layers[:-1]:
+    if isinstance(layer, Linear):
+      layer.weight *= 0.3
+</code></pre></div></div>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig7.png" alt="fig7" />
+as you can see, when I make gain to 0.3 the ratio significantly varies, i.e ratio for later layers are around 1e-1.5, which mean we would have to lower our learning rate because of this gain change.</p>
+
+<p>So the gain significantly affects our learning rate, but it doesn’t affect other plots that we plot above, because it’s controlled by batch normalization.</p>
+
+<p>So we don’t get a free pass to assign these gains arbitrarily, because it affects our gradients (as seen from the ratio plot). If we don’t worry about these gains, we have to tune these learning rates properly (by increasing or decreasing the learning rate).</p>
+
+<p>These data is analyzed throughout the training of NN</p>
+
+<h3 id="note-to-myself">NOTE to myself</h3>
+
+<p>after any operation look out for how the output’s standard deviation changes, we should always maintain the std of 1</p>
+
+<p>for instance while doing the dot production attention,</p>
+
+<p>Q @ K.T</p>
+
+<p>the output’s std grows by sqrt of last embedding or head dimension, which is the reason why we scale it by the sqrt of that last embedding dimension.</p>
+
+<p>Similarly, in skip connections too the addition of x back to the output introduces increase in std, we should scale that down too as i’ve mentioned <a href="https://cohlem.github.io/sub-notes/optimizing-loss/">here</a></p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Diagnostic Tool While Training Nn</h1>
+    <time datetime="2024-12-20T00:00:00+05:45">
+      December 20, 2024
+    </time>
+  </header>
+
+  <div class="post-content"><p>source: <a href="https://www.youtube.com/watch?v=P6sfmUTpUmc&amp;t=3677s"> Building makemore Part 3: Activations &amp; Gradients, BatchNorm</a></p>
+
+<h2 id="things-to-look-out-for-while-training-nn">Things to look out for while training NN</h2>
+
+<p>Take a look at <a href="http://cohlem.github.io/sub-notes/batchnormalization/">previous notes</a> to understand this note better</p>
+
+<p>consider we have this simple 6 layer NN</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Linear Layer
+</span><span class="n">g</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nc">Generator</span><span class="p">().</span><span class="nf">manual_seed</span><span class="p">(</span><span class="mi">2147483647</span><span class="p">)</span> <span class="c1"># for reproducibility
+</span>
+
+<span class="k">class</span> <span class="nc">Layer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">((</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">),</span><span class="n">generator</span> <span class="o">=</span> <span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">fan_in</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span> <span class="c1"># applying kaiming init
+</span>        <span class="n">self</span><span class="p">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">bias</span>
+        <span class="k">if</span> <span class="n">bias</span><span class="p">:</span>
+            <span class="n">self</span><span class="p">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros</span><span class="p">(</span><span class="n">fan_out</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">x</span> <span class="o">@</span> <span class="n">self</span><span class="p">.</span><span class="n">w</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">b</span> <span class="k">if</span> <span class="n">self</span><span class="p">.</span><span class="n">bias</span> <span class="k">else</span> <span class="n">y</span>
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">out</span>
+
+
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">w</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">b</span><span class="p">]</span> <span class="k">if</span> <span class="n">self</span><span class="p">.</span><span class="n">bias</span> <span class="k">else</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">w</span><span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">Tanh</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+
+
+<span class="k">class</span> <span class="nc">BatchNormalization1</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">nf</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span> <span class="n">mom</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">bngain</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">ones</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">bnbias</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">out</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">mom</span> <span class="o">=</span> <span class="n">mom</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">training</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">running_mean</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">ones</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">running_var</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">zeros</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">self</span><span class="p">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="n">meani</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nf">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+            <span class="n">vari</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nf">var</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdim</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">meani</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">running_mean</span>
+            <span class="n">vari</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">running_var</span>
+
+        <span class="k">if</span> <span class="n">self</span><span class="p">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">running_mean</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">self</span><span class="p">.</span><span class="n">mom</span><span class="p">)</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">running_mean</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">mom</span><span class="o">*</span><span class="n">meani</span>
+                <span class="n">self</span><span class="p">.</span><span class="n">running_var</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">self</span><span class="p">.</span><span class="n">mom</span><span class="p">)</span><span class="o">*</span><span class="n">self</span><span class="p">.</span><span class="n">running_var</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">mom</span><span class="o">*</span><span class="n">vari</span>
+
+        <span class="n">self</span><span class="p">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">bngain</span> <span class="o">*</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">meani</span><span class="p">)</span><span class="o">/</span> <span class="n">torch</span><span class="p">.</span><span class="nf">sqrt</span><span class="p">(</span><span class="n">vari</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">eps</span><span class="p">))</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">bnbias</span>
+
+        <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">bngain</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bnbias</span><span class="p">]</span>
+
+</code></pre></div></div>
+
+<p><strong>Structure</strong></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="n">torch.nn.functional</span> <span class="k">as</span> <span class="n">F</span>
+
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="n">generator</span> <span class="o">=</span> <span class="n">g</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">([</span><span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">26</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">32</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="c1"># Embedding layer,
+</span><span class="n">n_embd</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">n_vocab</span> <span class="o">=</span> <span class="mi">27</span>
+<span class="n">n_dim</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">((</span><span class="n">n_vocab</span><span class="p">,</span><span class="n">n_embd</span><span class="p">))</span>
+
+
+<span class="n">st</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># x shape = 32, 30
+</span>    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_embd</span><span class="o">*</span><span class="n">block_size</span><span class="p">,</span><span class="n">n_dim</span><span class="p">),</span> <span class="nc">Tanh</span><span class="p">(),</span>
+    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">),</span> <span class="nc">Tanh</span><span class="p">(),</span>
+    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">)</span> <span class="p">,</span> <span class="nc">Tanh</span><span class="p">(),</span>
+    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">),</span> <span class="nc">Tanh</span><span class="p">(),</span>
+    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">),</span> <span class="nc">Tanh</span><span class="p">(),</span>
+    <span class="nc">Layer</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_vocab</span><span class="p">),</span><span class="nc">BatchNormalization1</span><span class="p">(</span><span class="n">n_vocab</span><span class="p">)</span>
+<span class="p">]</span>
+
+
+<span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+    <span class="n">st</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">bngain</span> <span class="o">*=</span> <span class="mf">0.1</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nf">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Layer</span><span class="p">):</span>
+            <span class="n">layer</span><span class="p">.</span><span class="n">w</span> <span class="o">*=</span> <span class="mi">5</span><span class="o">/</span><span class="mi">3</span>
+
+
+
+<span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span><span class="n">C</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">st</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">l</span><span class="p">.</span><span class="nf">parameters</span><span class="p">()]</span>
+<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="bp">True</span>
+</code></pre></div></div>
+
+<p><strong>Training Loop</strong></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">200000</span><span class="p">):</span>
+
+    <span class="c1"># for iteration in range(2000):
+</span>    <span class="n">idx</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Xtr</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">batch_size</span><span class="p">,))</span>
+    <span class="n">x_emb</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="n">Xtr</span><span class="p">[</span><span class="n">idx</span><span class="p">]].</span><span class="nf">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">block_size</span> <span class="o">*</span> <span class="n">n_embd</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x_emb</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">item</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">st</span><span class="p">):</span>
+<span class="c1">#         print(idx)
+</span>        <span class="n">x</span> <span class="o">=</span> <span class="nf">item</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="nf">cross_entropy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">st</span><span class="p">:</span>
+        <span class="n">layer</span><span class="p">.</span><span class="n">out</span><span class="p">.</span><span class="nf">retain_grad</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">grad</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="n">loss</span><span class="p">.</span><span class="nf">backward</span><span class="p">()</span>
+
+    <span class="n">lr</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="k">if</span> <span class="n">iteration</span> <span class="o">&lt;</span> <span class="mi">150000</span> <span class="k">else</span> <span class="mf">0.01</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+
+        <span class="n">p</span><span class="p">.</span><span class="n">data</span> <span class="o">+=</span> <span class="o">-</span><span class="n">lr</span><span class="o">*</span><span class="n">p</span><span class="p">.</span><span class="n">grad</span>
+
+    <span class="k">if</span> <span class="n">iteration</span> <span class="o">%</span> <span class="mi">10000</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nf">print</span><span class="p">(</span><span class="n">loss</span><span class="p">.</span><span class="n">data</span><span class="p">)</span>
+
+<span class="c1">#     if iteration &gt;= 1000:
+#         break
+</span></code></pre></div></div>
+
+<p>let’s look at our activations before initializing weights using kaiming init.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># these are just part of modified code from the code that's given above.
+</span><span class="k">class</span> <span class="nc">Layer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">((</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">),</span><span class="n">generator</span> <span class="o">=</span> <span class="n">g</span><span class="p">)</span> <span class="c1"># / (fan_in)**(0.5) # commenting our the kaiming init
+</span>
+<span class="c1"># part of code
+</span><span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+    <span class="n">st</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">bngain</span> <span class="o">*=</span> <span class="mf">0.1</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nf">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Layer</span><span class="p">):</span>
+            <span class="n">layer</span><span class="p">.</span><span class="n">w</span> <span class="o">*=</span> <span class="mf">1.0</span> <span class="c1"># setting gains to 1.0 (no gain)
+</span>
+
+</code></pre></div></div>
+
+<h3 id="activation-plot">Activation plot</h3>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig1.png" alt="fig1" /></p>
+
+<p>As you can see almost all the pre activations are saturated, this is because our weight is initialized in such a way that after applying tanh, most of our output values lie in -1 and 1, which will stop gradient propagation.</p>
+
+<p>Now applying kaiming init with with no gain.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># these are just part of modified code from the code that's given above.
+</span><span class="k">class</span> <span class="nc">Layer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">((</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span><span class="p">),</span><span class="n">generator</span> <span class="o">=</span> <span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">fan_in</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span> <span class="c1"># applying the kaiming init
+</span>
+<span class="c1"># part of code
+</span><span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="nf">no_grad</span><span class="p">():</span>
+    <span class="n">st</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">bngain</span> <span class="o">*=</span> <span class="mf">0.1</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nf">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Layer</span><span class="p">):</span>
+            <span class="n">layer</span><span class="p">.</span><span class="n">w</span> <span class="o">*=</span> <span class="mf">1.0</span> <span class="c1"># setting gains to 1.0 (no gain)
+</span>
+
+</code></pre></div></div>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig2.png" alt="fig2" /></p>
+
+<p>The plot is starting to look nicer, because there is less saturation, because now values don’t lie in the extreme values of tanh, and gradient will be propagated. But we still have issue, as we can see the standard deviation is decreasing this is because of the property of tanh, i.e it squashes the values, initially (blue plot) the output was decent but in later layers, the distribution is being shrinked that because of the property of tanh.</p>
+
+<p>now let’s apply kaiming init with gain too, for tanh the gain is 5/3.</p>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig3.png" alt="fig3" />
+Now the values are being evenly distributed, and the standard deviation is stable (doesn’t decrease with iteration).</p>
+
+<p>We have to precisely measure the gains to have a stable training. But the introduction of batch normalization changes the case, and we don’t have to be that much aware for precisely initializing weights.</p>
+
+<p>Let’s now apply the batch normalization but without kaiming init and see the same plot.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>st = [
+    # x shape = 32, 30
+    Layer(n_embd*block_size,n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_dim), BatchNormalization1(n_dim), Tanh(),
+    Layer(n_dim, n_vocab),BatchNormalization1(n_vocab)
+]
+</code></pre></div></div>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig4.png" alt="fig4" />
+The output values are properly distributed, with very less saturation and a constant standard deviation.</p>
+
+<h3 id="gradient-plot">Gradient plot</h3>
+
+<p>The gradient distribution at each layers would look like this when the pre activations are batch normalized.
+<img src="sub-notes/Diagnostic-tool-while-training-nn/fig5.png" alt="fig5" /></p>
+
+<h3 id="gradient-to-data-ratio-plot">Gradient to data ratio plot</h3>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig6.png" alt="fig6" />
+This is what the ratio of gradient (calculated after backprop) to data plot looks like.
+x-axis represent iterations, y represent the exponents. Ideally, 1e-3 is suitable and that ratio should lie around that line. If the ratio is below that line it means, we need to step up our learning rate, and if it is higher than that line we need to lower our learning rate.</p>
+
+<p>The gain that we add during kaiming init has direct correlation with this plot.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>with torch.no_grad():
+  # last layer: make less confident
+  layers[-1].gamma *= 0.1
+  #layers[-1].weight *= 0.1
+  # all other layers: apply gain
+  for layer in layers[:-1]:
+    if isinstance(layer, Linear):
+      layer.weight *= 0.3
+</code></pre></div></div>
+
+<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig7.png" alt="fig7" />
+as you can see, when I make gain to 0.3 the ratio significantly varies, i.e ratio for later layers are around 1e-1.5, which mean we would have to lower our learning rate because of this gain change.</p>
+
+<p>So the gain significantly affects our learning rate, but it doesn’t affect other plots that we plot above, because it’s controlled by batch normalization.</p>
+
+<p>So we don’t get a free pass to assign these gains arbitrarily, because it affects our gradients (as seen from the ratio plot). If we don’t worry about these gains, we have to tune these learning rates properly (by increasing or decreasing the learning rate).</p>
+
+<p>These data is analyzed throughout the training of NN</p>
+
+<h3 id="note-to-myself">NOTE to myself</h3>
+
+<p>after any operation look out for how the output’s standard deviation changes, we should always maintain the std of 1</p>
+
+<p>for instance while doing the dot production attention,</p>
+
+<p>Q @ K.T</p>
+
+<p>the output’s std grows by sqrt of last embedding or head dimension, which is the reason why we scale it by the sqrt of that last embedding dimension.</p>
+
+<p>Similarly, in skip connections too the addition of x back to the output introduces increase in std, we should scale that down too as i’ve mentioned <a href="https://cohlem.github.io/sub-notes/optimizing-loss/">here</a></p>
+</div>
+
+  
+  <div class="tags">
+    
+    <span class="tag">optimization</span>
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

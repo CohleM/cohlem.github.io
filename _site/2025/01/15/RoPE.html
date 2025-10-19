@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rope - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Rope</h1>
+<p>15 Jan 2025 - cohlem</p>
+
+<h3 id="recap-of-absolute-pe">Recap of Absolute PE</h3>
+
+<p>We previously used absolute positional embedding in our GPT-2 model.</p>
+
+<h4 id="disadvantages">Disadvantages</h4>
+
+<ul>
+  <li>No notion of relative information between tokens</li>
+  <li>doesn’t work for sequences larger than context length the model is trained with, because we run out of token embeddings for tokens that come at sequence larger than the context length.</li>
+</ul>
+
+<h3 id="rope">RoPE</h3>
+
+<h4 id="pre-requisites">pre-requisites</h4>
+
+<p><img src="rope1.png" alt="rope1" /></p>
+
+<p>This is how we rotate a point by an angel theta in a two dimensional space and this is all we need in RoPE.</p>
+
+<p>In RoPE, the notion of providing a position to a token is by rotating it by some angle.
+For instance, if we have a token “this” with an embedding of 2 i.e [0.2782, 1.5109] and lets say it occurs in our sequence at first</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[this,is,awesome]
+</code></pre></div></div>
+
+<p>The idea is to rotate token’s embedding according to the position it occurs in our sequence.</p>
+
+<p>For instance, if this occurs in 2nd position it’s original embedding ([0.2782, 1.5109]) will be rotated by some angle m x theta, where m is the position and theta is some angle. You can see how we’re incorporating information about absolute position of tokens (m) while rotating it.</p>
+
+<p>but the embedding is usually bigger than what we’ve assumed here, it’s basically 256,512,768 depending on what we choose. Let’s say we have embedding dimension of 4 for the sake of simplicity. The idea is to first divide embedding dimensions into pairs and apply rotation to each pairs.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">d_model</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="sh">'</span><span class="s">this is awesome</span><span class="sh">'</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="nf">len</span><span class="p">(</span><span class="n">sentence</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="sh">'</span><span class="s"> </span><span class="sh">'</span><span class="p">)))]</span>
+
+<span class="n">Q</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="nf">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">),</span> <span class="n">d_model</span><span class="p">)</span>
+
+<span class="n">Q</span>
+</code></pre></div></div>
+
+<p>output</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>		[[ 0.2782,  1.5109,  0.1739, -0.7098],
+        [ 0.3792, -0.1098,  0.3707, -0.4049],
+        [ 0.1652,  0.5787,  0.4085, -0.7005]]
+</code></pre></div></div>
+
+<p>so embedding for our token “this” corresponds to</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[ 0.2782,  1.5109,  0.1739, -0.7098]
+</code></pre></div></div>
+
+<p>it is divided into two i.e i values i.e i = 0 will correspond to [ 0.2782, 1.5109] and i=1 will correspond to[0.1739, -0.7098] so, the i values ranges from 0 to d_model/2 - 1, where d_model is the embedding dimension and and we can apply rotation to each of these separately and combine them together into one single embedding.</p>
+
+<p>the angle by which we rotate a pair depends on m and theta, as m is simply the position and theta is generally this</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>10000 ** (-2 * i / d_model) #where i corresponds to each pair as described above.
+</code></pre></div></div>
+
+<p>let’s see how embedding of our token “this” is rotated if it occurs at different positions (i.e different m) in this case i’m assuming i=0 (only considering the first pair)</p>
+
+<p>We construct our rotation matrix like this</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">d_model</span><span class="p">):</span>
+    <span class="sh">"""</span><span class="s">
+    Compute the 2x2 rotation matrix for RoPE.
+
+    Args:
+        m (int or torch.Tensor): Position (token index).
+        i (int or torch.Tensor): Dimension index.
+        d_model (int): Embedding dimension.
+
+    Returns:
+        torch.Tensor: 2x2 rotation matrix.
+    </span><span class="sh">"""</span>
+    <span class="c1"># Compute theta_i
+</span>    <span class="n">thetai</span> <span class="o">=</span> <span class="mi">10000</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="n">d_model</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="n">thetai</span><span class="p">)</span>
+
+    <span class="c1"># Ensure m is a tensor
+</span>    <span class="n">m</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># Compute cos(m * theta_i) and sin(m * theta_i)
+</span>    <span class="n">angle</span> <span class="o">=</span> <span class="n">m</span> <span class="o">*</span> <span class="n">thetai</span>
+    <span class="n">cos</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="n">sin</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+
+    <span class="c1"># Construct the 2x2 rotation matrix
+</span>    <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">([</span>
+        <span class="p">[</span><span class="n">cos</span><span class="p">,</span> <span class="o">-</span><span class="n">sin</span><span class="p">],</span>
+        <span class="p">[</span><span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">]</span>
+    <span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">rotation_matrix</span>
+</code></pre></div></div>
+
+<p>and apply this rotation for different m values(different positions) i.e 1,2,3,4,5</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c1"># Input vector
+</span><span class="n">inp</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="mi">2</span><span class="p">].</span><span class="nf">detach</span><span class="p">().</span><span class="nf">numpy</span><span class="p">()</span> <span class="c1"># [ 0.2782,  1.5109]
+</span>
+<span class="c1"># Create a figure and axis
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">figure</span><span class="p">()</span>
+
+<span class="c1"># Draw the coordinate axes
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">"</span><span class="s">black</span><span class="sh">"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># X-axis
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">axvline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">"</span><span class="s">black</span><span class="sh">"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Y-axis
+</span>
+<span class="c1"># Set axis limits
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Plot the original input vector
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inp</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">color</span><span class="o">=</span><span class="sh">'</span><span class="s">blue</span><span class="sh">'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Original</span><span class="sh">'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="sh">'</span><span class="s">o</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># Apply rotation and plot the rotated vectors
+</span><span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+    <span class="c1"># Compute the rotation matrix
+</span>    <span class="n">rot_mat</span> <span class="o">=</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+
+    <span class="c1"># Apply the rotation to the input vector
+</span>    <span class="n">ans</span> <span class="o">=</span> <span class="n">rot_mat</span> <span class="o">@</span> <span class="n">inp</span>
+
+    <span class="c1"># Plot the rotated vector
+</span>    <span class="nf">print</span><span class="p">(</span><span class="n">ans</span><span class="p">)</span>
+    <span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">ans</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">ans</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="sh">'</span><span class="s">Rotated (m=</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s">)</span><span class="sh">'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="sh">'</span><span class="s">o</span><span class="sh">'</span><span class="p">)</span>
+
+
+
+<span class="c1"># Add labels and title
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">xlabel</span><span class="p">(</span><span class="sh">"</span><span class="s">X-axis</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylabel</span><span class="p">(</span><span class="sh">"</span><span class="s">Y-axis</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">title</span><span class="p">(</span><span class="sh">"</span><span class="s">RoPE Rotation Visualization</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Add a legend
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">legend</span><span class="p">()</span>
+
+<span class="c1"># Add a grid
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">grid</span><span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="sh">"</span><span class="s">--</span><span class="sh">"</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+
+<span class="c1"># Display the plot
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">show</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><img src="rope2.png" alt="rope2" /></p>
+
+<p>you can see how these are rotated by some big angles when m is changed.</p>
+
+<p>but this isn’t the case for later embedding pairs (i.e i = 300, when d_model = 768).</p>
+
+<p>The more we increase our i values the less angle it will rotate with. Lets see one example
+I’m keeping the value of m as a constant i.e 1 here and plotting for different i values for sample input embedding.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="n">inp</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="mi">2</span><span class="p">].</span><span class="nf">detach</span><span class="p">().</span><span class="nf">numpy</span><span class="p">()</span>
+
+
+<span class="c1"># Create a figure and axis
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">figure</span><span class="p">()</span>
+
+<span class="c1"># Draw the coordinate axes
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">"</span><span class="s">black</span><span class="sh">"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># X-axis
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">axvline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">"</span><span class="s">black</span><span class="sh">"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Y-axis
+</span>
+<span class="c1"># Set axis limits
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+
+<span class="c1"># Plot the original input vector
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inp</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">color</span><span class="o">=</span><span class="sh">'</span><span class="s">blue</span><span class="sh">'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Original</span><span class="sh">'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="sh">'</span><span class="s">o</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1">#Apply rotation and plot the rotated vectors
+</span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">20</span><span class="p">):</span>
+    <span class="c1"># Compute the rotation matrix
+</span>    <span class="n">rot_mat</span> <span class="o">=</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span> <span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+
+    <span class="c1"># Apply the rotation to the input vector
+</span>    <span class="n">ans</span> <span class="o">=</span> <span class="n">rot_mat</span> <span class="o">@</span> <span class="n">inp</span>
+
+    <span class="c1"># Plot the rotated vector
+</span>    <span class="nf">print</span><span class="p">(</span><span class="n">ans</span><span class="p">)</span>
+    <span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">ans</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">ans</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="sh">'</span><span class="s">Rotated i=</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s"> (m=</span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s">)</span><span class="sh">'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="sh">'</span><span class="s">o</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># Add labels and title
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">xlabel</span><span class="p">(</span><span class="sh">"</span><span class="s">X-axis</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylabel</span><span class="p">(</span><span class="sh">"</span><span class="s">Y-axis</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">title</span><span class="p">(</span><span class="sh">"</span><span class="s">RoPE Rotation Visualization</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Add a legend
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">legend</span><span class="p">()</span>
+
+<span class="c1"># Add a grid
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">grid</span><span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="sh">"</span><span class="s">--</span><span class="sh">"</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+
+<span class="c1"># Display the plot
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">show</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><img src="rope3.png" alt="ropee3" /></p>
+
+<p>as you can see the angle between them becomes smaller and smaller when I is increased.</p>
+
+<p>NOTE: In the figure above our original plot (dark blue) lies in the same pos as the plot covered by i=19.</p>
+
+<p>I just wanted to show how angles change depending on m and i values.</p>
+
+<p>Now that we have basic intuition, lets implement it.</p>
+
+<p>rotating a embedding of dimension 2 is simple, but how do we do it for more than 2 dimension in just one operation?</p>
+
+<p>here’s how.
+<img src="rope4.png" alt="rope4" />
+we construct matrix like this where the diagonal is rotation matrix (same matrix that we used above) and all the other elements are sparse i.e 0 and then multiply this big rotation matrix with our embedding of size d.</p>
+
+<p>But the authors of this paper have derived a simple formula for doing the same operation but without the big matrix, because it would be computationally expensive where most of the elements are sparse.</p>
+
+<p>here’s the simplified formula.
+<img src="rope5.png" alt="rope5" /></p>
+
+<p>lets apply this simplified version to our token “this” where it’s embedding is [ 0.2782, 1.5109, 0.1739, -0.7098]</p>
+
+<p>NOTE: this code below only applies the rotation to token “this” only for simplicity. m=0 because it occurs at position 0.</p>
+
+<p>If you take a closer look the code below, it matches the formula shown above.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">m</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">cos_dim</span> <span class="o">=</span> <span class="p">[</span><span class="n">math</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="n">m</span><span class="o">*</span><span class="p">(</span><span class="mi">10000</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="n">d_model</span><span class="p">)))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">d_model</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+<span class="n">sin_dim</span> <span class="o">=</span> <span class="p">[</span><span class="n">math</span><span class="p">.</span><span class="nf">sin</span><span class="p">(</span><span class="n">m</span><span class="o">*</span><span class="p">(</span><span class="mi">10000</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="n">d_model</span><span class="p">)))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">d_model</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+
+<span class="n">QT</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">empty_like</span><span class="p">(</span><span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">QT</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">][::</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">QT</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="n">simplified_ans</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="n">cos_dim</span><span class="p">)</span> <span class="o">+</span> <span class="n">QT</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="n">sin_dim</span><span class="p">)</span> <span class="c1"># using m
+</span>
+</code></pre></div></div>
+
+<p>This code below applies the rotation to all 3 tokens in our sequence for all i values.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">thetai</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">10000</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">d_model</span><span class="o">//</span><span class="mi">2</span><span class="p">).</span><span class="nf">float</span><span class="p">()</span> <span class="o">/</span> <span class="n">d_model</span><span class="p">))</span>
+
+<span class="n">m</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">arange</span><span class="p">(</span><span class="n">Q</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">sinusoid</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">thetai</span><span class="p">.</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Outer product
+</span>
+<span class="n">freq</span> <span class="o">=</span> <span class="n">sinusoid</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">cos</span><span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+<span class="n">sin</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">sin</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+<span class="n">Q_new</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">empty_like</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+
+<span class="n">Q_new</span><span class="p">[:,::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">Q</span><span class="p">[:,</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">Q_new</span><span class="p">[:,</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[:,::</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="n">ans</span> <span class="o">=</span> <span class="n">Q</span><span class="o">*</span><span class="n">cos</span> <span class="o">+</span> <span class="n">Q_new</span><span class="o">*</span><span class="n">sin</span>
+</code></pre></div></div>
+
+<p>all these code were for matrix rotation. But there’s more to it.</p>
+
+<p>llama models don’t use these type of operation, because there seems to be too much tensor manipulation is a bit computationally expensive. There seems to be an elegant way of doing 2D rotation, and that is by using complex numbers.</p>
+
+<p>Before going into the implementation, please read these paper notes.</p>
+
+<p>Complex plane is simply representing real numbers along the x-axis and imaginary numbers along y (i.e imaginary plane is perpendicular to the real plane)</p>
+
+<p><img src="rope6.jpg" alt="rope6" />
+<img src="rope7.jpg" alt="rope7" />
+<img src="rope8.jpg" alt="rope8" /></p>
+
+<p>after completely understanding the notes, now we you may have the notion that we can represent our embedding in complex numbers and then multiply by cos(theta) +i.sin(theta)
+to rotate it by theta.</p>
+
+<p>what we do now in the code below is represent our input in complex form, and represent the rotation angles in polar form and then multiply together to get the output.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">precompute_freq_cis</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">theta</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">):</span>
+
+    <span class="n">thetai</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">theta</span> <span class="o">**</span> <span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[:</span> <span class="p">(</span><span class="n">dim</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)].</span><span class="nf">float</span><span class="p">()</span> <span class="o">/</span> <span class="n">dim</span><span class="p">))</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">arange</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">thetai</span><span class="p">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">mthetai</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">outer</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">thetai</span><span class="p">)</span> <span class="c1"># m x thetai
+</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="p">.</span><span class="nf">polar</span><span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">mthetai</span><span class="p">),</span><span class="n">mthetai</span><span class="p">)</span> <span class="c1"># computes r * e^mthetai
+</span>
+
+<span class="k">def</span> <span class="nf">apply_rotary_pe</span><span class="p">(</span><span class="n">xq</span><span class="p">,</span> <span class="n">xk</span><span class="p">,</span> <span class="n">cis</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">unite_shape</span><span class="p">(</span><span class="n">pos_cis</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">ndim</span>
+        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">ndim</span>
+        <span class="k">assert</span> <span class="n">pos_cis</span><span class="p">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">pos_cis</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">xq_</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">view_as_complex</span><span class="p">(</span><span class="n">xq</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">*</span><span class="n">xq</span><span class="p">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="c1"># converting to complex form
+</span>    <span class="n">xk_</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">view_as_complex</span><span class="p">(</span><span class="n">xk</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">*</span><span class="n">xq</span><span class="p">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="c1"># converting to complex form
+</span>    <span class="n">cis</span> <span class="o">=</span> <span class="nf">unite_shape</span><span class="p">(</span><span class="n">cis</span><span class="p">,</span><span class="n">xq_</span><span class="p">)</span>
+    <span class="n">xq_out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">view_as_real</span><span class="p">(</span><span class="n">xq_</span> <span class="o">*</span> <span class="n">cis</span><span class="p">).</span><span class="nf">flatten</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">xk_out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">view_as_real</span><span class="p">(</span><span class="n">xk_</span> <span class="o">*</span> <span class="n">cis</span><span class="p">).</span><span class="nf">flatten</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">xq_out</span><span class="p">.</span><span class="nf">type_as</span><span class="p">(</span><span class="n">xq</span><span class="p">),</span> <span class="n">xk_out</span><span class="p">.</span><span class="nf">type_as</span><span class="p">(</span><span class="n">xk</span><span class="p">)</span>
+
+
+
+
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">freq_cis</span> <span class="o">=</span> <span class="nf">precompute_freq_cis</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">xq</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">xk</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">xq_out</span><span class="p">,</span> <span class="n">xk_out</span> <span class="o">=</span> <span class="nf">apply_rotary_pe</span><span class="p">(</span><span class="n">xq</span><span class="p">,</span><span class="n">xk</span><span class="p">,</span><span class="n">freq_cis</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This is how it’s originally implemented in llama models as you can see here</p>
+
+<p>https://github.com/meta-llama/llama/blob/8fac8befd776bc03242fe7bc2236cdb41b6c609c/llama/model.py#L132</p>
+
+<h3 id="references">References</h3>
+
+<ul>
+  <li><a href="https://arxiv.org/pdf/2104.09864">https://arxiv.org/pdf/2104.09864</a></li>
+  <li><a href="https://youtu.be/GQPOtyITy54?si=VBH6Vnnsykmv9BaQ">RoPE</a></li>
+  <li><a href="https://www.youtube.com/watch?v=5PcpBw5Hbwo">Complex Numbers Fundamentals</a></li>
+  <li><a href="https://github.com/meta-llama/llama/tree/main">llama code implementation</a></li>
+</ul>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Rope</h1>
+    <time datetime="2025-01-15T00:00:00+05:45">
+      January 15, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><h3 id="recap-of-absolute-pe">Recap of Absolute PE</h3>
+
+<p>We previously used absolute positional embedding in our GPT-2 model.</p>
+
+<h4 id="disadvantages">Disadvantages</h4>
+
+<ul>
+  <li>No notion of relative information between tokens</li>
+  <li>doesn’t work for sequences larger than context length the model is trained with, because we run out of token embeddings for tokens that come at sequence larger than the context length.</li>
+</ul>
+
+<h3 id="rope">RoPE</h3>
+
+<h4 id="pre-requisites">pre-requisites</h4>
+
+<p><img src="rope1.png" alt="rope1" /></p>
+
+<p>This is how we rotate a point by an angel theta in a two dimensional space and this is all we need in RoPE.</p>
+
+<p>In RoPE, the notion of providing a position to a token is by rotating it by some angle.
+For instance, if we have a token “this” with an embedding of 2 i.e [0.2782, 1.5109] and lets say it occurs in our sequence at first</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[this,is,awesome]
+</code></pre></div></div>
+
+<p>The idea is to rotate token’s embedding according to the position it occurs in our sequence.</p>
+
+<p>For instance, if this occurs in 2nd position it’s original embedding ([0.2782, 1.5109]) will be rotated by some angle m x theta, where m is the position and theta is some angle. You can see how we’re incorporating information about absolute position of tokens (m) while rotating it.</p>
+
+<p>but the embedding is usually bigger than what we’ve assumed here, it’s basically 256,512,768 depending on what we choose. Let’s say we have embedding dimension of 4 for the sake of simplicity. The idea is to first divide embedding dimensions into pairs and apply rotation to each pairs.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">d_model</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="sh">'</span><span class="s">this is awesome</span><span class="sh">'</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="nf">len</span><span class="p">(</span><span class="n">sentence</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="sh">'</span><span class="s"> </span><span class="sh">'</span><span class="p">)))]</span>
+
+<span class="n">Q</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="nf">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">),</span> <span class="n">d_model</span><span class="p">)</span>
+
+<span class="n">Q</span>
+</code></pre></div></div>
+
+<p>output</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>		[[ 0.2782,  1.5109,  0.1739, -0.7098],
+        [ 0.3792, -0.1098,  0.3707, -0.4049],
+        [ 0.1652,  0.5787,  0.4085, -0.7005]]
+</code></pre></div></div>
+
+<p>so embedding for our token “this” corresponds to</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[ 0.2782,  1.5109,  0.1739, -0.7098]
+</code></pre></div></div>
+
+<p>it is divided into two i.e i values i.e i = 0 will correspond to [ 0.2782, 1.5109] and i=1 will correspond to[0.1739, -0.7098] so, the i values ranges from 0 to d_model/2 - 1, where d_model is the embedding dimension and and we can apply rotation to each of these separately and combine them together into one single embedding.</p>
+
+<p>the angle by which we rotate a pair depends on m and theta, as m is simply the position and theta is generally this</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>10000 ** (-2 * i / d_model) #where i corresponds to each pair as described above.
+</code></pre></div></div>
+
+<p>let’s see how embedding of our token “this” is rotated if it occurs at different positions (i.e different m) in this case i’m assuming i=0 (only considering the first pair)</p>
+
+<p>We construct our rotation matrix like this</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">d_model</span><span class="p">):</span>
+    <span class="sh">"""</span><span class="s">
+    Compute the 2x2 rotation matrix for RoPE.
+
+    Args:
+        m (int or torch.Tensor): Position (token index).
+        i (int or torch.Tensor): Dimension index.
+        d_model (int): Embedding dimension.
+
+    Returns:
+        torch.Tensor: 2x2 rotation matrix.
+    </span><span class="sh">"""</span>
+    <span class="c1"># Compute theta_i
+</span>    <span class="n">thetai</span> <span class="o">=</span> <span class="mi">10000</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="n">d_model</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="n">thetai</span><span class="p">)</span>
+
+    <span class="c1"># Ensure m is a tensor
+</span>    <span class="n">m</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># Compute cos(m * theta_i) and sin(m * theta_i)
+</span>    <span class="n">angle</span> <span class="o">=</span> <span class="n">m</span> <span class="o">*</span> <span class="n">thetai</span>
+    <span class="n">cos</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="n">sin</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+
+    <span class="c1"># Construct the 2x2 rotation matrix
+</span>    <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">([</span>
+        <span class="p">[</span><span class="n">cos</span><span class="p">,</span> <span class="o">-</span><span class="n">sin</span><span class="p">],</span>
+        <span class="p">[</span><span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">]</span>
+    <span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">rotation_matrix</span>
+</code></pre></div></div>
+
+<p>and apply this rotation for different m values(different positions) i.e 1,2,3,4,5</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c1"># Input vector
+</span><span class="n">inp</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="mi">2</span><span class="p">].</span><span class="nf">detach</span><span class="p">().</span><span class="nf">numpy</span><span class="p">()</span> <span class="c1"># [ 0.2782,  1.5109]
+</span>
+<span class="c1"># Create a figure and axis
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">figure</span><span class="p">()</span>
+
+<span class="c1"># Draw the coordinate axes
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">"</span><span class="s">black</span><span class="sh">"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># X-axis
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">axvline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">"</span><span class="s">black</span><span class="sh">"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Y-axis
+</span>
+<span class="c1"># Set axis limits
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Plot the original input vector
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inp</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">color</span><span class="o">=</span><span class="sh">'</span><span class="s">blue</span><span class="sh">'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Original</span><span class="sh">'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="sh">'</span><span class="s">o</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># Apply rotation and plot the rotated vectors
+</span><span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+    <span class="c1"># Compute the rotation matrix
+</span>    <span class="n">rot_mat</span> <span class="o">=</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+
+    <span class="c1"># Apply the rotation to the input vector
+</span>    <span class="n">ans</span> <span class="o">=</span> <span class="n">rot_mat</span> <span class="o">@</span> <span class="n">inp</span>
+
+    <span class="c1"># Plot the rotated vector
+</span>    <span class="nf">print</span><span class="p">(</span><span class="n">ans</span><span class="p">)</span>
+    <span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">ans</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">ans</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="sh">'</span><span class="s">Rotated (m=</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s">)</span><span class="sh">'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="sh">'</span><span class="s">o</span><span class="sh">'</span><span class="p">)</span>
+
+
+
+<span class="c1"># Add labels and title
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">xlabel</span><span class="p">(</span><span class="sh">"</span><span class="s">X-axis</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylabel</span><span class="p">(</span><span class="sh">"</span><span class="s">Y-axis</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">title</span><span class="p">(</span><span class="sh">"</span><span class="s">RoPE Rotation Visualization</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Add a legend
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">legend</span><span class="p">()</span>
+
+<span class="c1"># Add a grid
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">grid</span><span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="sh">"</span><span class="s">--</span><span class="sh">"</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+
+<span class="c1"># Display the plot
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">show</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><img src="rope2.png" alt="rope2" /></p>
+
+<p>you can see how these are rotated by some big angles when m is changed.</p>
+
+<p>but this isn’t the case for later embedding pairs (i.e i = 300, when d_model = 768).</p>
+
+<p>The more we increase our i values the less angle it will rotate with. Lets see one example
+I’m keeping the value of m as a constant i.e 1 here and plotting for different i values for sample input embedding.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="n">inp</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="mi">2</span><span class="p">].</span><span class="nf">detach</span><span class="p">().</span><span class="nf">numpy</span><span class="p">()</span>
+
+
+<span class="c1"># Create a figure and axis
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">figure</span><span class="p">()</span>
+
+<span class="c1"># Draw the coordinate axes
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">"</span><span class="s">black</span><span class="sh">"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># X-axis
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">axvline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">"</span><span class="s">black</span><span class="sh">"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Y-axis
+</span>
+<span class="c1"># Set axis limits
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+
+<span class="c1"># Plot the original input vector
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inp</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">color</span><span class="o">=</span><span class="sh">'</span><span class="s">blue</span><span class="sh">'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Original</span><span class="sh">'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="sh">'</span><span class="s">o</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1">#Apply rotation and plot the rotated vectors
+</span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">20</span><span class="p">):</span>
+    <span class="c1"># Compute the rotation matrix
+</span>    <span class="n">rot_mat</span> <span class="o">=</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span> <span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+
+    <span class="c1"># Apply the rotation to the input vector
+</span>    <span class="n">ans</span> <span class="o">=</span> <span class="n">rot_mat</span> <span class="o">@</span> <span class="n">inp</span>
+
+    <span class="c1"># Plot the rotated vector
+</span>    <span class="nf">print</span><span class="p">(</span><span class="n">ans</span><span class="p">)</span>
+    <span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">ans</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">ans</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="sh">'</span><span class="s">Rotated i=</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s"> (m=</span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s">)</span><span class="sh">'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="sh">'</span><span class="s">o</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># Add labels and title
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">xlabel</span><span class="p">(</span><span class="sh">"</span><span class="s">X-axis</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylabel</span><span class="p">(</span><span class="sh">"</span><span class="s">Y-axis</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">title</span><span class="p">(</span><span class="sh">"</span><span class="s">RoPE Rotation Visualization</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Add a legend
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">legend</span><span class="p">()</span>
+
+<span class="c1"># Add a grid
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">grid</span><span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="sh">"</span><span class="s">--</span><span class="sh">"</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+
+<span class="c1"># Display the plot
+</span><span class="n">plt</span><span class="p">.</span><span class="nf">show</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><img src="rope3.png" alt="ropee3" /></p>
+
+<p>as you can see the angle between them becomes smaller and smaller when I is increased.</p>
+
+<p>NOTE: In the figure above our original plot (dark blue) lies in the same pos as the plot covered by i=19.</p>
+
+<p>I just wanted to show how angles change depending on m and i values.</p>
+
+<p>Now that we have basic intuition, lets implement it.</p>
+
+<p>rotating a embedding of dimension 2 is simple, but how do we do it for more than 2 dimension in just one operation?</p>
+
+<p>here’s how.
+<img src="rope4.png" alt="rope4" />
+we construct matrix like this where the diagonal is rotation matrix (same matrix that we used above) and all the other elements are sparse i.e 0 and then multiply this big rotation matrix with our embedding of size d.</p>
+
+<p>But the authors of this paper have derived a simple formula for doing the same operation but without the big matrix, because it would be computationally expensive where most of the elements are sparse.</p>
+
+<p>here’s the simplified formula.
+<img src="rope5.png" alt="rope5" /></p>
+
+<p>lets apply this simplified version to our token “this” where it’s embedding is [ 0.2782, 1.5109, 0.1739, -0.7098]</p>
+
+<p>NOTE: this code below only applies the rotation to token “this” only for simplicity. m=0 because it occurs at position 0.</p>
+
+<p>If you take a closer look the code below, it matches the formula shown above.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">m</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">cos_dim</span> <span class="o">=</span> <span class="p">[</span><span class="n">math</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="n">m</span><span class="o">*</span><span class="p">(</span><span class="mi">10000</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="n">d_model</span><span class="p">)))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">d_model</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+<span class="n">sin_dim</span> <span class="o">=</span> <span class="p">[</span><span class="n">math</span><span class="p">.</span><span class="nf">sin</span><span class="p">(</span><span class="n">m</span><span class="o">*</span><span class="p">(</span><span class="mi">10000</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="n">d_model</span><span class="p">)))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">d_model</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+
+<span class="n">QT</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">empty_like</span><span class="p">(</span><span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">QT</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">][::</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">QT</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="n">simplified_ans</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="n">cos_dim</span><span class="p">)</span> <span class="o">+</span> <span class="n">QT</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="n">sin_dim</span><span class="p">)</span> <span class="c1"># using m
+</span>
+</code></pre></div></div>
+
+<p>This code below applies the rotation to all 3 tokens in our sequence for all i values.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">thetai</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">10000</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">torch</span><span class="p">.</span><span class="nf">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">d_model</span><span class="o">//</span><span class="mi">2</span><span class="p">).</span><span class="nf">float</span><span class="p">()</span> <span class="o">/</span> <span class="n">d_model</span><span class="p">))</span>
+
+<span class="n">m</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">arange</span><span class="p">(</span><span class="n">Q</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">sinusoid</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">thetai</span><span class="p">.</span><span class="nf">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Outer product
+</span>
+<span class="n">freq</span> <span class="o">=</span> <span class="n">sinusoid</span><span class="p">.</span><span class="nf">repeat_interleave</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">cos</span><span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+<span class="n">sin</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">sin</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+<span class="n">Q_new</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">empty_like</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+
+<span class="n">Q_new</span><span class="p">[:,::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">Q</span><span class="p">[:,</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">Q_new</span><span class="p">[:,</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[:,::</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="n">ans</span> <span class="o">=</span> <span class="n">Q</span><span class="o">*</span><span class="n">cos</span> <span class="o">+</span> <span class="n">Q_new</span><span class="o">*</span><span class="n">sin</span>
+</code></pre></div></div>
+
+<p>all these code were for matrix rotation. But there’s more to it.</p>
+
+<p>llama models don’t use these type of operation, because there seems to be too much tensor manipulation is a bit computationally expensive. There seems to be an elegant way of doing 2D rotation, and that is by using complex numbers.</p>
+
+<p>Before going into the implementation, please read these paper notes.</p>
+
+<p>Complex plane is simply representing real numbers along the x-axis and imaginary numbers along y (i.e imaginary plane is perpendicular to the real plane)</p>
+
+<p><img src="rope6.jpg" alt="rope6" />
+<img src="rope7.jpg" alt="rope7" />
+<img src="rope8.jpg" alt="rope8" /></p>
+
+<p>after completely understanding the notes, now we you may have the notion that we can represent our embedding in complex numbers and then multiply by cos(theta) +i.sin(theta)
+to rotate it by theta.</p>
+
+<p>what we do now in the code below is represent our input in complex form, and represent the rotation angles in polar form and then multiply together to get the output.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">precompute_freq_cis</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">theta</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">):</span>
+
+    <span class="n">thetai</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">theta</span> <span class="o">**</span> <span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[:</span> <span class="p">(</span><span class="n">dim</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)].</span><span class="nf">float</span><span class="p">()</span> <span class="o">/</span> <span class="n">dim</span><span class="p">))</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">arange</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">thetai</span><span class="p">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">mthetai</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">outer</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">thetai</span><span class="p">)</span> <span class="c1"># m x thetai
+</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="p">.</span><span class="nf">polar</span><span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="nf">ones_like</span><span class="p">(</span><span class="n">mthetai</span><span class="p">),</span><span class="n">mthetai</span><span class="p">)</span> <span class="c1"># computes r * e^mthetai
+</span>
+
+<span class="k">def</span> <span class="nf">apply_rotary_pe</span><span class="p">(</span><span class="n">xq</span><span class="p">,</span> <span class="n">xk</span><span class="p">,</span> <span class="n">cis</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">unite_shape</span><span class="p">(</span><span class="n">pos_cis</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">ndim</span>
+        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">ndim</span>
+        <span class="k">assert</span> <span class="n">pos_cis</span><span class="p">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">pos_cis</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">xq_</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">view_as_complex</span><span class="p">(</span><span class="n">xq</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">*</span><span class="n">xq</span><span class="p">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="c1"># converting to complex form
+</span>    <span class="n">xk_</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">view_as_complex</span><span class="p">(</span><span class="n">xk</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span><span class="o">*</span><span class="n">xq</span><span class="p">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="c1"># converting to complex form
+</span>    <span class="n">cis</span> <span class="o">=</span> <span class="nf">unite_shape</span><span class="p">(</span><span class="n">cis</span><span class="p">,</span><span class="n">xq_</span><span class="p">)</span>
+    <span class="n">xq_out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">view_as_real</span><span class="p">(</span><span class="n">xq_</span> <span class="o">*</span> <span class="n">cis</span><span class="p">).</span><span class="nf">flatten</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">xk_out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">view_as_real</span><span class="p">(</span><span class="n">xk_</span> <span class="o">*</span> <span class="n">cis</span><span class="p">).</span><span class="nf">flatten</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">xq_out</span><span class="p">.</span><span class="nf">type_as</span><span class="p">(</span><span class="n">xq</span><span class="p">),</span> <span class="n">xk_out</span><span class="p">.</span><span class="nf">type_as</span><span class="p">(</span><span class="n">xk</span><span class="p">)</span>
+
+
+
+
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">freq_cis</span> <span class="o">=</span> <span class="nf">precompute_freq_cis</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">xq</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">xk</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">randn</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">xq_out</span><span class="p">,</span> <span class="n">xk_out</span> <span class="o">=</span> <span class="nf">apply_rotary_pe</span><span class="p">(</span><span class="n">xq</span><span class="p">,</span><span class="n">xk</span><span class="p">,</span><span class="n">freq_cis</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This is how it’s originally implemented in llama models as you can see here</p>
+
+<p>https://github.com/meta-llama/llama/blob/8fac8befd776bc03242fe7bc2236cdb41b6c609c/llama/model.py#L132</p>
+
+<h3 id="references">References</h3>
+
+<ul>
+  <li><a href="https://arxiv.org/pdf/2104.09864">https://arxiv.org/pdf/2104.09864</a></li>
+  <li><a href="https://youtu.be/GQPOtyITy54?si=VBH6Vnnsykmv9BaQ">RoPE</a></li>
+  <li><a href="https://www.youtube.com/watch?v=5PcpBw5Hbwo">Complex Numbers Fundamentals</a></li>
+  <li><a href="https://github.com/meta-llama/llama/tree/main">llama code implementation</a></li>
+</ul>
+</div>
+
+  
+  <div class="tags">
+    
+    <span class="tag">architecture</span>
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

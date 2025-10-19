@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multi Head Latent Attention - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Multi Head Latent Attention</h1>
+<p>28 Apr 2025 - cohlem</p>
+
+<h2 id="scaled-dot-product-attention">Scaled-dot product Attention</h2>
+
+<h3 id="q1">Q1</h3>
+
+<p>Given the attention equation</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(xWq)(xWk)^\top}{\sqrt{d_k}}\right)(xWv)W_O\]
+
+<p>Why don’t we train by combining $WqWk^\top$ and $WvWo$? because mathematically they seem equivalent</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{x(WqWk^\top)x^\top}{\sqrt{d_k}}\right)x(WvW_O)\]
+
+<p>I initially thought if we could combine those weights, we don’t need to calculate $Q,K,V$ meaning there will be less number of matrix multiplication.</p>
+
+<h4 id="answer">Answer</h4>
+
+<p>We lose the objective of $Q,K,V,O$, they are meant to operate independently. In analogy,
+$Q$ represents the notion of “what we have”, $K$ whats available to us and so on. BUT, if we combine them into a giant matrix $WqWk^\top$ during backpropagation weight updates are mixed. We no longer update them separately so we end up loosing their significance.</p>
+
+<h3 id="q2">Q2</h3>
+
+<p>So, if we can’t use them during training, can we still mix those weights during inference now that we aren’t updating weights? since the mathematical equivalence is the same, can we use it to optimize inference performance?</p>
+
+<h4 id="answer-1">Answer</h4>
+
+<p>We decrease the number of matrix multiplication, BUT we end up increasing the actual element wise multiplications inside those matrix multiplication.</p>
+
+<p>We end up decreasing the speed rather than increasing it.</p>
+
+<p>Let’s see this by comparison.</p>
+
+<p><strong>NOTE: Given matrix A with size (2,3) and B with size (3,4), the total number of element wise matrix multiplication between is (2 _ 3 _ 4).</strong></p>
+
+<p>$n$ = number of tokens
+$d_{\text{model}}$: embedding dimension
+$nh$: number of heads
+$hd$: number of head<em>dimension
+$d</em>{\text{k}}$: $nh$ x $hd$</p>
+
+<h4 id="case-i-original-attention">CASE I: Original Attention</h4>
+
+<p>Compute $Q = X W_Q$: $\mathcal{O}(n \cdot d_{\text{model}} \cdot d_k)$</p>
+
+<p>Compute $K = X W_K$: $\mathcal{O}(n \cdot d_{\text{model}} \cdot d_k)$</p>
+
+<p>Compute $QK^T$: $\mathcal{O}(n^2 \cdot d_k)$</p>
+
+<h4 id="case-ii-combined">CASE II: Combined</h4>
+
+<p>Compute $X W_{QK}$: $\mathcal{O}(n \cdot d_{\text{model}}^2)$</p>
+
+<p>Compute $(X W_{QK}) X^T$: $\mathcal{O}(n^2 \cdot d_{\text{model}})$</p>
+
+<p>If $d_k \ll d_{\text{model}}$ (e.g., $d_k = 128$, $d_{\text{model}} = 512$):</p>
+
+<p>Original: $\mathcal{O}( n \cdot 512 \cdot 128)+ \mathcal{O}( n \cdot 512 \cdot 128) + \mathcal{O}(n^2 \cdot 128)$</p>
+
+<p>Combined: $\mathcal{O}(n \cdot 512^2) + \mathcal{O}(n^2 \cdot 512)$</p>
+
+<p>As you can see the number of matrix multiplication is 3, but the total elementwise multiplication is very large.</p>
+
+<h2 id="multi-head-latent-attention">Multi-head Latent Attention</h2>
+
+<p>The main reason behind using the variants of <strong>Attention</strong> is that we always to increase our inference speed and we are always bottlenecked by <a href="https://cohlem.github.io/sub-notes/kv-cache-gqa/">KV cache</a> The KV cache needed in original Multi-head attention is $2\cdot nh\cdot hd\cdot l$
+for one token, as the tokens get large during inference, the memory needed for storing this case also increases.</p>
+
+<p>Deepseek propose the use of latent dimension to compress the dimension.</p>
+
+<p>As we know $K,V$ both come from the same x i.e $K=xWk$ and $V=xWv$ but the different weights $Wk, Wv$</p>
+
+<p>how about we make an intermediate compressed version of x, from which we can decompress it into K and V, and only store that compressed version of x. This is what they use for multi-head latent attention.</p>
+
+<p>$W_{\text{dkv}}$: compression matrix of size ($d_{\text{model}}$, $d_{\text{c}}$)
+$L_{\text{kv}}$= $xW_{\text{dkv}}$ which is the compressed version of x</p>
+
+<p>We decompress $L_{\text{kv}}$ into K, V using $Wuk, Wuv$ i.e</p>
+
+<p>$Q=xWq$</p>
+
+<p>$Kc=L_{\text{kv}} \cdot Wuk$ ($Wuk$ size = ($d_{\text{c}}, nh \cdot hd$))</p>
+
+<p>$Vc=L_{\text{kv}} \cdot Wuv$ ($Wuv$ size = ($d_{\text{c}}, nh \cdot hd$))</p>
+
+<p>Similarly, we can substitute those in our original attention equation</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(Q)(Kc)^\top}{\sqrt{d_k}}\right)(Vc)W_O\]
+
+<p>As you can see, we’ve increased the number of matrix multiplication (i.e the computation of $L_{\text{kv}}$= $xW_{\text{dkv}}$), but the total number of elementwise multiplication can be made comparable with the right choice of compression dimension $d_{\text{c}}$</p>
+
+<p>But, our main goal was to reduce the number of KV cache, but if we store only the $L_{\text{kv}}$ only, we still would would need to perform $Kc=L_{\text{kv}} \cdot Wuk$ and $Vc=L_{\text{kv}} \cdot Wuv$ to calculate attention. So whats the point of this compression?</p>
+
+<p>Well there’s a trick to still store only the $L_{\text{kv}}$ and use it without calculating Kc and Vc, we do weight combination like in our Q2 but still end up with less number of elementwise matrix multiplication. The equation above can also we written as</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(xWq)(L_{\text{kv}} \cdot Wuk)^\top}{\sqrt{d_k}}\right)(L_{\text{kv}} \cdot Wuv)W_O\]
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(x(Wq Wuk^\top) (L_{\text{kv}})^\top}{\sqrt{d_k}}\right)L_{\text{kv}}(WuvW_O)\]
+
+<p>After combining $(Wq Wuk^\top)$ and $(WuvW_O)$ once, we can save $L_{\text{kv}}$ in our cache and then directly multiply with $(Wq Wuk^\top)$ to get the attention, without needing to calculate $Kc$ and $Vc$. Remember the issue we had while combining weights in Q2, this fades away because of the compression dimension because it strictly has to be less than $nh \cdot hd$ i.e ($d_{\text{c}} \ll nh \cdot hd$)</p>
+
+<h3 id="decoupled-rope">Decoupled RoPE</h3>
+
+<p>There are still some parts I feel like I don’t understand completely. But, here’s what I’ve understood till now.</p>
+
+<p>First thing to keep in mind, its the clever weight absorption design and caching only $L_{\text{kv}}$ that helps MLA to retain its fast speed. But, we have yet to apply positional information to our Q and K i.e</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{R1(xWq)(R2(L_{\text{kv}} \cdot Wuk))^\top}{\sqrt{d_k}}\right)(L_{\text{kv}} \cdot Wuv)W_O\]
+
+<p>In the paper, they say the RoPE matrix gets in the middle but I don’t know what i am missing here cause $({R1(xWq)Wuk^\top)L_{\text{kv}}^\top R2^\top}$ so weights can still be combined? I think there something that I don’t understand here. I’ll correct my understand in future.</p>
+
+<p>lets resume from the point that RoPE matrix gets in the middle. They again design a clever thing here. Add two new matrices $W_{QR}\in \mathbb{R}^{(d,nh \cdot d^R)}$ and $W_{KR} \in \mathbb{R}^{(d,d^R)}$</p>
+
+<p>$Q^{R}=RoPE(xW_{QR})$ and $K^{R}=RoPE(xW_{KR})$</p>
+
+<p>and also cache the $K^R$</p>
+
+<p>add then concatenate the new two matrices to the original Q and K</p>
+
+<p>$Q = [Q, Q^R]$</p>
+
+<p>$K = [K, K^R]$</p>
+
+<p>and then perform our original attention.</p>
+
+\[Q \cdot K^\top = [Q, Q^R] \cdot [K, K^R]^\top\]
+
+\[Q \cdot K^\top = [Q \cdot K + Q^R \cdot K^R]\]
+
+<p>as you can see the original Q and K are still preserved meaning we can still absorb the weights.</p>
+
+<p>Total cached elements will be $K^R$ and $L_{kv}$ so the total saved cache will be $(d^R + dc)l$</p>
+
+<h4 id="question">Question</h4>
+
+<p>Why is second dimension of $W_{KR}$ is $d^R$ and not $(nh \cdot d^R)$
+Meaning $d^R$ will be broadcasted across all the heads.</p>
+
+<p>My guess is that they found that keeping only $d^R$ would produce decent result and would also save the cache memory requirement.</p>
+
+<h4 id="references">References</h4>
+
+<p>https://arxiv.org/abs/2405.04434
+https://liorsinai.github.io/machine-learning/2025/02/22/mla.html#multi-head-latent-attention</p>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Multi Head Latent Attention</h1>
+    <time datetime="2025-04-28T00:00:00+05:45">
+      April 28, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><h2 id="scaled-dot-product-attention">Scaled-dot product Attention</h2>
+
+<h3 id="q1">Q1</h3>
+
+<p>Given the attention equation</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(xWq)(xWk)^\top}{\sqrt{d_k}}\right)(xWv)W_O\]
+
+<p>Why don’t we train by combining $WqWk^\top$ and $WvWo$? because mathematically they seem equivalent</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{x(WqWk^\top)x^\top}{\sqrt{d_k}}\right)x(WvW_O)\]
+
+<p>I initially thought if we could combine those weights, we don’t need to calculate $Q,K,V$ meaning there will be less number of matrix multiplication.</p>
+
+<h4 id="answer">Answer</h4>
+
+<p>We lose the objective of $Q,K,V,O$, they are meant to operate independently. In analogy,
+$Q$ represents the notion of “what we have”, $K$ whats available to us and so on. BUT, if we combine them into a giant matrix $WqWk^\top$ during backpropagation weight updates are mixed. We no longer update them separately so we end up loosing their significance.</p>
+
+<h3 id="q2">Q2</h3>
+
+<p>So, if we can’t use them during training, can we still mix those weights during inference now that we aren’t updating weights? since the mathematical equivalence is the same, can we use it to optimize inference performance?</p>
+
+<h4 id="answer-1">Answer</h4>
+
+<p>We decrease the number of matrix multiplication, BUT we end up increasing the actual element wise multiplications inside those matrix multiplication.</p>
+
+<p>We end up decreasing the speed rather than increasing it.</p>
+
+<p>Let’s see this by comparison.</p>
+
+<p><strong>NOTE: Given matrix A with size (2,3) and B with size (3,4), the total number of element wise matrix multiplication between is (2 _ 3 _ 4).</strong></p>
+
+<p>$n$ = number of tokens
+$d_{\text{model}}$: embedding dimension
+$nh$: number of heads
+$hd$: number of head<em>dimension
+$d</em>{\text{k}}$: $nh$ x $hd$</p>
+
+<h4 id="case-i-original-attention">CASE I: Original Attention</h4>
+
+<p>Compute $Q = X W_Q$: $\mathcal{O}(n \cdot d_{\text{model}} \cdot d_k)$</p>
+
+<p>Compute $K = X W_K$: $\mathcal{O}(n \cdot d_{\text{model}} \cdot d_k)$</p>
+
+<p>Compute $QK^T$: $\mathcal{O}(n^2 \cdot d_k)$</p>
+
+<h4 id="case-ii-combined">CASE II: Combined</h4>
+
+<p>Compute $X W_{QK}$: $\mathcal{O}(n \cdot d_{\text{model}}^2)$</p>
+
+<p>Compute $(X W_{QK}) X^T$: $\mathcal{O}(n^2 \cdot d_{\text{model}})$</p>
+
+<p>If $d_k \ll d_{\text{model}}$ (e.g., $d_k = 128$, $d_{\text{model}} = 512$):</p>
+
+<p>Original: $\mathcal{O}( n \cdot 512 \cdot 128)+ \mathcal{O}( n \cdot 512 \cdot 128) + \mathcal{O}(n^2 \cdot 128)$</p>
+
+<p>Combined: $\mathcal{O}(n \cdot 512^2) + \mathcal{O}(n^2 \cdot 512)$</p>
+
+<p>As you can see the number of matrix multiplication is 3, but the total elementwise multiplication is very large.</p>
+
+<h2 id="multi-head-latent-attention">Multi-head Latent Attention</h2>
+
+<p>The main reason behind using the variants of <strong>Attention</strong> is that we always to increase our inference speed and we are always bottlenecked by <a href="https://cohlem.github.io/sub-notes/kv-cache-gqa/">KV cache</a> The KV cache needed in original Multi-head attention is $2\cdot nh\cdot hd\cdot l$
+for one token, as the tokens get large during inference, the memory needed for storing this case also increases.</p>
+
+<p>Deepseek propose the use of latent dimension to compress the dimension.</p>
+
+<p>As we know $K,V$ both come from the same x i.e $K=xWk$ and $V=xWv$ but the different weights $Wk, Wv$</p>
+
+<p>how about we make an intermediate compressed version of x, from which we can decompress it into K and V, and only store that compressed version of x. This is what they use for multi-head latent attention.</p>
+
+<p>$W_{\text{dkv}}$: compression matrix of size ($d_{\text{model}}$, $d_{\text{c}}$)
+$L_{\text{kv}}$= $xW_{\text{dkv}}$ which is the compressed version of x</p>
+
+<p>We decompress $L_{\text{kv}}$ into K, V using $Wuk, Wuv$ i.e</p>
+
+<p>$Q=xWq$</p>
+
+<p>$Kc=L_{\text{kv}} \cdot Wuk$ ($Wuk$ size = ($d_{\text{c}}, nh \cdot hd$))</p>
+
+<p>$Vc=L_{\text{kv}} \cdot Wuv$ ($Wuv$ size = ($d_{\text{c}}, nh \cdot hd$))</p>
+
+<p>Similarly, we can substitute those in our original attention equation</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(Q)(Kc)^\top}{\sqrt{d_k}}\right)(Vc)W_O\]
+
+<p>As you can see, we’ve increased the number of matrix multiplication (i.e the computation of $L_{\text{kv}}$= $xW_{\text{dkv}}$), but the total number of elementwise multiplication can be made comparable with the right choice of compression dimension $d_{\text{c}}$</p>
+
+<p>But, our main goal was to reduce the number of KV cache, but if we store only the $L_{\text{kv}}$ only, we still would would need to perform $Kc=L_{\text{kv}} \cdot Wuk$ and $Vc=L_{\text{kv}} \cdot Wuv$ to calculate attention. So whats the point of this compression?</p>
+
+<p>Well there’s a trick to still store only the $L_{\text{kv}}$ and use it without calculating Kc and Vc, we do weight combination like in our Q2 but still end up with less number of elementwise matrix multiplication. The equation above can also we written as</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(xWq)(L_{\text{kv}} \cdot Wuk)^\top}{\sqrt{d_k}}\right)(L_{\text{kv}} \cdot Wuv)W_O\]
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{(x(Wq Wuk^\top) (L_{\text{kv}})^\top}{\sqrt{d_k}}\right)L_{\text{kv}}(WuvW_O)\]
+
+<p>After combining $(Wq Wuk^\top)$ and $(WuvW_O)$ once, we can save $L_{\text{kv}}$ in our cache and then directly multiply with $(Wq Wuk^\top)$ to get the attention, without needing to calculate $Kc$ and $Vc$. Remember the issue we had while combining weights in Q2, this fades away because of the compression dimension because it strictly has to be less than $nh \cdot hd$ i.e ($d_{\text{c}} \ll nh \cdot hd$)</p>
+
+<h3 id="decoupled-rope">Decoupled RoPE</h3>
+
+<p>There are still some parts I feel like I don’t understand completely. But, here’s what I’ve understood till now.</p>
+
+<p>First thing to keep in mind, its the clever weight absorption design and caching only $L_{\text{kv}}$ that helps MLA to retain its fast speed. But, we have yet to apply positional information to our Q and K i.e</p>
+
+\[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{R1(xWq)(R2(L_{\text{kv}} \cdot Wuk))^\top}{\sqrt{d_k}}\right)(L_{\text{kv}} \cdot Wuv)W_O\]
+
+<p>In the paper, they say the RoPE matrix gets in the middle but I don’t know what i am missing here cause $({R1(xWq)Wuk^\top)L_{\text{kv}}^\top R2^\top}$ so weights can still be combined? I think there something that I don’t understand here. I’ll correct my understand in future.</p>
+
+<p>lets resume from the point that RoPE matrix gets in the middle. They again design a clever thing here. Add two new matrices $W_{QR}\in \mathbb{R}^{(d,nh \cdot d^R)}$ and $W_{KR} \in \mathbb{R}^{(d,d^R)}$</p>
+
+<p>$Q^{R}=RoPE(xW_{QR})$ and $K^{R}=RoPE(xW_{KR})$</p>
+
+<p>and also cache the $K^R$</p>
+
+<p>add then concatenate the new two matrices to the original Q and K</p>
+
+<p>$Q = [Q, Q^R]$</p>
+
+<p>$K = [K, K^R]$</p>
+
+<p>and then perform our original attention.</p>
+
+\[Q \cdot K^\top = [Q, Q^R] \cdot [K, K^R]^\top\]
+
+\[Q \cdot K^\top = [Q \cdot K + Q^R \cdot K^R]\]
+
+<p>as you can see the original Q and K are still preserved meaning we can still absorb the weights.</p>
+
+<p>Total cached elements will be $K^R$ and $L_{kv}$ so the total saved cache will be $(d^R + dc)l$</p>
+
+<h4 id="question">Question</h4>
+
+<p>Why is second dimension of $W_{KR}$ is $d^R$ and not $(nh \cdot d^R)$
+Meaning $d^R$ will be broadcasted across all the heads.</p>
+
+<p>My guess is that they found that keeping only $d^R$ would produce decent result and would also save the cache memory requirement.</p>
+
+<h4 id="references">References</h4>
+
+<p>https://arxiv.org/abs/2405.04434
+https://liorsinai.github.io/machine-learning/2025/02/22/mla.html#multi-head-latent-attention</p>
+</div>
+
+  
+  <div class="tags">
+    
+    <span class="tag">architecture</span>
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

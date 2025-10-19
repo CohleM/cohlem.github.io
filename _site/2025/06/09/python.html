@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Python - </title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- MathJax for LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+          processEnvironments: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      id="MathJax-script"
+      async
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/posts">Posts</a>
+      <a href="/notes">Notes</a>
+      <a href="/blogs">Blogs</a>
+    </nav>
+
+    <main><h1>Python</h1>
+<p>09 Jun 2025 - cohlem</p>
+
+<h3 id="unpacking-over-indexing">Unpacking over indexing</h3>
+
+<p>why?</p>
+
+<ul>
+  <li>less noisy</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># do this
+</span><span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="n">somehting</span>
+
+<span class="c1"># over
+</span><span class="n">a</span> <span class="o">=</span> <span class="n">something</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">somehting</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>another example</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># don't do this
+</span><span class="n">snacks</span> <span class="o">=</span> <span class="p">[(</span><span class="sh">'</span><span class="s">bacon</span><span class="sh">'</span><span class="p">,</span> <span class="mi">350</span><span class="p">),</span> <span class="p">(</span><span class="sh">'</span><span class="s">donut</span><span class="sh">'</span><span class="p">,</span> <span class="mi">240</span><span class="p">),</span> <span class="p">(</span><span class="sh">'</span><span class="s">muffin</span><span class="sh">'</span><span class="p">,</span> <span class="mi">190</span><span class="p">)]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="nf">len</span><span class="p">(</span><span class="n">snacks</span><span class="p">)):</span>
+
+    <span class="n">item</span> <span class="o">=</span> <span class="n">snacks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">calories</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sa">f</span><span class="sh">'</span><span class="s">#</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s"> has </span><span class="si">{</span><span class="n">calories</span><span class="si">}</span><span class="s"> calories</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># do this
+</span><span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">calorie</span><span class="p">)</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">snacks</span><span class="p">,</span><span class="mi">1</span><span class="p">):</span>
+	<span class="nf">print</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">calorie</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Unpacking can be applied to any iterables (dict, lists, tuples)</p>
+
+<h3 id="slicing">Slicing</h3>
+
+<p>slicing creates a reference to original list, but changing sliced object won’t reflect in original list</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="sh">'</span><span class="s">a</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">b</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">c</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">d</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">e</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">f</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">g</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">h</span><span class="sh">'</span><span class="p">]</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+
+<span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span> <span class="mi">10</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="c1"># [10, 'b', 'c']
+</span><span class="nf">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="c1"># ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+</span></code></pre></div></div>
+
+<h3 id="striding">Striding</h3>
+
+<p>Avoid using striding (step) i.e start:stop:step altogether, mostly avoid them while using negative strides.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># outputs ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a']
+</span><span class="n">a</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">::</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="c1"># ['g', 'e', 'c', 'a'] # its confusing, so avoid it
+</span></code></pre></div></div>
+
+<h3 id="starred-expression">Starred Expression</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">car_ages</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">15</span><span class="p">]</span>
+<span class="n">car_ages_descending</span> <span class="o">=</span> <span class="nf">sorted</span><span class="p">(</span><span class="n">car_ages</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span> <span class="o">=</span> <span class="n">car_ages_descending</span>
+
+<span class="c1"># Instead of doing this
+</span><span class="n">oldest</span> <span class="o">=</span> <span class="n">car_ages_descending</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">second_oldest</span> <span class="o">=</span> <span class="n">car_ages_descending</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">others</span> <span class="o">=</span> <span class="n">car_ages_descending</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span><span class="p">,</span> <span class="n">others</span><span class="p">)</span>
+
+<span class="c1"># Do this
+</span><span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span><span class="p">,</span> <span class="o">*</span><span class="n">others</span> <span class="o">=</span> <span class="n">car_ages_descending</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span><span class="p">,</span> <span class="n">others</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>But it can only be used once in an expression, but it should alway pair with at least one normal unpacking. i.e only doing * others = car_ages_descending will not work.</p>
+
+<h3 id="sorting">Sorting</h3>
+
+<p>.sort() can be called on to any built-in types that has ordering, i.e int, float, str. Defaults to sorting in ascending order, use reverse=True for descending.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="mi">93</span><span class="p">,</span> <span class="mi">86</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">70</span><span class="p">]</span>
+<span class="n">numbers</span><span class="p">.</span><span class="nf">sort</span><span class="p">()</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span> <span class="c1"># [11, 68, 70, 86, 93]
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Tool</span><span class="p">:</span>
+     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+
+         <span class="n">self</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+         <span class="n">self</span><span class="p">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span>
+
+     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+         <span class="k">return</span> <span class="sa">f</span><span class="sh">'</span><span class="s">Tool(</span><span class="si">{</span><span class="n">self</span><span class="p">.</span><span class="n">name</span><span class="si">!r}</span><span class="s">, </span><span class="si">{</span><span class="n">self</span><span class="p">.</span><span class="n">weight</span><span class="si">}</span><span class="s">)</span><span class="sh">'</span>
+<span class="n">tools</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">level</span><span class="sh">'</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">),</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">hammer</span><span class="sh">'</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">),</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">screwdriver</span><span class="sh">'</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">chisel</span><span class="sh">'</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span>
+
+<span class="p">]</span>
+
+<span class="c1">#simply calling tools.sort() will result in error, cause Tool class doesn't implement comparision operator by default.
+# sort it using key parameter.
+# keys expects a function, and the should return by which we want our list to be ordered i.e by name
+</span><span class="n">tools</span><span class="p">.</span><span class="nf">sort</span><span class="p">(</span><span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">.</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Tuples have built in order defined in them, i.e</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="sh">'</span><span class="s">drill</span><span class="sh">'</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="sh">'</span><span class="s">sander</span><span class="sh">'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>in this case, 4 is compared with 4, and since its true ‘drill’ is compared with ‘sander’, we can take advantage of this tuple within our key function to defined the order i.e</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">tools</span><span class="p">.</span><span class="nf">sort</span><span class="p">(</span><span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">x</span><span class="p">.</span><span class="n">name</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>In this case, it sort by ascending order, but first weight is compared AND if any two items have the same weight their name attribute is compared i.e drill and sander have same weights, so d &lt; s</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c1">#output
+</span><span class="p">[</span><span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">drill</span><span class="sh">'</span><span class="p">,</span>        <span class="mi">4</span><span class="p">),</span>
+ <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">sander</span><span class="sh">'</span><span class="p">,</span>       <span class="mi">4</span><span class="p">),</span>
+ <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">circular saw</span><span class="sh">'</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+ <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">jackhammer</span><span class="sh">'</span><span class="p">,</span>   <span class="mi">40</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<h3 id="list-multiplication-vs-list-comprehension">list multiplication vs list comprehension</h3>
+
+<p>use multiplication carefully.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="o">*</span> <span class="mi">2</span>    <span class="c1"># replicates the *same* inner list reference twice
+</span><span class="n">b</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>  <span class="c1"># makes two distinct inner lists
+</span>
+</code></pre></div></div>
+
+<h3 id="closures-and-decorators">Closures and decorators</h3>
+
+<p>A simple problem. We need to keep track of every object that is printed. In the code below, how do we access data list inside inner function? doing something like below will have global data, which any other functions can access. We need some list that can keep track of every object printed, but is also only accessible to that specific function.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<p>We use closures.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="nf">func</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+
+<span class="n">print_</span> <span class="o">=</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="k">print</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">yoo</span><span class="sh">'</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">whats up</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">print_</span><span class="p">.</span><span class="n">__closure__</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">cell_contents</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## outputs
+yoo
+whats up
+
+['yoo', 'whats up']
+</code></pre></div></div>
+
+<p>The drawback with closure function above is that inner func only takes one object, whereas it should be able to take in more than one object as parameters. If so, make use of _ args and _ kwargs.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">((</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span> <span class="c1"># args is a tuple, and kwargs is a dict
+</span>        <span class="nf">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+
+<span class="n">print_</span> <span class="o">=</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="k">print</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">yoo</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">haha</span><span class="sh">'</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">whats up</span><span class="sh">'</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="sh">'</span><span class="s">:</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">print_</span><span class="p">.</span><span class="n">__closure__</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">cell_contents</span>
+
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># output
+yoo haha 1 2 3
+whats up
+
+[(('yoo', 'haha', 1, 2, 3), {}), (('whats up',), {'sep': ':'})]
+</code></pre></div></div>
+
+<p>One more thing, our inner function doesn’t return anything, lets add return to it, and it becomes a decorator.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">((</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span> <span class="c1"># args is a tuple, and kwargs is a dict
+</span>        <span class="k">return</span> <span class="nf">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+
+</code></pre></div></div>
+
+<p>our print_with_memory() function now can take in any function, i.e print, max, min and so on.
+We can also do something like this. The whole point of decorators is that we are decorating the function, with additional functionality, i.e adding every parameter passed to that function to data list.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="sb">`print = print_with_memory(print)`</span> <span class="c1"># we deocorate with somehting like this
+</span></code></pre></div></div>
+
+<h4 id="how-to-use--in-decorator">How to use @ in decorator</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">store_arguments</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">((</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nf">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span>
+<span class="c1"># or we can do this
+</span>
+<span class="nd">@store_arguments</span>
+<span class="k">def</span> <span class="nf">my_special_function</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repeat</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">name</span><span class="p">.</span><span class="nf">upper</span><span class="p">()</span> <span class="o">*</span> <span class="n">repeat</span>
+
+<span class="nf">print</span><span class="p">(</span><span class="nf">my_special_function</span><span class="p">(</span><span class="sh">'</span><span class="s">yolo</span><span class="sh">'</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="nf">print</span><span class="p">(</span><span class="nf">my_special_function</span><span class="p">(</span><span class="sh">'</span><span class="s">haha</span><span class="sh">'</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="n">my_special_function</span><span class="p">.</span><span class="n">__closure__</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">cell_contents</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># outputs
+YOLOYOLO
+HAHAHAHAHAHA
+[(('yolo', 2), {}), (('haha', 3), {})]
+</code></pre></div></div>
+
+
+<!-- <article class="blog-post">
+  <header>
+    <h1>Python</h1>
+    <time datetime="2025-06-09T00:00:00+05:45">
+      June 09, 2025
+    </time>
+  </header>
+
+  <div class="post-content"><h3 id="unpacking-over-indexing">Unpacking over indexing</h3>
+
+<p>why?</p>
+
+<ul>
+  <li>less noisy</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># do this
+</span><span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="n">somehting</span>
+
+<span class="c1"># over
+</span><span class="n">a</span> <span class="o">=</span> <span class="n">something</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">somehting</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>another example</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># don't do this
+</span><span class="n">snacks</span> <span class="o">=</span> <span class="p">[(</span><span class="sh">'</span><span class="s">bacon</span><span class="sh">'</span><span class="p">,</span> <span class="mi">350</span><span class="p">),</span> <span class="p">(</span><span class="sh">'</span><span class="s">donut</span><span class="sh">'</span><span class="p">,</span> <span class="mi">240</span><span class="p">),</span> <span class="p">(</span><span class="sh">'</span><span class="s">muffin</span><span class="sh">'</span><span class="p">,</span> <span class="mi">190</span><span class="p">)]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="nf">len</span><span class="p">(</span><span class="n">snacks</span><span class="p">)):</span>
+
+    <span class="n">item</span> <span class="o">=</span> <span class="n">snacks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">calories</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sa">f</span><span class="sh">'</span><span class="s">#</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s"> has </span><span class="si">{</span><span class="n">calories</span><span class="si">}</span><span class="s"> calories</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="c1"># do this
+</span><span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">calorie</span><span class="p">)</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">snacks</span><span class="p">,</span><span class="mi">1</span><span class="p">):</span>
+	<span class="nf">print</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">calorie</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Unpacking can be applied to any iterables (dict, lists, tuples)</p>
+
+<h3 id="slicing">Slicing</h3>
+
+<p>slicing creates a reference to original list, but changing sliced object won’t reflect in original list</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="sh">'</span><span class="s">a</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">b</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">c</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">d</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">e</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">f</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">g</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">h</span><span class="sh">'</span><span class="p">]</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+
+<span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span> <span class="mi">10</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="c1"># [10, 'b', 'c']
+</span><span class="nf">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="c1"># ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+</span></code></pre></div></div>
+
+<h3 id="striding">Striding</h3>
+
+<p>Avoid using striding (step) i.e start:stop:step altogether, mostly avoid them while using negative strides.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># outputs ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a']
+</span><span class="n">a</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">::</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="c1"># ['g', 'e', 'c', 'a'] # its confusing, so avoid it
+</span></code></pre></div></div>
+
+<h3 id="starred-expression">Starred Expression</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">car_ages</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">15</span><span class="p">]</span>
+<span class="n">car_ages_descending</span> <span class="o">=</span> <span class="nf">sorted</span><span class="p">(</span><span class="n">car_ages</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span> <span class="o">=</span> <span class="n">car_ages_descending</span>
+
+<span class="c1"># Instead of doing this
+</span><span class="n">oldest</span> <span class="o">=</span> <span class="n">car_ages_descending</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">second_oldest</span> <span class="o">=</span> <span class="n">car_ages_descending</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">others</span> <span class="o">=</span> <span class="n">car_ages_descending</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span><span class="p">,</span> <span class="n">others</span><span class="p">)</span>
+
+<span class="c1"># Do this
+</span><span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span><span class="p">,</span> <span class="o">*</span><span class="n">others</span> <span class="o">=</span> <span class="n">car_ages_descending</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">oldest</span><span class="p">,</span> <span class="n">second_oldest</span><span class="p">,</span> <span class="n">others</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>But it can only be used once in an expression, but it should alway pair with at least one normal unpacking. i.e only doing * others = car_ages_descending will not work.</p>
+
+<h3 id="sorting">Sorting</h3>
+
+<p>.sort() can be called on to any built-in types that has ordering, i.e int, float, str. Defaults to sorting in ascending order, use reverse=True for descending.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="mi">93</span><span class="p">,</span> <span class="mi">86</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">70</span><span class="p">]</span>
+<span class="n">numbers</span><span class="p">.</span><span class="nf">sort</span><span class="p">()</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span> <span class="c1"># [11, 68, 70, 86, 93]
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Tool</span><span class="p">:</span>
+     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+
+         <span class="n">self</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+         <span class="n">self</span><span class="p">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span>
+
+     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+         <span class="k">return</span> <span class="sa">f</span><span class="sh">'</span><span class="s">Tool(</span><span class="si">{</span><span class="n">self</span><span class="p">.</span><span class="n">name</span><span class="si">!r}</span><span class="s">, </span><span class="si">{</span><span class="n">self</span><span class="p">.</span><span class="n">weight</span><span class="si">}</span><span class="s">)</span><span class="sh">'</span>
+<span class="n">tools</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">level</span><span class="sh">'</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">),</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">hammer</span><span class="sh">'</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">),</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">screwdriver</span><span class="sh">'</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+    <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">chisel</span><span class="sh">'</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span>
+
+<span class="p">]</span>
+
+<span class="c1">#simply calling tools.sort() will result in error, cause Tool class doesn't implement comparision operator by default.
+# sort it using key parameter.
+# keys expects a function, and the should return by which we want our list to be ordered i.e by name
+</span><span class="n">tools</span><span class="p">.</span><span class="nf">sort</span><span class="p">(</span><span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">.</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Tuples have built in order defined in them, i.e</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="sh">'</span><span class="s">drill</span><span class="sh">'</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="sh">'</span><span class="s">sander</span><span class="sh">'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>in this case, 4 is compared with 4, and since its true ‘drill’ is compared with ‘sander’, we can take advantage of this tuple within our key function to defined the order i.e</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">tools</span><span class="p">.</span><span class="nf">sort</span><span class="p">(</span><span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">x</span><span class="p">.</span><span class="n">name</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>In this case, it sort by ascending order, but first weight is compared AND if any two items have the same weight their name attribute is compared i.e drill and sander have same weights, so d &lt; s</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c1">#output
+</span><span class="p">[</span><span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">drill</span><span class="sh">'</span><span class="p">,</span>        <span class="mi">4</span><span class="p">),</span>
+ <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">sander</span><span class="sh">'</span><span class="p">,</span>       <span class="mi">4</span><span class="p">),</span>
+ <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">circular saw</span><span class="sh">'</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+ <span class="nc">Tool</span><span class="p">(</span><span class="sh">'</span><span class="s">jackhammer</span><span class="sh">'</span><span class="p">,</span>   <span class="mi">40</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<h3 id="list-multiplication-vs-list-comprehension">list multiplication vs list comprehension</h3>
+
+<p>use multiplication carefully.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="o">*</span> <span class="mi">2</span>    <span class="c1"># replicates the *same* inner list reference twice
+</span><span class="n">b</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>  <span class="c1"># makes two distinct inner lists
+</span>
+</code></pre></div></div>
+
+<h3 id="closures-and-decorators">Closures and decorators</h3>
+
+<p>A simple problem. We need to keep track of every object that is printed. In the code below, how do we access data list inside inner function? doing something like below will have global data, which any other functions can access. We need some list that can keep track of every object printed, but is also only accessible to that specific function.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<p>We use closures.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="nf">func</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+
+<span class="n">print_</span> <span class="o">=</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="k">print</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">yoo</span><span class="sh">'</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">whats up</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">print_</span><span class="p">.</span><span class="n">__closure__</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">cell_contents</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## outputs
+yoo
+whats up
+
+['yoo', 'whats up']
+</code></pre></div></div>
+
+<p>The drawback with closure function above is that inner func only takes one object, whereas it should be able to take in more than one object as parameters. If so, make use of _ args and _ kwargs.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">((</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span> <span class="c1"># args is a tuple, and kwargs is a dict
+</span>        <span class="nf">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+
+<span class="n">print_</span> <span class="o">=</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="k">print</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">yoo</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">haha</span><span class="sh">'</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="nf">print_</span><span class="p">(</span><span class="sh">'</span><span class="s">whats up</span><span class="sh">'</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="sh">'</span><span class="s">:</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">print_</span><span class="p">.</span><span class="n">__closure__</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">cell_contents</span>
+
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># output
+yoo haha 1 2 3
+whats up
+
+[(('yoo', 'haha', 1, 2, 3), {}), (('whats up',), {'sep': ':'})]
+</code></pre></div></div>
+
+<p>One more thing, our inner function doesn’t return anything, lets add return to it, and it becomes a decorator.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">print_with_memory</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">((</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span> <span class="c1"># args is a tuple, and kwargs is a dict
+</span>        <span class="k">return</span> <span class="nf">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+
+</code></pre></div></div>
+
+<p>our print_with_memory() function now can take in any function, i.e print, max, min and so on.
+We can also do something like this. The whole point of decorators is that we are decorating the function, with additional functionality, i.e adding every parameter passed to that function to data list.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="sb">`print = print_with_memory(print)`</span> <span class="c1"># we deocorate with somehting like this
+</span></code></pre></div></div>
+
+<h4 id="how-to-use--in-decorator">How to use @ in decorator</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">store_arguments</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">.</span><span class="nf">append</span><span class="p">((</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nf">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span>
+<span class="c1"># or we can do this
+</span>
+<span class="nd">@store_arguments</span>
+<span class="k">def</span> <span class="nf">my_special_function</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repeat</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">name</span><span class="p">.</span><span class="nf">upper</span><span class="p">()</span> <span class="o">*</span> <span class="n">repeat</span>
+
+<span class="nf">print</span><span class="p">(</span><span class="nf">my_special_function</span><span class="p">(</span><span class="sh">'</span><span class="s">yolo</span><span class="sh">'</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="nf">print</span><span class="p">(</span><span class="nf">my_special_function</span><span class="p">(</span><span class="sh">'</span><span class="s">haha</span><span class="sh">'</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="n">my_special_function</span><span class="p">.</span><span class="n">__closure__</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">cell_contents</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># outputs
+YOLOYOLO
+HAHAHAHAHAHA
+[(('yolo', 2), {}), (('haha', 3), {})]
+</code></pre></div></div>
+</div>
+
+  
+  <div class="tags">
+    
+  </div>
+  
+</article> -->
+</main>
+
+    <footer>
+      <p>&copy; 2025 </p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+---
+layout: home
+---
+
+<h1>Notes</h1>
+<p>Structured Notes, categorized</p>
+
+<section class="notes">
+  {% for section in site.data.notes.sections %}
+  <h2>{{ section.heading }}</h2>
+  <ul>
+    {% for post in site.tags[section.tag] %}
+    <a href="{{ post.url }}"><li>{{ post.title }}</li></a>
+    {% endfor %}
+  </ul>
+  {% endfor %}
+</section>
