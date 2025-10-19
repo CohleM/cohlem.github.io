@@ -549,16 +549,18 @@ footer {
 }
 
 a {
-  color: #8abeb7;
+  color: #b5bd68;
 }
 a:hover {
-  color: #b5bd68;
+  color: #8abeb7;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: "Zalando Sans Expanded", sans-serif;
   color: #b5bd68;
   font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 p, ul, li {
@@ -570,14 +572,10 @@ p, ul, li {
 
 h1 {
   font-size: 2rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
 }
 
 h2 {
   font-size: 1.5rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
 }
 
 h3 {
@@ -610,6 +608,15 @@ pre code {
   font-family: "Fira Code", monospace;
   font-size: 0.8rem;
   font-weight: 400;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5rem 0;
+  border-radius: 4px;
+  border: 1px solid #373b41;
 }
 
 /*# sourceMappingURL=main.css.map */
