@@ -1,0 +1,64 @@
+---
+layout: home
+title: Home
+---
+
+<section class="hero">
+  <h2>{{site.data.homepage.description.heading}}</h2>
+  <p class="subtitle">
+
+     {{site.data.homepage.description.about}} 
+     <ul>
+        {% for  point in site.data.homepage.description.research_directions %}
+          <li>> {{ point }}</li>
+        {% endfor %}
+      </ul>
+      
+  </p>
+</section>
+
+<section class="Publications">
+    <h2>Publications</h2>
+    <ul>
+      {% for pub in site.data.homepage.publications %}
+        <li>
+          <p>
+            <strong>{{ pub.name }}</strong>
+            <a href="{{ pub.link }}" target="_blank" rel="noopener">[PDF]</a><br>
+            {{ pub.conference }}<br>
+            {{ pub.authors }}
+          </p>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="projects">
+    <h2>Projects</h2>
+    <ul>
+      {% for project in site.data.homepage.projects %}
+        <li>
+          <p>
+            <strong>{{ project.name }}</strong>
+            <a href="{{ project.link }}" target="_blank" rel="noopener">{{ project.link_text }}</a><br>
+            &gt; {{ project.description }}
+          </p>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+  
+
+<section class="blogs">
+  <h2>Blogs</h2>
+  <ul>
+    <li>Skill 1 </li>
+    <li>Skill 2</li>
+    <li>Skill 3</li>
+  </ul>
+</section>
+
+<section class="contact">
+  <h2>Get in Touch</h2>
+  <p>Email: your@email.com</p>
+</section>

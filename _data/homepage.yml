@@ -1,0 +1,36 @@
+description:
+  heading: "Hi, I'm Manish"
+  about: |
+    I graduated with a BS in Computer Science from Kathmandu
+    University where I was advised by
+    <a href='https://ku.edu.np/contact-detail/bal-krishna-bal' target='_blank'>Prof. Dr. Bal Krishna Bal</a>.
+    As of now, my research interests include, but are not limited to:
+  research_directions:
+    - |
+      <strong>LLM Post-Training</strong>: RL is supposed to elicit reasoning in LLMs
+      by expanding inference-time compute. However, this training process is only
+      limited to verifiable domains (code, math) whereas the majority of tasks
+      that justify productivity are not verifiable. Does RL help here? Do we need
+      a different paradigm? I intend to explore this.
+    - |
+      <strong>Multi-agent</strong>: Current research focuses on building agents that
+      are good at tool calling, but still tools are called more often than required.
+      When should LLMs simply use their parametric knowledge and when use the tools?
+      Agents are used only during inference time. Can we orchestrate multi-agents for
+      training tasks like these?
+
+publications:
+  - name: "Nepali Encoder Transformers"
+    link: "https://aclanthology.org/2022.sigul-1.14.pdf"
+    conference: "Proceedings of SIGUL2022 @ LREC2022"
+    authors: "Utsav Maskey, Manish Bhatta, Shiva Raj Bhatta, Sanket Dhungel, Bal Krishna Bal"
+
+projects:
+  - name: "LilLM"
+    link: "https://github.com/CohleM/lilLM"
+    link_text: "[github]"
+    description: "pre-training 39M parameter and supervised fine-tuning Llama like model from scratch"
+  - name: "RL-GRPO"
+    link: "https://github.com/CohleM/RL-GRPO"
+    link_text: "[github]"
+    description: "distributed training (FSDP, tensor parallelism) of qwen model using GRPO algorithm under 1000 LOC"

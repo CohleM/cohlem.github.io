@@ -1,0 +1,329 @@
+.home-container section {
+  margin: 3rem 0;
+  margin-left: 3rem;
+  margin-right: 3rem;
+}
+.home-container .blogs ul {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.home-container .blogs ul li {
+  width: 100%;
+  background: #282a2e;
+  padding: 1rem 1.5rem;
+  border-radius: 4px;
+  border: 1px solid #373b41;
+  color: #8abeb7;
+  transition: all 0.3s ease;
+}
+.home-container .blogs ul li:hover {
+  border-color: #b5bd68;
+  background: #2a2c2e;
+  transform: translateX(4px);
+}
+.home-container .blogs ul li::before {
+  content: "> ";
+  color: #b5bd68;
+}
+.home-container .contact p {
+  font-size: 1.1rem;
+}
+.home-container .contact p a {
+  color: #8abeb7;
+  text-decoration: none;
+}
+.home-container .contact p a:hover {
+  text-decoration: underline;
+}
+
+.work-section .job {
+  margin-bottom: 3rem;
+  padding: 1.5rem;
+  background: #282a2e;
+  border-left: 3px solid #b5bd68;
+  border-radius: 4px;
+}
+.work-section .job .company {
+  font-size: 1.5rem;
+  color: #8abeb7;
+  margin-bottom: 0.5rem;
+}
+.work-section .job .company a {
+  color: inherit;
+  text-decoration: none;
+}
+.work-section .job .company a:hover {
+  text-decoration: underline;
+}
+.work-section .job .role {
+  color: #c5c8c6;
+  margin-bottom: 0.3rem;
+}
+.work-section .job .dates {
+  color: #81a2be;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+.work-section .job .description {
+  color: #969896;
+  line-height: 1.7;
+}
+
+.projects-section .project {
+  margin-bottom: 2.5rem;
+}
+.projects-section .project h3 {
+  font-size: 1.5rem;
+  color: #8abeb7;
+  margin-bottom: 0.5rem;
+}
+.projects-section .project h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+.projects-section .project h3 a:hover {
+  color: #b5bd68;
+}
+.projects-section .project .description {
+  color: #969896;
+  line-height: 1.7;
+}
+
+.blog-container h1 {
+  font-size: 2.5rem;
+  margin-bottom: 3rem;
+  color: #b5bd68;
+}
+
+.posts-list .post-preview {
+  margin-bottom: 3rem;
+  padding: 1.5rem;
+  background: #282a2e;
+  border-left: 3px solid #8abeb7;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+.posts-list .post-preview:hover {
+  background: #2a2c2e;
+  border-left-color: #b5bd68;
+  transform: translateX(4px);
+}
+.posts-list .post-preview h2 {
+  margin-bottom: 0.5rem;
+}
+.posts-list .post-preview h2 a {
+  color: #8abeb7;
+  text-decoration: none;
+}
+.posts-list .post-preview h2 a:hover {
+  color: #b5bd68;
+}
+.posts-list .post-preview time {
+  color: #81a2be;
+  font-size: 0.9rem;
+}
+.posts-list .post-preview p {
+  margin: 1rem 0;
+  color: #969896;
+}
+.posts-list .post-preview .read-more {
+  color: #b5bd68;
+  text-decoration: none;
+  font-weight: 500;
+}
+.posts-list .post-preview .read-more:hover {
+  text-decoration: underline;
+}
+
+.blog-post header {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #373b41;
+}
+.blog-post header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: #b5bd68;
+}
+.blog-post header time {
+  color: #81a2be;
+}
+.blog-post .post-content {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: #c5c8c6;
+}
+.blog-post .post-content h2, .blog-post .post-content h3 {
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: #8abeb7;
+}
+.blog-post .post-content h2 {
+  font-size: 1.8rem;
+}
+.blog-post .post-content h3 {
+  font-size: 1.4rem;
+}
+.blog-post .post-content p {
+  margin-bottom: 1.2rem;
+}
+.blog-post .post-content ul, .blog-post .post-content ol {
+  margin-left: 2rem;
+  margin-bottom: 1.2rem;
+  color: #969896;
+}
+.blog-post .post-content ul li, .blog-post .post-content ol li {
+  margin-bottom: 0.5rem;
+}
+.blog-post .post-content code {
+  background: #282a2e;
+  color: #de935f;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
+  font-size: 0.95em;
+}
+.blog-post .post-content pre {
+  background: #282a2e;
+  padding: 1.5rem;
+  overflow-x: auto;
+  border-radius: 4px;
+  border: 1px solid #373b41;
+  margin-bottom: 1.5rem;
+}
+.blog-post .post-content pre code {
+  background: transparent;
+  padding: 0;
+  color: #c5c8c6;
+}
+.blog-post .post-content blockquote {
+  border-left: 3px solid #b5bd68;
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
+  color: #969896;
+  font-style: italic;
+}
+.blog-post .post-content a {
+  color: #8abeb7;
+}
+.blog-post .post-content a:hover {
+  color: #b5bd68;
+}
+.blog-post .tags {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #373b41;
+}
+.blog-post .tags .tag {
+  display: inline-block;
+  background: #282a2e;
+  color: #8abeb7;
+  padding: 0.4rem 1rem;
+  border-radius: 15px;
+  font-size: 0.9rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #373b41;
+}
+.blog-post .tags .tag:hover {
+  border-color: #b5bd68;
+  color: #b5bd68;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Courier New";
+  line-height: 1.6;
+  color: #c5c8c6;
+  background-color: #1d1f21;
+  font-size: 16px;
+}
+
+nav {
+  padding: 1rem 2rem;
+}
+nav a {
+  color: #b5bd68;
+  text-decoration: none;
+  margin-right: 2rem;
+  transition: color 0.3s ease;
+}
+nav a:hover {
+  color: #8abeb7;
+  text-decoration: underline;
+}
+
+main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+footer {
+  text-align: center;
+  padding: 2rem;
+  background: #282a2e;
+  margin-top: 4rem;
+  border-top: 1px solid #373b41;
+  color: #969896;
+}
+
+a {
+  color: #8abeb7;
+}
+a:hover {
+  color: #b5bd68;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Zalando Sans Expanded", sans-serif;
+  color: #b5bd68;
+  font-weight: 600;
+}
+
+p, ul, li {
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.8;
+  color: #abbcba;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* spacing between li elements */
+}
+
+.highlight pre {
+  background-color: #282b2f;
+  padding: 1em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+}
+
+/*# sourceMappingURL=main.css.map */

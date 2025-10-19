@@ -1,0 +1,122 @@
+.home-container {
+    
+    section {
+        margin: 3rem 0;
+        margin-left: 3rem;
+        margin-right: 3rem;
+    }
+
+    .blogs ul {
+        list-style: none;
+        display: grid;
+        grid-template-columns: 1fr; 
+        gap: 1rem;
+        margin-top: 1.5rem;
+        
+        
+        li {
+            width: 100%;
+            background: #282a2e;
+            padding: 1rem 1.5rem;
+            border-radius: 4px;
+            border: 1px solid #373b41;
+            color: #8abeb7;
+            transition: all 0.3s ease;
+            
+            &:hover {
+                border-color: #b5bd68;
+                background: #2a2c2e;
+                transform: translateX(4px);
+            }
+            
+            &::before {
+                content: '> ';
+                color: #b5bd68;
+            }
+        }
+    }
+    
+    .contact {
+        p {
+            font-size: 1.1rem;
+            
+            a {
+                color: #8abeb7;
+                text-decoration: none;
+                
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+    }
+}
+
+// Work experience styling
+.work-section {
+    .job {
+        margin-bottom: 3rem;
+        padding: 1.5rem;
+        background: #282a2e;
+        border-left: 3px solid #b5bd68;
+        border-radius: 4px;
+        
+        .company {
+            font-size: 1.5rem;
+            color: #8abeb7;
+            margin-bottom: 0.5rem;
+            
+            a {
+                color: inherit;
+                text-decoration: none;
+                
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+        
+        .role {
+            color: #c5c8c6;
+            margin-bottom: 0.3rem;
+        }
+        
+        .dates {
+            color: #81a2be;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .description {
+            color: #969896;
+            line-height: 1.7;
+        }
+    }
+}
+
+// Projects styling
+.projects-section {
+    .project {
+        margin-bottom: 2.5rem;
+        
+        h3 {
+            font-size: 1.5rem;
+            color: #8abeb7;
+            margin-bottom: 0.5rem;
+            
+            a {
+                color: inherit;
+                text-decoration: none;
+                
+                &:hover {
+                    color: #b5bd68;
+                }
+            }
+        }
+        
+        .description {
+            color: #969896;
+            line-height: 1.7;
+        }
+    }
+}

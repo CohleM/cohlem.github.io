@@ -1,0 +1,106 @@
+---
+---
+@use "home";
+@use "blog";
+
+// Base styles with terminal aesthetic
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family:  'Courier New';
+    line-height: 1.6;
+    color: #c5c8c6;
+    background-color: #1d1f21;
+    font-size: 16px;
+}
+
+nav {
+    // background: #282a2e;
+    padding: 1rem 2rem;
+    // border-bottom: 1px solid #373b41;
+    
+    a {
+        color: #b5bd68;
+        text-decoration: none;
+        margin-right: 2rem;
+        transition: color 0.3s ease;
+        
+        &:hover {
+            color: #8abeb7;
+            text-decoration: underline;
+        }
+    }
+}
+
+main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem;
+    background: #282a2e;
+    margin-top: 4rem;
+    border-top: 1px solid #373b41;
+    color: #969896;
+}
+
+// Links
+a {
+    color: #8abeb7;
+    
+    &:hover {
+        color: #b5bd68;
+    }
+}
+
+// Headings
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Zalando Sans Expanded", sans-serif;
+    color: #b5bd68;
+    font-weight: 600;
+}
+
+p,ul,li {
+    
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.8;
+    color: #abbcba;
+}
+
+h1 {
+    font-size: 2rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+h3 {
+    font-size: 1.25rem;
+}
+
+ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* spacing between li elements */
+}
+
+.highlight pre {
+    background-color: #282b2f;
+    padding: 1em;
+    border-radius: 0.5em;
+    overflow-x: auto;
+  }
