@@ -34,3 +34,7 @@ projects:
     link: "https://github.com/CohleM/RL-GRPO"
     link_text: "[github]"
     description: "distributed training (FSDP, tensor parallelism) of qwen model using GRPO algorithm under 1000 LOC"
+  - name: "TinyOpenHands"
+    link: "https://github.com/CohleM/TinyOpenHands"
+    link_text: "[github]"
+    description: "Tiny from-scratch reproduction of Open Hands/OpenDevin agent"
