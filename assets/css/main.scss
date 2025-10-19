@@ -1,8 +1,8 @@
 ---
 ---
-@use "home";
-@use "blog";
-@use "syntax";
+@import "home";
+@import "blog";
+@import "syntax";
 
 // Base styles with terminal aesthetic
 * {
