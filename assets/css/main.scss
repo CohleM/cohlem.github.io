@@ -99,9 +99,24 @@ ul {
     gap: 0.5rem; /* spacing between li elements */
 }
 
-.highlight pre {
-    background-color: #282b2f;
-    padding: 1em;
-    border-radius: 0.5em;
+pre {
+    background: #282a2e;
+    padding: 1.5rem;
     overflow-x: auto;
-  }
+    border-radius: 4px;
+    border: 1px solid #373b41;
+    margin-bottom: 1.5rem;
+    margin-top: 1.5rem;
+    font-size: 1rem; // Larger for better readability
+    line-height: 1.6;
+    
+    code {
+        background: transparent;
+        padding: 0;
+        color: #c5c8c6;
+        display: block;
+        font-family: 'Fira Code', monospace;
+        font-size: 0.8rem;
+        font-weight: 400;
+    }
+}
