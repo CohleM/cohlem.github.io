@@ -156,6 +156,8 @@ PLATFORMS
 
 DEPENDENCIES
   jekyll
+  rouge
+  webrick
 
 BUNDLED WITH
    2.7.2
