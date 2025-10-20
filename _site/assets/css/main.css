@@ -3,6 +3,12 @@
   margin-left: 3rem;
   margin-right: 3rem;
 }
+@media (max-width: 768px) {
+  .home-container section {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
 .home-container .blogs ul,
 .home-container .notes ul {
   list-style: none;
