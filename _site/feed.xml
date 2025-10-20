@@ -1,21 +1,21 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-10-19T22:54:09+05:45</updated><id>http://localhost:4000/feed.xml</id><entry><title type="html">Rl Papers</title><link href="http://localhost:4000/2025/09/18/RL-papers.html" rel="alternate" type="text/html" title="Rl Papers" /><published>2025-09-18T00:00:00+05:45</published><updated>2025-09-18T00:00:00+05:45</updated><id>http://localhost:4000/2025/09/18/RL-papers</id><content type="html" xml:base="http://localhost:4000/2025/09/18/RL-papers.html"><![CDATA[<h3 id="skywork-open-reasoner-1-technical-report">Skywork Open Reasoner 1 Technical Report</h3>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-10-20T11:47:39+05:45</updated><id>http://localhost:4000/feed.xml</id><entry><title type="html">Rl Papers</title><link href="http://localhost:4000/2025/09/18/RL-papers.html" rel="alternate" type="text/html" title="Rl Papers" /><published>2025-09-18T00:00:00+05:45</published><updated>2025-09-18T00:00:00+05:45</updated><id>http://localhost:4000/2025/09/18/RL-papers</id><content type="html" xml:base="http://localhost:4000/2025/09/18/RL-papers.html"><![CDATA[<h3 id="skywork-open-reasoner-1-technical-report">Skywork Open Reasoner 1 Technical Report</h3>
 
 <h4 id="multi-stage-training">Multi-stage training</h4>
 
 <p>First, set context_length = T, train, wait for convergence, at some point afterwards set context_length=2T</p>
 
 <p>There seems to be no problem with truncated responses, cause actor learns to produce accurate but shorter responses.
-<img src="skywork-tr.png" alt="skywork-tr" /></p>
+<img src="/assets/images/2025-09-18-RL-papers/skywork-tr.png" alt="skywork-tr" /></p>
 
 <h4 id="high-temperature-sampling">High temperature Sampling</h4>
 
 <p>temperatue 1.0 provides more room for exploration, whereas lower temperature might cause early entropy collapse.
-<img src="temp-sampling.png" alt="temp-sampling.png" /></p>
+<img src="/assets/images/2025-09-18-RL-papers/temp-sampling.png" alt="temp-sampling.png" /></p>
 
 <h4 id="adaptive-entropy-control">Adaptive Entropy Control</h4>
 
 <p>turn off entropy coefficient when entropy is already greater than target entropy else, increase it by del.
-<img src="entropy_control.png" alt="entropy_control" /></p>
+<img src="/assets/images/2025-09-18-RL-papers/entropy_control.png" alt="entropy_control" /></p>
 
 <h3 id="acereason-nemotron-11-advancing-math-and-code-reasoning-through-sft-and-rl-synergy">AceReason-Nemotron 1.1: Advancing Math and Code Reasoning through SFT and RL Synergy</h3>
 
@@ -23,27 +23,27 @@
 
 <p>Generally, large no. of unique prompts is better, but at some point obtaining those become difficult, afterwards, we can include more responses per prompt in our dataset. More epochs helps as well.</p>
 
-<p><img src="ace-nemo.png" alt="ace-nemo" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/ace-nemo.png" alt="ace-nemo" /></p>
 
 <h4 id="is-stage-1-necessary">Is stage-1 necessary?</h4>
 
-<p><img src="overall-trn.png" alt="overall-trn" />
+<p><img src="/assets/images/2025-09-18-RL-papers/overall-trn.png" alt="overall-trn" />
 stage-1 training seems to be necessary cause, it allows the model to compress it’s reasoning at early stage, not doing so results in accuracy that plateaus see fig below.</p>
 
-<p><img src="stage-1.png" alt="stage-1" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/stage-1.png" alt="stage-1" /></p>
 
 <h4 id="exploration-vs-exploitation-ie-temperature-controlled-entropy">Exploration vs exploitation (i.e temperature controlled entropy)</h4>
 
 <p>extremely high temp or low temp cause reward to dampen, thus noisy training.</p>
 
-<p><img src="temp-exp.png" alt="temp-exp" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/temp-exp.png" alt="temp-exp" /></p>
 
 <h4 id="with-overlong-filtering-or-without-overlong-filtering">with overlong filtering or without overlong filtering</h4>
 
 <p>with overlong filtering = don’t use the trajectory for reward calculation
 without overlong filtering = use the trajectory and provide negative reward for truncated responses</p>
 
-<p><img src="overlong.png" alt="overlong" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/overlong.png" alt="overlong" /></p>
 
 <p>overlong filtering helps during first stages (i.e when context lengths are small) otherwise, when context length is sufficient, it doesn’t help.</p>
 
@@ -51,7 +51,7 @@ without overlong filtering = use the trajectory and provide negative reward for 
 
 <p>The performance gain decreases for some benchmarks(AIME25) as we increase K. We can find answer within the SFT model if the K is sufficiently large</p>
 
-<p><img src="passk.png" alt="passk" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/passk.png" alt="passk" /></p>
 
 <h3 id="something">Something</h3>
 
@@ -65,11 +65,11 @@ without overlong filtering = use the trajectory and provide negative reward for 
 
 <p>when problems are too easy for actor, the rewards are almost all correct, the std will be low, division by low std results in high advanrages causing higher gradients (sometimes exploding gradients) but when problems are medium-hard there’s not much of a difference between normalizing by std or just simply subtracting the mean from the reward. (i.e no use of std)</p>
 
-<p><img src="std-use.png" alt="std-use" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/std-use.png" alt="std-use" /></p>
 
 <h4 id="reward-shaping-works-best-when-use-divide-by-global-std">Reward shaping works best when use divide by global std</h4>
 
-<p><img src="global-std.png" alt="global-std" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/global-std.png" alt="global-std" /></p>
 
 <h4 id="liteppo">LitePPO</h4>
 
@@ -185,8 +185,8 @@ exp do rollout of 8 exp, select one randomly as a reference data, pass current a
 
 <p>This all_reduce is a collective operation performed by the <code class="language-plaintext highlighter-rouge">backend</code> i.e either ‘nccl’ or ‘gloo’.
 ‘nccl’ is mostly used for GPUs whereas ‘gloo’ can run in CPUs as well. Under the hood these backend implement the logic on how these collectives operations need to be implemented. all_reduce is one of many collective operations provided by the backend. Please late a look at the picture below to understand how these work.
-<img src="coll1.png" alt="coll1.png" />
-<img src="coll2.png" alt="coll2" />
+<img src="/assets/images/2025-09-01-Distributed-RL-training-step/coll1.png" alt="coll1.png" />
+<img src="/assets/images/2025-09-01-Distributed-RL-training-step/coll2.png" alt="coll2" />
 Image source: <a href="https://docs.pytorch.org/tutorials/intermediate/dist_tuto.html">Writing Distributed Applications with PyTorch</a></p>
 
 <p>You can take a look at this <a href="https://docs.pytorch.org/tutorials/intermediate/dist_tuto.html">source</a> if you want to understand how these collectives work under the hood.</p>
@@ -258,11 +258,11 @@ Image source: <a href="https://docs.pytorch.org/tutorials/intermediate/dist_tuto
 
 <p>Let’s consider we have a layer that has a flat weight matrix and 3 GPUs, we divide 1/3 of the weights into each GPU as shown in the picture below and pass different batch to each GPU so that it can perform computation simultaneously.</p>
 
-<p><img src="fsdp1.png" alt="fsdp1" />
+<p><img src="/assets/images/2025-09-01-Distributed-RL-training-step/fsdp1.png" alt="fsdp1" />
 Image source: <a href="https://www.youtube.com/watch?v=6pVn6khIgiI">The SECRET Behind ChatGPT’s Training That Nobody Talks About | FSDP Explained</a></p>
 
 <p>Data reaches the GPU but GPU doesn’t have the full weight to complete the computation, so each GPU calls all_gather collective to collect weights from all the GPUs. After all gather all 3 GPUs will have the full weight <code class="language-plaintext highlighter-rouge">[0..1024]</code> and it can do the computation as shown in the figure below.
-<img src="fsdp2.png" alt="fsdp2" />
+<img src="/assets/images/2025-09-01-Distributed-RL-training-step/fsdp2.png" alt="fsdp2" />
 After computing the activations it instantly frees up the GPU memory. Next, is the case of backward pass.</p>
 
 <p>Similar to image above, it first all gathers the weights and compute the gradients, and reduce scatter so that each GPU only has gradients for their respective shard and then when we do optimizer.step() it will only update it’s respective shard of optimizer. See how we shard weights, gradients, and optimizer across GPUs but only gather weights, this helps a lot. BUT a GPU should have memory to at least store model’s full weights.
@@ -378,8 +378,8 @@ d2 = c @ gpu2_w2
 
 <p>Similarly, we can do row-wise and column-wise sharding for attention as well which can be seen in the illustration below.</p>
 
-<p><img src="attn1-n.png" alt="attn1-n" />
-<img src="attn2-n.png" alt="att2-n" /></p>
+<p><img src="/assets/images/2025-09-01-Distributed-RL-training-step/attn1-n.png" alt="attn1-n" />
+<img src="/assets/images/2025-09-01-Distributed-RL-training-step/attn2-n.png" alt="att2-n" /></p>
 
 <p>Both should be easy to understand, if not please take a look at the <a href="https://insujang.github.io/2024-01-11/tensor-parallelism-and-sequence-parallelism-detailed-analysis/">source</a></p>
 
@@ -969,7 +969,7 @@ Assume we are in process 0, i.e
 our original mesh is <code class="language-plaintext highlighter-rouge">mesh['FSDP','TP']</code>, we try to get <code class="language-plaintext highlighter-rouge">mesh['TP']</code> where FSDP is not there so lets draw a line across ‘FSDP’ dimensions (0th and 1st) and see which TP sub-matrix falls in the drawn line. since we were in process 0, submatrix <code class="language-plaintext highlighter-rouge">[0,1]</code> is chosen and our process 0 will only <code class="language-plaintext highlighter-rouge">[0,1]</code> when we output <code class="language-plaintext highlighter-rouge">mesh['TP']</code> and ignore others. We’ll get the same when we are on process 1, but we’ll get <code class="language-plaintext highlighter-rouge">[2,3]</code> when we’re on either 2 or 3 processes.</p>
 
 <p>so the simple logic is to draw line across dimension that is not in the specified mesh i.e FSDP in this case, and see on which submatrix our current process falls. It’s better to get a pen and paper and understand it deeply.
-<img src="fsdp_mat.png" alt="fsdp_mat" /></p>
+<img src="/assets/images/2025-09-01-Distributed-RL-training-step/fsdp_mat.png" alt="fsdp_mat" /></p>
 
 <p>We pass this mesh to parallelize_module that takes in only 1D mesh and applies the Sharding plan across that 1D mesh, For example, if we are in process 0, the weights of size (8,8) are sharded across 0 and 1 GPUs so each gpu will get (4,8) (assume Shard(0)) and if we’re on process 2 weights are sharded across 2,3.</p>
 
@@ -996,7 +996,7 @@ and process 1 will see [1,3].</p>
 
 <h4 id="3d-mesh">3D mesh</h4>
 
-<p><img src="matrix-mul.png" alt="matrix-mul" /></p>
+<p><img src="/assets/images/2025-09-01-Distributed-RL-training-step/matrix-mul.png" alt="matrix-mul" /></p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
 <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]]</span>
@@ -1921,9 +1921,9 @@ out = X @ W + X @ B@A</p>
 
 <h3 id="paper-findings-only-focus-on-highlighted-sentences">Paper findings (only focus on highlighted sentences)</h3>
 
-<p><img src="lora1.png" alt="lora1" /></p>
+<p><img src="/assets/images/2025-04-07-LoRA/lora1.png" alt="lora1" /></p>
 
-<p><img src="lora2.png" alt="lora2" /></p>
+<p><img src="/assets/images/2025-04-07-LoRA/lora2.png" alt="lora2" /></p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="c1"># import torch
@@ -2183,10 +2183,10 @@ A head which implements the induction behaviour. They allow models to perform in
 <p>Wq,Wk, Wv can be thought of as what we take in(read) from the residual stream and Wo can be though of as what we put into(write) the residual stream. Similar to read/write operation.</p>
 
 <p>QK circuit is represented as combination of
-<img src="i1.png" alt="i1" /></p>
+<img src="/assets/images/2025-03-03-interpretability/i1.png" alt="i1" /></p>
 
 <p>and attention scores are calculated as
-<img src="i2.png" alt="i2" /></p>
+<img src="/assets/images/2025-03-03-interpretability/i2.png" alt="i2" /></p>
 
 <p>it is similar to Q @ K.T</p>
 
@@ -2194,7 +2194,7 @@ A head which implements the induction behaviour. They allow models to perform in
 
 <h3 id="ov-circuit">OV circuit</h3>
 
-<p><img src="i3.png" alt="i3" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i3.png" alt="i3" /></p>
 
 <ul>
   <li>Conceptually, this matrix (Vi.Wov) tells us <strong>what information is moved from a token</strong>, if that token is attended to.</li>
@@ -2214,26 +2214,26 @@ Important assumption to keep in mind is subspaces are orthogonal i.e their dot p
 <p><strong>K-composition</strong>
 In K-composition, the output of one attention at layer 0 is used as a key for another attention calculation in layer1.</p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/dhz5bqfuuoujydh89caa.png" alt="matrix" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/dhz5bqfuuoujydh89caa.png" alt="matrix" /></p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/ui0f38ofgdsyr9zzt5ar.png" alt="imag2" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/ui0f38ofgdsyr9zzt5ar.png" alt="imag2" /></p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/voncnaecap3tsw8dt0mn.png" alt="image3" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/voncnaecap3tsw8dt0mn.png" alt="image3" /></p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/tuskojx6dtlzjwoqs9zd.png" alt="image3" />
-<img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/eaongteayjgei7no5ycy.png" alt="image5" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/tuskojx6dtlzjwoqs9zd.png" alt="image3" />
+<img src="/assets/images/2025-03-03-interpretability/eaongteayjgei7no5ycy.png" alt="image5" /></p>
 
 <p>Induction heads are responsible in significant downward loss. It could mainly occur in phase changes, eg. 2B to 4B tokens. Are responsible to ICL but also helps in translation as well as few-shots learning</p>
 
 <h3 id="visualization-of-induction-head">Visualization of induction head</h3>
 
-<p><img src="i4.png" alt="i4" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i4.png" alt="i4" /></p>
 
 <p>the visualization would look like this, for an induction head i.e the destination token attends to token after the previous destination token’s occurance offset by seq_len - 1.</p>
 
 <h3 id="direct-logits-attribution">Direct logits attribution</h3>
 
-<p><img src="i5.png" alt="i5" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i5.png" alt="i5" /></p>
 
 <p>It involves understanding how much each component (e.g., attention heads, layers, or direct paths) contributes to the model’s predictions.</p>
 
@@ -2255,11 +2255,11 @@ destination token: the token that is looking at other tokens</p>
 
 <p>We pass it through our 2 layer attention-only model</p>
 
-<p>we get attention pattern like this for layer 0 <img src="i6.png" alt="i6" />
+<p>we get attention pattern like this for layer 0 <img src="/assets/images/2025-03-03-interpretability/i6.png" alt="i6" />
 here 7 is a <strong>previous token head</strong></p>
 
 <p>and we get this attention pattern for layer 1
-<img src="i7.png" alt="i7" /></p>
+<img src="/assets/images/2025-03-03-interpretability/i7.png" alt="i7" /></p>
 
 <p>4 and 7 are induction heads, cause we see the activations for seq_len -1 diagonal</p>
 
@@ -2285,11 +2285,11 @@ to a different subspace than they read from.
 
 <h3 id="paper">Paper</h3>
 
-<p>implement this formula to find which component/layer are important <img src="i8.png" alt="i8" /></p>
+<p>implement this formula to find which component/layer are important <img src="/assets/images/2025-03-03-interpretability/i8.png" alt="i8" /></p>
 
 <p>to find how good they are (faithful) use this equation</p>
 
-<p><img src="i9.png" alt="i9" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i9.png" alt="i9" /></p>
 
 <p>IDENTIFYING ANSWER-PROMOTING COMPONENTS
 train linear probing for each layer, at each position p, find which which layer at which position promote the correct-answer</p>
@@ -2396,7 +2396,7 @@ but we manually correct the calculation, example 64 - 55 = 100 was corrected to 
 
 <p>logit difference == logprob difference</p>
 
-<p><img src="i10.png" alt="i10" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i10.png" alt="i10" /></p>
 
 <h3 id="things-to-check">Things to check</h3>
 
@@ -3118,7 +3118,7 @@ because the training objective is different, In pretraining we force the model t
   <p>We utilize an autoregressive objective and zero-out the loss on tokens from the user prompt, so as a result, we backpropagate only on answer tokens. Finally, we fine-tune the model for 2 epochs.</p>
 </blockquote>
 
-<p><img src="pts1.png" alt="pts1" />
+<p><img src="/assets/images/2025-02-06-post-training-strategies/pts1.png" alt="pts1" />
 figure: <a href="https://arxiv.org/pdf/2203.02155">InstructGPT paper</a></p>
 
 <blockquote>

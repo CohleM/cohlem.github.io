@@ -285,9 +285,9 @@ logits = h @ W2 + b2 # output layer
 
 why? because if we go deep into matrix multiplication, we see there are two operations involved i.e multiplication and addition. The formula for calculating gradient for the equation above is derived in the picture below.
 
-![one](one.jpg)
+![one](/assets/images/2024-12-24-manual-backpropagation-on-tensors/one.jpg)
 
-![two](two.jpg)
+![two](/assets/images/2024-12-24-manual-backpropagation-on-tensors/two.jpg)
 We come up with a simple equation.
 
 ```

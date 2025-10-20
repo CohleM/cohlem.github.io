@@ -221,7 +221,7 @@
 
 <h3 id="activation-plot">Activation plot</h3>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig1.png" alt="fig1" /></p>
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig1.png" alt="fig1" /></p>
 
 <p>As you can see almost all the pre activations are saturated, this is because our weight is initialized in such a way that after applying tanh, most of our output values lie in -1 and 1, which will stop gradient propagation.</p>
 
@@ -243,13 +243,13 @@
 
 </code></pre></div></div>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig2.png" alt="fig2" /></p>
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig2.png" alt="fig2" /></p>
 
 <p>The plot is starting to look nicer, because there is less saturation, because now values don’t lie in the extreme values of tanh, and gradient will be propagated. But we still have issue, as we can see the standard deviation is decreasing this is because of the property of tanh, i.e it squashes the values, initially (blue plot) the output was decent but in later layers, the distribution is being shrinked that because of the property of tanh.</p>
 
 <p>now let’s apply kaiming init with gain too, for tanh the gain is 5/3.</p>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig3.png" alt="fig3" />
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig3.png" alt="fig3" />
 Now the values are being evenly distributed, and the standard deviation is stable (doesn’t decrease with iteration).</p>
 
 <p>We have to precisely measure the gains to have a stable training. But the introduction of batch normalization changes the case, and we don’t have to be that much aware for precisely initializing weights.</p>
@@ -267,17 +267,17 @@ Now the values are being evenly distributed, and the standard deviation is stabl
 ]
 </code></pre></div></div>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig4.png" alt="fig4" />
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig4.png" alt="fig4" />
 The output values are properly distributed, with very less saturation and a constant standard deviation.</p>
 
 <h3 id="gradient-plot">Gradient plot</h3>
 
 <p>The gradient distribution at each layers would look like this when the pre activations are batch normalized.
-<img src="sub-notes/Diagnostic-tool-while-training-nn/fig5.png" alt="fig5" /></p>
+<img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig5.png" alt="fig5" /></p>
 
 <h3 id="gradient-to-data-ratio-plot">Gradient to data ratio plot</h3>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig6.png" alt="fig6" />
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig6.png" alt="fig6" />
 This is what the ratio of gradient (calculated after backprop) to data plot looks like.
 x-axis represent iterations, y represent the exponents. Ideally, 1e-3 is suitable and that ratio should lie around that line. If the ratio is below that line it means, we need to step up our learning rate, and if it is higher than that line we need to lower our learning rate.</p>
 
@@ -293,7 +293,7 @@ x-axis represent iterations, y represent the exponents. Ideally, 1e-3 is suitabl
       layer.weight *= 0.3
 </code></pre></div></div>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig7.png" alt="fig7" />
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig7.png" alt="fig7" />
 as you can see, when I make gain to 0.3 the ratio significantly varies, i.e ratio for later layers are around 1e-1.5, which mean we would have to lower our learning rate because of this gain change.</p>
 
 <p>So the gain significantly affects our learning rate, but it doesn’t affect other plots that we plot above, because it’s controlled by batch normalization.</p>
@@ -494,7 +494,7 @@ as you can see, when I make gain to 0.3 the ratio significantly varies, i.e rati
 
 <h3 id="activation-plot">Activation plot</h3>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig1.png" alt="fig1" /></p>
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig1.png" alt="fig1" /></p>
 
 <p>As you can see almost all the pre activations are saturated, this is because our weight is initialized in such a way that after applying tanh, most of our output values lie in -1 and 1, which will stop gradient propagation.</p>
 
@@ -516,13 +516,13 @@ as you can see, when I make gain to 0.3 the ratio significantly varies, i.e rati
 
 </code></pre></div></div>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig2.png" alt="fig2" /></p>
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig2.png" alt="fig2" /></p>
 
 <p>The plot is starting to look nicer, because there is less saturation, because now values don’t lie in the extreme values of tanh, and gradient will be propagated. But we still have issue, as we can see the standard deviation is decreasing this is because of the property of tanh, i.e it squashes the values, initially (blue plot) the output was decent but in later layers, the distribution is being shrinked that because of the property of tanh.</p>
 
 <p>now let’s apply kaiming init with gain too, for tanh the gain is 5/3.</p>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig3.png" alt="fig3" />
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig3.png" alt="fig3" />
 Now the values are being evenly distributed, and the standard deviation is stable (doesn’t decrease with iteration).</p>
 
 <p>We have to precisely measure the gains to have a stable training. But the introduction of batch normalization changes the case, and we don’t have to be that much aware for precisely initializing weights.</p>
@@ -540,17 +540,17 @@ Now the values are being evenly distributed, and the standard deviation is stabl
 ]
 </code></pre></div></div>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig4.png" alt="fig4" />
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig4.png" alt="fig4" />
 The output values are properly distributed, with very less saturation and a constant standard deviation.</p>
 
 <h3 id="gradient-plot">Gradient plot</h3>
 
 <p>The gradient distribution at each layers would look like this when the pre activations are batch normalized.
-<img src="sub-notes/Diagnostic-tool-while-training-nn/fig5.png" alt="fig5" /></p>
+<img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig5.png" alt="fig5" /></p>
 
 <h3 id="gradient-to-data-ratio-plot">Gradient to data ratio plot</h3>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig6.png" alt="fig6" />
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig6.png" alt="fig6" />
 This is what the ratio of gradient (calculated after backprop) to data plot looks like.
 x-axis represent iterations, y represent the exponents. Ideally, 1e-3 is suitable and that ratio should lie around that line. If the ratio is below that line it means, we need to step up our learning rate, and if it is higher than that line we need to lower our learning rate.</p>
 
@@ -566,7 +566,7 @@ x-axis represent iterations, y represent the exponents. Ideally, 1e-3 is suitabl
       layer.weight *= 0.3
 </code></pre></div></div>
 
-<p><img src="sub-notes/Diagnostic-tool-while-training-nn/fig7.png" alt="fig7" />
+<p><img src="/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig7.png" alt="fig7" />
 as you can see, when I make gain to 0.3 the ratio significantly varies, i.e ratio for later layers are around 1e-1.5, which mean we would have to lower our learning rate because of this gain change.</p>
 
 <p>So the gain significantly affects our learning rate, but it doesn’t affect other plots that we plot above, because it’s controlled by batch normalization.</p>

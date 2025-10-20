@@ -13,7 +13,7 @@ The more the precision point the less operation (TFLOPS) is performed.
 
 Picture below shows specifications of A100 GPU.
 
-![GPU precision](sub-notes/training-speed-optimization/fig1.png)
+![GPU precision](/assets/images/2025-01-02-training-speed-optimization/fig1.png)
 
 Using these precision points may have some difference in code.
 See pytorch's docs
@@ -24,7 +24,7 @@ It works in a similar fashion like the GCC compiler. It works by reducing overhe
 
 For instance
 
-![gpu memory](sub-notes/training-speed-optimization/fig2.png)
+![gpu memory](/assets/images/2025-01-02-training-speed-optimization/fig2.png)
 
 ```python
 def gelu(x):

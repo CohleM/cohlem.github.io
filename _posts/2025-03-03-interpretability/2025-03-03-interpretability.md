@@ -21,10 +21,10 @@ Wq, Wk, Wv be the projection matrices in our attention and Wo be the projection 
 Wq,Wk, Wv can be thought of as what we take in(read) from the residual stream and Wo can be though of as what we put into(write) the residual stream. Similar to read/write operation.
 
 QK circuit is represented as combination of
-![i1](i1.png)
+![i1](/assets/images/2025-03-03-interpretability/i1.png)
 
 and attention scores are calculated as
-![i2](i2.png)
+![i2](/assets/images/2025-03-03-interpretability/i2.png)
 
 it is similar to Q @ K.T
 
@@ -32,7 +32,7 @@ Conceptually, this matrix tells us **which tokens information is moved to & fro
 
 ### OV circuit
 
-![i3](i3.png)
+![i3](/assets/images/2025-03-03-interpretability/i3.png)
 
 - Conceptually, this matrix (Vi.Wov) tells us **what information is moved from a token**, if that token is attended to.
 
@@ -50,26 +50,26 @@ we are simply adding two different informations from different subspaces i.e pos
 **K-composition**
 In K-composition, the output of one attention at layer 0 is used as a key for another attention calculation in layer1.
 
-![matrix](https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/dhz5bqfuuoujydh89caa.png)
+![matrix](/assets/images/2025-03-03-interpretability/dhz5bqfuuoujydh89caa.png)
 
-![imag2](https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/ui0f38ofgdsyr9zzt5ar.png)
+![imag2](/assets/images/2025-03-03-interpretability/ui0f38ofgdsyr9zzt5ar.png)
 
-![image3](https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/voncnaecap3tsw8dt0mn.png)
+![image3](/assets/images/2025-03-03-interpretability/voncnaecap3tsw8dt0mn.png)
 
-![image3](https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/tuskojx6dtlzjwoqs9zd.png)
-![image5](https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/eaongteayjgei7no5ycy.png)
+![image3](/assets/images/2025-03-03-interpretability/tuskojx6dtlzjwoqs9zd.png)
+![image5](/assets/images/2025-03-03-interpretability/eaongteayjgei7no5ycy.png)
 
 Induction heads are responsible in significant downward loss. It could mainly occur in phase changes, eg. 2B to 4B tokens. Are responsible to ICL but also helps in translation as well as few-shots learning
 
 ### Visualization of induction head
 
-![i4](i4.png)
+![i4](/assets/images/2025-03-03-interpretability/i4.png)
 
 the visualization would look like this, for an induction head i.e the destination token attends to token after the previous destination token's occurance offset by seq_len - 1.
 
 ### Direct logits attribution
 
-![i5](i5.png)
+![i5](/assets/images/2025-03-03-interpretability/i5.png)
 
 It involves understanding how much each component (e.g., attention heads, layers, or direct paths) contributes to the model's predictions.
 
@@ -92,11 +92,11 @@ lets say we process a random but repeating sequence.
 
 We pass it through our 2 layer attention-only model
 
-we get attention pattern like this for layer 0 ![i6](i6.png)
+we get attention pattern like this for layer 0 ![i6](/assets/images/2025-03-03-interpretability/i6.png)
 here 7 is a **previous token head**
 
 and we get this attention pattern for layer 1
-![i7](i7.png)
+![i7](/assets/images/2025-03-03-interpretability/i7.png)
 
 4 and 7 are induction heads, cause we see the activations for seq_len -1 diagonal
 
@@ -120,11 +120,11 @@ In layer 1, attention 4,10, K-composition is used i.e the output of attention he
 
 ### Paper
 
-implement this formula to find which component/layer are important ![i8](i8.png)
+implement this formula to find which component/layer are important ![i8](/assets/images/2025-03-03-interpretability/i8.png)
 
 to find how good they are (faithful) use this equation
 
-![i9](i9.png)
+![i9](/assets/images/2025-03-03-interpretability/i9.png)
 
 IDENTIFYING ANSWER-PROMOTING COMPONENTS
 train linear probing for each layer, at each position p, find which which layer at which position promote the correct-answer
@@ -223,7 +223,7 @@ logit differnce is easier to understand
 
 logit difference == logprob difference
 
-![i10](i10.png)
+![i10](/assets/images/2025-03-03-interpretability/i10.png)
 
 ### Things to check
 

@@ -57,16 +57,16 @@ https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-expert
 
 <ul>
   <li>Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs.
-<img src="moefig1.png" alt="fig1" /></li>
+<img src="/assets/images/2025-01-05-mixture-of-experts/moefig1.png" alt="fig1" /></li>
 </ul>
 
 <p>Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.</p>
 
-<p><img src="moefig2.png" alt="fig2" />
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/moefig2.png" alt="fig2" />
 Down the line it could use multiple experts but at different blocks i.e (layers)</p>
 
 <p>A routing layer is set to choose experts
-<img src="fig3.png" alt="fig3" /></p>
+<img src="/assets/images/2025-01-05-mixture-of-experts/fig3.png" alt="fig3" /></p>
 
 <p>depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected.</p>
 
@@ -82,13 +82,13 @@ Down the line it could use multiple experts but at different blocks i.e (layers)
 
 <p>By introducing trainable (gaussian) noise, we can prevent the same experts from always being picked. It’ll help router to distribute experts and not restrict to some specific experts.</p>
 
-<p><img src="fig4.png" alt="fig4" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig4.png" alt="fig4" /></p>
 
 <h3 id="capacity-factor">Capacity Factor</h3>
 
 <p>Distributing experts is not enough because distribution of expert happens close to no.of.steps times but there are a lot of batch of tokens that are processed in a single step. An expert could be assigned more than the others but it can also be assigned less tokens as compared to others.
 The solution is to equally divide the number of tokens to all the expert using capacity factor given by this formula.
-<img src="fig5.png" alt="fig5" /></p>
+<img src="/assets/images/2025-01-05-mixture-of-experts/fig5.png" alt="fig5" /></p>
 
 <h2 id="implementation">Implementation</h2>
 
@@ -149,7 +149,7 @@ The solution is to equally divide the number of tokens to all the expert using c
 
 <p>Using all the experts for inputs will be computationally expensive. A way to reduce that is to implement noise_gating + topK method specified in the paper <a href="https://arxiv.org/pdf/1701.06538">OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER</a></p>
 
-<p><img src="fig6.png" alt="fig6" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig6.png" alt="fig6" /></p>
 
 <p>let’s understand these equation with reference to the code</p>
 
@@ -365,7 +365,7 @@ using that mask (mask will help us pluck out input tokens with specific index wh
 
 <h4 id="auxiliary-loss">Auxiliary Loss</h4>
 
-<p><img src="fig7.png" alt="fig7" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig7.png" alt="fig7" /></p>
 
 <p>To encourage models to make expert’s probability uniform (choosing all the experts and not restricting to some experts) We add to our main loss another loss term that we get from our MoE layer. It is calculated by first calculating the importance which is simply calculating the batch sum over the inputs for the router’s output and calculating the square of the coefficient of variation from the importance and then multiplying with a hand tuned scaling factor called Wimportance.</p>
 
@@ -381,25 +381,25 @@ using that mask (mask will help us pluck out input tokens with specific index wh
 
 <p>x axis = no of steps
 y axis = no of tokens assigned to each expert
-<img src="no_noise_no_lossmoe.png" alt="no_noise_no_lossmoe" /></p>
+<img src="/assets/images/2025-01-05-mixture-of-experts/no_noise_no_lossmoe.png" alt="no_noise_no_lossmoe" /></p>
 
 <p>Even though the plot seems to fluctuate too much, we can see that there is inappropriate distribution of tokens among the experts i.e expert 0 is assigned less tokens and and expert 1 and 3 are assigned more tokens and the curve relatively stays the same because we did not add the loss function too.</p>
 
 <h4 id="noise-but-no-moe-loss">Noise but no MoE loss</h4>
 
-<p><img src="noise_yes_lossmoe_no.png" alt="noise_yes_lossmoe_no" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/noise_yes_lossmoe_no.png" alt="noise_yes_lossmoe_no" /></p>
 
 <p>There is relatively small gap between number of tokens assigned to the experts because this time we added gaussian noise which reduces the gap, but the number of tokens assigned to them remains constantly fluctuating.</p>
 
 <h4 id="no-noise-but-moeloss-included">No Noise but MoELoss included</h4>
 
-<p><img src="noise_no_lossmoe_yes.png" alt="noise_no_lossmoe_yes" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/noise_no_lossmoe_yes.png" alt="noise_no_lossmoe_yes" /></p>
 
 <p>As you can see there was inappropriate distribution of tokens in the beginning but the model seems to have learned to distribute the tokens among the experts after training for some time.</p>
 
 <h4 id="including-noise-and-moe-loss">Including Noise and MoE Loss</h4>
 
-<p><img src="loss_noisy_topk.png" alt="loss_noisy_topk" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/loss_noisy_topk.png" alt="loss_noisy_topk" /></p>
 
 <p>it looks similar to the previous one, i.e big variation in the beginning but learns to distribute afterwards, its different from the previous one in that initially the range of tokens assigned to experts are between (150, 350) but in the previous plot it was (100,400). This less variation in this plot can be attributed to the addition of gaussian noise.</p>
 
@@ -429,7 +429,7 @@ https://github.com/CohleM/deep_learning/blob/master/MoE/moe.ipynb</p>
 <p>(out of this paper: discrete operations are not differentiable i.e choosing max from a list, cause derivative of constant is 0 so gradient propagation stops)</p>
 
 <p>Choosing right capacity factor is important as shown in figure below.
-<img src="fig8.png" alt="fig8" /></p>
+<img src="/assets/images/2025-01-05-mixture-of-experts/fig8.png" alt="fig8" /></p>
 
 <p>as you can see the when CF is 1 only one token is truncated (not evaluated) but is passed through to next layers through residual connection.</p>
 
@@ -440,7 +440,7 @@ https://github.com/CohleM/deep_learning/blob/master/MoE/moe.ipynb</p>
 </ul>
 
 <p>The auxiliary loss is given by this equation
-<img src="fig9.png" alt="fig9" /></p>
+<img src="/assets/images/2025-01-05-mixture-of-experts/fig9.png" alt="fig9" /></p>
 
 <blockquote>
   <p>Since we seek uniform routing of the batch of tokens across the N experts, we desire both vectors to have values of 1/N</p>
@@ -566,13 +566,13 @@ https://github.com/CohleM/deep_learning/blob/master/MoE/moe.ipynb</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor(1.2714)
 </code></pre></div></div>
 
-<p><img src="fig10.png" alt="fig10" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig10.png" alt="fig10" /></p>
 
 <h3 id="deepseekmoe-paper">DeepSeekMoE (<a href="https://arxiv.org/pdf/2401.06066">paper</a>)</h3>
 
 <p>One of the recent MoE paper.</p>
 
-<p><img src="fig11.png" alt="fig11" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig11.png" alt="fig11" /></p>
 
 <p>There were these limitations.</p>
 
@@ -588,7 +588,7 @@ https://github.com/CohleM/deep_learning/blob/master/MoE/moe.ipynb</p>
   <li>Shared Expert Isolation: There must be expert that should process some general knowledge task. for that reason they separate out some experts for this knowledge sharing. By sharing knowledge, the fine grained experts don’t need to acquire extra knowledge, enabling them to specialize in specific tasks.</li>
 </ol>
 
-<p><img src="fig12.png" alt="fig12" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig12.png" alt="fig12" /></p>
 
 <p>The output representation for a batch, will look like this.</p>
 
@@ -620,16 +620,16 @@ https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-expert
 
 <ul>
   <li>Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs.
-<img src="moefig1.png" alt="fig1" /></li>
+<img src="/assets/images/2025-01-05-mixture-of-experts/moefig1.png" alt="fig1" /></li>
 </ul>
 
 <p>Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.</p>
 
-<p><img src="moefig2.png" alt="fig2" />
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/moefig2.png" alt="fig2" />
 Down the line it could use multiple experts but at different blocks i.e (layers)</p>
 
 <p>A routing layer is set to choose experts
-<img src="fig3.png" alt="fig3" /></p>
+<img src="/assets/images/2025-01-05-mixture-of-experts/fig3.png" alt="fig3" /></p>
 
 <p>depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected.</p>
 
@@ -645,13 +645,13 @@ Down the line it could use multiple experts but at different blocks i.e (layers)
 
 <p>By introducing trainable (gaussian) noise, we can prevent the same experts from always being picked. It’ll help router to distribute experts and not restrict to some specific experts.</p>
 
-<p><img src="fig4.png" alt="fig4" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig4.png" alt="fig4" /></p>
 
 <h3 id="capacity-factor">Capacity Factor</h3>
 
 <p>Distributing experts is not enough because distribution of expert happens close to no.of.steps times but there are a lot of batch of tokens that are processed in a single step. An expert could be assigned more than the others but it can also be assigned less tokens as compared to others.
 The solution is to equally divide the number of tokens to all the expert using capacity factor given by this formula.
-<img src="fig5.png" alt="fig5" /></p>
+<img src="/assets/images/2025-01-05-mixture-of-experts/fig5.png" alt="fig5" /></p>
 
 <h2 id="implementation">Implementation</h2>
 
@@ -712,7 +712,7 @@ The solution is to equally divide the number of tokens to all the expert using c
 
 <p>Using all the experts for inputs will be computationally expensive. A way to reduce that is to implement noise_gating + topK method specified in the paper <a href="https://arxiv.org/pdf/1701.06538">OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER</a></p>
 
-<p><img src="fig6.png" alt="fig6" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig6.png" alt="fig6" /></p>
 
 <p>let’s understand these equation with reference to the code</p>
 
@@ -928,7 +928,7 @@ using that mask (mask will help us pluck out input tokens with specific index wh
 
 <h4 id="auxiliary-loss">Auxiliary Loss</h4>
 
-<p><img src="fig7.png" alt="fig7" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig7.png" alt="fig7" /></p>
 
 <p>To encourage models to make expert’s probability uniform (choosing all the experts and not restricting to some experts) We add to our main loss another loss term that we get from our MoE layer. It is calculated by first calculating the importance which is simply calculating the batch sum over the inputs for the router’s output and calculating the square of the coefficient of variation from the importance and then multiplying with a hand tuned scaling factor called Wimportance.</p>
 
@@ -944,25 +944,25 @@ using that mask (mask will help us pluck out input tokens with specific index wh
 
 <p>x axis = no of steps
 y axis = no of tokens assigned to each expert
-<img src="no_noise_no_lossmoe.png" alt="no_noise_no_lossmoe" /></p>
+<img src="/assets/images/2025-01-05-mixture-of-experts/no_noise_no_lossmoe.png" alt="no_noise_no_lossmoe" /></p>
 
 <p>Even though the plot seems to fluctuate too much, we can see that there is inappropriate distribution of tokens among the experts i.e expert 0 is assigned less tokens and and expert 1 and 3 are assigned more tokens and the curve relatively stays the same because we did not add the loss function too.</p>
 
 <h4 id="noise-but-no-moe-loss">Noise but no MoE loss</h4>
 
-<p><img src="noise_yes_lossmoe_no.png" alt="noise_yes_lossmoe_no" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/noise_yes_lossmoe_no.png" alt="noise_yes_lossmoe_no" /></p>
 
 <p>There is relatively small gap between number of tokens assigned to the experts because this time we added gaussian noise which reduces the gap, but the number of tokens assigned to them remains constantly fluctuating.</p>
 
 <h4 id="no-noise-but-moeloss-included">No Noise but MoELoss included</h4>
 
-<p><img src="noise_no_lossmoe_yes.png" alt="noise_no_lossmoe_yes" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/noise_no_lossmoe_yes.png" alt="noise_no_lossmoe_yes" /></p>
 
 <p>As you can see there was inappropriate distribution of tokens in the beginning but the model seems to have learned to distribute the tokens among the experts after training for some time.</p>
 
 <h4 id="including-noise-and-moe-loss">Including Noise and MoE Loss</h4>
 
-<p><img src="loss_noisy_topk.png" alt="loss_noisy_topk" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/loss_noisy_topk.png" alt="loss_noisy_topk" /></p>
 
 <p>it looks similar to the previous one, i.e big variation in the beginning but learns to distribute afterwards, its different from the previous one in that initially the range of tokens assigned to experts are between (150, 350) but in the previous plot it was (100,400). This less variation in this plot can be attributed to the addition of gaussian noise.</p>
 
@@ -992,7 +992,7 @@ https://github.com/CohleM/deep_learning/blob/master/MoE/moe.ipynb</p>
 <p>(out of this paper: discrete operations are not differentiable i.e choosing max from a list, cause derivative of constant is 0 so gradient propagation stops)</p>
 
 <p>Choosing right capacity factor is important as shown in figure below.
-<img src="fig8.png" alt="fig8" /></p>
+<img src="/assets/images/2025-01-05-mixture-of-experts/fig8.png" alt="fig8" /></p>
 
 <p>as you can see the when CF is 1 only one token is truncated (not evaluated) but is passed through to next layers through residual connection.</p>
 
@@ -1003,7 +1003,7 @@ https://github.com/CohleM/deep_learning/blob/master/MoE/moe.ipynb</p>
 </ul>
 
 <p>The auxiliary loss is given by this equation
-<img src="fig9.png" alt="fig9" /></p>
+<img src="/assets/images/2025-01-05-mixture-of-experts/fig9.png" alt="fig9" /></p>
 
 <blockquote>
   <p>Since we seek uniform routing of the batch of tokens across the N experts, we desire both vectors to have values of 1/N</p>
@@ -1129,13 +1129,13 @@ https://github.com/CohleM/deep_learning/blob/master/MoE/moe.ipynb</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tensor(1.2714)
 </code></pre></div></div>
 
-<p><img src="fig10.png" alt="fig10" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig10.png" alt="fig10" /></p>
 
 <h3 id="deepseekmoe-paper">DeepSeekMoE (<a href="https://arxiv.org/pdf/2401.06066">paper</a>)</h3>
 
 <p>One of the recent MoE paper.</p>
 
-<p><img src="fig11.png" alt="fig11" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig11.png" alt="fig11" /></p>
 
 <p>There were these limitations.</p>
 
@@ -1151,7 +1151,7 @@ https://github.com/CohleM/deep_learning/blob/master/MoE/moe.ipynb</p>
   <li>Shared Expert Isolation: There must be expert that should process some general knowledge task. for that reason they separate out some experts for this knowledge sharing. By sharing knowledge, the fine grained experts don’t need to acquire extra knowledge, enabling them to specialize in specific tasks.</li>
 </ol>
 
-<p><img src="fig12.png" alt="fig12" /></p>
+<p><img src="/assets/images/2025-01-05-mixture-of-experts/fig12.png" alt="fig12" /></p>
 
 <p>The output representation for a batch, will look like this.</p>
 

@@ -179,7 +179,7 @@ with torch.no_grad():
 
 ### Activation plot
 
-![fig1](sub-notes/Diagnostic-tool-while-training-nn/fig1.png)
+![fig1](/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig1.png)
 
 As you can see almost all the pre activations are saturated, this is because our weight is initialized in such a way that after applying tanh, most of our output values lie in -1 and 1, which will stop gradient propagation.
 
@@ -202,13 +202,13 @@ with torch.no_grad():
 
 ```
 
-![fig2](sub-notes/Diagnostic-tool-while-training-nn/fig2.png)
+![fig2](/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig2.png)
 
 The plot is starting to look nicer, because there is less saturation, because now values don't lie in the extreme values of tanh, and gradient will be propagated. But we still have issue, as we can see the standard deviation is decreasing this is because of the property of tanh, i.e it squashes the values, initially (blue plot) the output was decent but in later layers, the distribution is being shrinked that because of the property of tanh.
 
 now let's apply kaiming init with gain too, for tanh the gain is 5/3.
 
-![fig3](sub-notes/Diagnostic-tool-while-training-nn/fig3.png)
+![fig3](/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig3.png)
 Now the values are being evenly distributed, and the standard deviation is stable (doesn't decrease with iteration).
 
 We have to precisely measure the gains to have a stable training. But the introduction of batch normalization changes the case, and we don't have to be that much aware for precisely initializing weights.
@@ -227,17 +227,17 @@ st = [
 ]
 ```
 
-![fig4](sub-notes/Diagnostic-tool-while-training-nn/fig4.png)
+![fig4](/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig4.png)
 The output values are properly distributed, with very less saturation and a constant standard deviation.
 
 ### Gradient plot
 
 The gradient distribution at each layers would look like this when the pre activations are batch normalized.
-![fig5](sub-notes/Diagnostic-tool-while-training-nn/fig5.png)
+![fig5](/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig5.png)
 
 ### Gradient to data ratio plot
 
-![fig6](sub-notes/Diagnostic-tool-while-training-nn/fig6.png)
+![fig6](/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig6.png)
 This is what the ratio of gradient (calculated after backprop) to data plot looks like.
 x-axis represent iterations, y represent the exponents. Ideally, 1e-3 is suitable and that ratio should lie around that line. If the ratio is below that line it means, we need to step up our learning rate, and if it is higher than that line we need to lower our learning rate.
 
@@ -254,7 +254,7 @@ with torch.no_grad():
       layer.weight *= 0.3
 ```
 
-![fig7](sub-notes/Diagnostic-tool-while-training-nn/fig7.png)
+![fig7](/assets/images/2024-12-20-Diagnostic-tool-while-training-nn/fig7.png)
 as you can see, when I make gain to 0.3 the ratio significantly varies, i.e ratio for later layers are around 1e-1.5, which mean we would have to lower our learning rate because of this gain change.
 
 So the gain significantly affects our learning rate, but it doesn't affect other plots that we plot above, because it's controlled by batch normalization.

@@ -77,8 +77,8 @@ Now, we define our model structure, it's a simply matrix multiplication (similar
 
 This all_reduce is a collective operation performed by the `backend` i.e either 'nccl' or 'gloo'.
 'nccl' is mostly used for GPUs whereas 'gloo' can run in CPUs as well. Under the hood these backend implement the logic on how these collectives operations need to be implemented. all_reduce is one of many collective operations provided by the backend. Please late a look at the picture below to understand how these work.
-![coll1.png](coll1.png)
-![coll2](coll2.png)
+![coll1.png](/assets/images/2025-09-01-Distributed-RL-training-step/coll1.png)
+![coll2](/assets/images/2025-09-01-Distributed-RL-training-step/coll2.png)
 Image source: [Writing Distributed Applications with PyTorch](https://docs.pytorch.org/tutorials/intermediate/dist_tuto.html)
 
 You can take a look at this [source](https://docs.pytorch.org/tutorials/intermediate/dist_tuto.html) if you want to understand how these collectives work under the hood.
@@ -151,11 +151,11 @@ How about distributing parameters on different GPUs and then gathering the requi
 
 Let's consider we have a layer that has a flat weight matrix and 3 GPUs, we divide 1/3 of the weights into each GPU as shown in the picture below and pass different batch to each GPU so that it can perform computation simultaneously.
 
-![fsdp1](fsdp1.png)
+![fsdp1](/assets/images/2025-09-01-Distributed-RL-training-step/fsdp1.png)
 Image source: [The SECRET Behind ChatGPT's Training That Nobody Talks About | FSDP Explained](https://www.youtube.com/watch?v=6pVn6khIgiI)
 
 Data reaches the GPU but GPU doesn't have the full weight to complete the computation, so each GPU calls all_gather collective to collect weights from all the GPUs. After all gather all 3 GPUs will have the full weight `[0..1024]` and it can do the computation as shown in the figure below.
-![fsdp2](fsdp2.png)
+![fsdp2](/assets/images/2025-09-01-Distributed-RL-training-step/fsdp2.png)
 After computing the activations it instantly frees up the GPU memory. Next, is the case of backward pass.
 
 Similar to image above, it first all gathers the weights and compute the gradients, and reduce scatter so that each GPU only has gradients for their respective shard and then when we do optimizer.step() it will only update it's respective shard of optimizer. See how we shard weights, gradients, and optimizer across GPUs but only gather weights, this helps a lot. BUT a GPU should have memory to at least store model's full weights.
@@ -277,8 +277,8 @@ Afterwards, we can simply do all_reduce that will add the d1 + d2 and provide GP
 
 Similarly, we can do row-wise and column-wise sharding for attention as well which can be seen in the illustration below.
 
-![attn1-n](attn1-n.png)
-![att2-n](attn2-n.png)
+![attn1-n](/assets/images/2025-09-01-Distributed-RL-training-step/attn1-n.png)
+![att2-n](/assets/images/2025-09-01-Distributed-RL-training-step/attn2-n.png)
 
 Both should be easy to understand, if not please take a look at the [source](https://insujang.github.io/2024-01-11/tensor-parallelism-and-sequence-parallelism-detailed-analysis/)
 
@@ -878,7 +878,7 @@ Assume we are in process 0, i.e
 our original mesh is `mesh['FSDP','TP']`, we try to get `mesh['TP']` where FSDP is not there so lets draw a line across 'FSDP' dimensions (0th and 1st) and see which TP sub-matrix falls in the drawn line. since we were in process 0, submatrix `[0,1]` is chosen and our process 0 will only `[0,1]` when we output `mesh['TP']` and ignore others. We'll get the same when we are on process 1, but we'll get `[2,3]` when we're on either 2 or 3 processes.
 
 so the simple logic is to draw line across dimension that is not in the specified mesh i.e FSDP in this case, and see on which submatrix our current process falls. It's better to get a pen and paper and understand it deeply.
-![fsdp_mat](fsdp_mat.png)
+![fsdp_mat](/assets/images/2025-09-01-Distributed-RL-training-step/fsdp_mat.png)
 
 We pass this mesh to parallelize_module that takes in only 1D mesh and applies the Sharding plan across that 1D mesh, For example, if we are in process 0, the weights of size (8,8) are sharded across 0 and 1 GPUs so each gpu will get (4,8) (assume Shard(0)) and if we're on process 2 weights are sharded across 2,3.
 
@@ -907,7 +907,7 @@ fully_shard takes two types of mesh 1D, and 2D mesh. Since we have 1D mesh in th
 
 #### 3D mesh
 
-![matrix-mul](matrix-mul.png)
+![matrix-mul](/assets/images/2025-09-01-Distributed-RL-training-step/matrix-mul.png)
 
 ```python
 [[[0,1],

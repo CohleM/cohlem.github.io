@@ -12,10 +12,10 @@ In the note blow, I first describe how inferencing is done if we simply do opera
 
 We don't make use of KV cache while training because we already have data filled for each sequence length, we don't need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one. To understand better look at the notes below.
 
-![kvnote1](kvnote1.jpg)
+![kvnote1](/assets/images/2025-01-18-KV-cache-GQA/kvnote1.jpg)
 
-![kvnote2](kvnote2.jpg)
-![kvnote3](kvnote3.jpg)
+![kvnote2](/assets/images/2025-01-18-KV-cache-GQA/kvnote2.jpg)
+![kvnote3](/assets/images/2025-01-18-KV-cache-GQA/kvnote3.jpg)
 
 ### Memory needed for storing KV cache
 
@@ -348,7 +348,7 @@ This is all we need to know about KV cache.
 ### Explanation
 
 As we know the main bottleneck while training and inferencing is not the amount of operations that our GPU can perform but rather the amount of data our GPU can move between tensor cores and the GPU memory. This is what GQA tries to solve, it tries to achieve balance between the accuracy of Multi-Head Attention (it performs better than these attention variants) and speed of attention calculation.
-![kv1](kv1.png)
+![kv1](/assets/images/2025-01-18-KV-cache-GQA/kv1.png)
 
 The picture below accurately explains Multi-Head Attention (MHA), Multi-Query Attention (MQA)
 and Grouped Query Attention (GQA)
@@ -358,7 +358,7 @@ The main difference between them is:
 - MHA : Q,K,V are divided into equal number of heads
 - MQA: Only Q is divided into different heads, whereas K,V remain the same. However, the resulting number of attention heads are the same as MHA. (K,V are same, we don't have to move data back and forth, this is where it helps in achieving performance gains.)
 - GQA: Query is divided into total number of heads but mainly in groups, and K, V have different number of heads mainly referred to as kv_heads. As shown in the figure, similar group of query interact with their respective heads.
-  ![kv2](kv2.png)
+  ![kv2](/assets/images/2025-01-18-KV-cache-GQA/kv2.png)
 
 ### Code for GQA
 

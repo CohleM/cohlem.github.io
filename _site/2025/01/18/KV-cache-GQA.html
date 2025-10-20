@@ -58,10 +58,10 @@
 
 <p>We don’t make use of KV cache while training because we already have data filled for each sequence length, we don’t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one. To understand better look at the notes below.</p>
 
-<p><img src="kvnote1.jpg" alt="kvnote1" /></p>
+<p><img src="/assets/images/2025-01-18-KV-cache-GQA/kvnote1.jpg" alt="kvnote1" /></p>
 
-<p><img src="kvnote2.jpg" alt="kvnote2" />
-<img src="kvnote3.jpg" alt="kvnote3" /></p>
+<p><img src="/assets/images/2025-01-18-KV-cache-GQA/kvnote2.jpg" alt="kvnote2" />
+<img src="/assets/images/2025-01-18-KV-cache-GQA/kvnote3.jpg" alt="kvnote3" /></p>
 
 <h3 id="memory-needed-for-storing-kv-cache">Memory needed for storing KV cache</h3>
 
@@ -384,7 +384,7 @@ and now in the next iteration cur_pos=4, we pass this input i.e (x[:, 3:4], 3, N
 <h3 id="explanation">Explanation</h3>
 
 <p>As we know the main bottleneck while training and inferencing is not the amount of operations that our GPU can perform but rather the amount of data our GPU can move between tensor cores and the GPU memory. This is what GQA tries to solve, it tries to achieve balance between the accuracy of Multi-Head Attention (it performs better than these attention variants) and speed of attention calculation.
-<img src="kv1.png" alt="kv1" /></p>
+<img src="/assets/images/2025-01-18-KV-cache-GQA/kv1.png" alt="kv1" /></p>
 
 <p>The picture below accurately explains Multi-Head Attention (MHA), Multi-Query Attention (MQA)
 and Grouped Query Attention (GQA)</p>
@@ -395,7 +395,7 @@ and Grouped Query Attention (GQA)</p>
   <li>MHA : Q,K,V are divided into equal number of heads</li>
   <li>MQA: Only Q is divided into different heads, whereas K,V remain the same. However, the resulting number of attention heads are the same as MHA. (K,V are same, we don’t have to move data back and forth, this is where it helps in achieving performance gains.)</li>
   <li>GQA: Query is divided into total number of heads but mainly in groups, and K, V have different number of heads mainly referred to as kv_heads. As shown in the figure, similar group of query interact with their respective heads.
-<img src="kv2.png" alt="kv2" /></li>
+<img src="/assets/images/2025-01-18-KV-cache-GQA/kv2.png" alt="kv2" /></li>
 </ul>
 
 <h3 id="code-for-gqa">Code for GQA</h3>
@@ -494,10 +494,10 @@ and Grouped Query Attention (GQA)</p>
 
 <p>We don’t make use of KV cache while training because we already have data filled for each sequence length, we don’t need to calculate loss one by one, instead we do it in batches, whereas while inferencing we do it generally for 1 batch with some sequences and then we keep on appending next-predicted token to that sequence one by one. To understand better look at the notes below.</p>
 
-<p><img src="kvnote1.jpg" alt="kvnote1" /></p>
+<p><img src="/assets/images/2025-01-18-KV-cache-GQA/kvnote1.jpg" alt="kvnote1" /></p>
 
-<p><img src="kvnote2.jpg" alt="kvnote2" />
-<img src="kvnote3.jpg" alt="kvnote3" /></p>
+<p><img src="/assets/images/2025-01-18-KV-cache-GQA/kvnote2.jpg" alt="kvnote2" />
+<img src="/assets/images/2025-01-18-KV-cache-GQA/kvnote3.jpg" alt="kvnote3" /></p>
 
 <h3 id="memory-needed-for-storing-kv-cache">Memory needed for storing KV cache</h3>
 
@@ -820,7 +820,7 @@ and now in the next iteration cur_pos=4, we pass this input i.e (x[:, 3:4], 3, N
 <h3 id="explanation">Explanation</h3>
 
 <p>As we know the main bottleneck while training and inferencing is not the amount of operations that our GPU can perform but rather the amount of data our GPU can move between tensor cores and the GPU memory. This is what GQA tries to solve, it tries to achieve balance between the accuracy of Multi-Head Attention (it performs better than these attention variants) and speed of attention calculation.
-<img src="kv1.png" alt="kv1" /></p>
+<img src="/assets/images/2025-01-18-KV-cache-GQA/kv1.png" alt="kv1" /></p>
 
 <p>The picture below accurately explains Multi-Head Attention (MHA), Multi-Query Attention (MQA)
 and Grouped Query Attention (GQA)</p>
@@ -831,7 +831,7 @@ and Grouped Query Attention (GQA)</p>
   <li>MHA : Q,K,V are divided into equal number of heads</li>
   <li>MQA: Only Q is divided into different heads, whereas K,V remain the same. However, the resulting number of attention heads are the same as MHA. (K,V are same, we don’t have to move data back and forth, this is where it helps in achieving performance gains.)</li>
   <li>GQA: Query is divided into total number of heads but mainly in groups, and K, V have different number of heads mainly referred to as kv_heads. As shown in the figure, similar group of query interact with their respective heads.
-<img src="kv2.png" alt="kv2" /></li>
+<img src="/assets/images/2025-01-18-KV-cache-GQA/kv2.png" alt="kv2" /></li>
 </ul>
 
 <h3 id="code-for-gqa">Code for GQA</h3>

@@ -317,9 +317,9 @@ so the dcounts_sum_inv is (dprobs * torch.ones</em>like(count) * counts), but th
 
 <p>why? because if we go deep into matrix multiplication, we see there are two operations involved i.e multiplication and addition. The formula for calculating gradient for the equation above is derived in the picture below.</p>
 
-<p><img src="one.jpg" alt="one" /></p>
+<p><img src="/assets/images/2024-12-24-manual-backpropagation-on-tensors/one.jpg" alt="one" /></p>
 
-<p><img src="two.jpg" alt="two" />
+<p><img src="/assets/images/2024-12-24-manual-backpropagation-on-tensors/two.jpg" alt="two" />
 We come up with a simple equation.</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dh = dlogits @ W2.T
@@ -606,9 +606,9 @@ so the dcounts_sum_inv is (dprobs * torch.ones</em>like(count) * counts), but th
 
 <p>why? because if we go deep into matrix multiplication, we see there are two operations involved i.e multiplication and addition. The formula for calculating gradient for the equation above is derived in the picture below.</p>
 
-<p><img src="one.jpg" alt="one" /></p>
+<p><img src="/assets/images/2024-12-24-manual-backpropagation-on-tensors/one.jpg" alt="one" /></p>
 
-<p><img src="two.jpg" alt="two" />
+<p><img src="/assets/images/2024-12-24-manual-backpropagation-on-tensors/two.jpg" alt="two" />
 We come up with a simple equation.</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dh = dlogits @ W2.T

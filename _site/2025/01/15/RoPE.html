@@ -65,7 +65,7 @@
 
 <h4 id="pre-requisites">pre-requisites</h4>
 
-<p><img src="rope1.png" alt="rope1" /></p>
+<p><img src="/assets/images/2025-01-15-RoPE/rope1.png" alt="rope1" /></p>
 
 <p>This is how we rotate a point by an angel theta in a two dimensional space and this is all we need in RoPE.</p>
 
@@ -195,7 +195,7 @@ For instance, if we have a token “this” with an embedding of 2 i.e [0.2782, 
 </span><span class="n">plt</span><span class="p">.</span><span class="nf">show</span><span class="p">()</span>
 </code></pre></div></div>
 
-<p><img src="rope2.png" alt="rope2" /></p>
+<p><img src="/assets/images/2025-01-15-RoPE/rope2.png" alt="rope2" /></p>
 
 <p>you can see how these are rotated by some big angles when m is changed.</p>
 
@@ -250,7 +250,7 @@ I’m keeping the value of m as a constant i.e 1 here and plotting for different
 </span><span class="n">plt</span><span class="p">.</span><span class="nf">show</span><span class="p">()</span>
 </code></pre></div></div>
 
-<p><img src="rope3.png" alt="ropee3" /></p>
+<p><img src="/assets/images/2025-01-15-RoPE/rope3.png" alt="ropee3" /></p>
 
 <p>as you can see the angle between them becomes smaller and smaller when I is increased.</p>
 
@@ -263,13 +263,13 @@ I’m keeping the value of m as a constant i.e 1 here and plotting for different
 <p>rotating a embedding of dimension 2 is simple, but how do we do it for more than 2 dimension in just one operation?</p>
 
 <p>here’s how.
-<img src="rope4.png" alt="rope4" />
+<img src="/assets/images/2025-01-15-RoPE/rope4.png" alt="rope4" />
 we construct matrix like this where the diagonal is rotation matrix (same matrix that we used above) and all the other elements are sparse i.e 0 and then multiply this big rotation matrix with our embedding of size d.</p>
 
 <p>But the authors of this paper have derived a simple formula for doing the same operation but without the big matrix, because it would be computationally expensive where most of the elements are sparse.</p>
 
 <p>here’s the simplified formula.
-<img src="rope5.png" alt="rope5" /></p>
+<img src="/assets/images/2025-01-15-RoPE/rope5.png" alt="rope5" /></p>
 
 <p>lets apply this simplified version to our token “this” where it’s embedding is [ 0.2782, 1.5109, 0.1739, -0.7098]</p>
 
@@ -317,9 +317,9 @@ we construct matrix like this where the diagonal is rotation matrix (same matrix
 
 <p>Complex plane is simply representing real numbers along the x-axis and imaginary numbers along y (i.e imaginary plane is perpendicular to the real plane)</p>
 
-<p><img src="rope6.jpg" alt="rope6" />
-<img src="rope7.jpg" alt="rope7" />
-<img src="rope8.jpg" alt="rope8" /></p>
+<p><img src="/assets/images/2025-01-15-RoPE/rope6.jpg" alt="rope6" />
+<img src="/assets/images/2025-01-15-RoPE/rope7.jpg" alt="rope7" />
+<img src="/assets/images/2025-01-15-RoPE/rope8.jpg" alt="rope8" /></p>
 
 <p>after completely understanding the notes, now we you may have the notion that we can represent our embedding in complex numbers and then multiply by cos(theta) +i.sin(theta)
 to rotate it by theta.</p>
@@ -401,7 +401,7 @@ to rotate it by theta.</p>
 
 <h4 id="pre-requisites">pre-requisites</h4>
 
-<p><img src="rope1.png" alt="rope1" /></p>
+<p><img src="/assets/images/2025-01-15-RoPE/rope1.png" alt="rope1" /></p>
 
 <p>This is how we rotate a point by an angel theta in a two dimensional space and this is all we need in RoPE.</p>
 
@@ -531,7 +531,7 @@ For instance, if we have a token “this” with an embedding of 2 i.e [0.2782, 
 </span><span class="n">plt</span><span class="p">.</span><span class="nf">show</span><span class="p">()</span>
 </code></pre></div></div>
 
-<p><img src="rope2.png" alt="rope2" /></p>
+<p><img src="/assets/images/2025-01-15-RoPE/rope2.png" alt="rope2" /></p>
 
 <p>you can see how these are rotated by some big angles when m is changed.</p>
 
@@ -586,7 +586,7 @@ I’m keeping the value of m as a constant i.e 1 here and plotting for different
 </span><span class="n">plt</span><span class="p">.</span><span class="nf">show</span><span class="p">()</span>
 </code></pre></div></div>
 
-<p><img src="rope3.png" alt="ropee3" /></p>
+<p><img src="/assets/images/2025-01-15-RoPE/rope3.png" alt="ropee3" /></p>
 
 <p>as you can see the angle between them becomes smaller and smaller when I is increased.</p>
 
@@ -599,13 +599,13 @@ I’m keeping the value of m as a constant i.e 1 here and plotting for different
 <p>rotating a embedding of dimension 2 is simple, but how do we do it for more than 2 dimension in just one operation?</p>
 
 <p>here’s how.
-<img src="rope4.png" alt="rope4" />
+<img src="/assets/images/2025-01-15-RoPE/rope4.png" alt="rope4" />
 we construct matrix like this where the diagonal is rotation matrix (same matrix that we used above) and all the other elements are sparse i.e 0 and then multiply this big rotation matrix with our embedding of size d.</p>
 
 <p>But the authors of this paper have derived a simple formula for doing the same operation but without the big matrix, because it would be computationally expensive where most of the elements are sparse.</p>
 
 <p>here’s the simplified formula.
-<img src="rope5.png" alt="rope5" /></p>
+<img src="/assets/images/2025-01-15-RoPE/rope5.png" alt="rope5" /></p>
 
 <p>lets apply this simplified version to our token “this” where it’s embedding is [ 0.2782, 1.5109, 0.1739, -0.7098]</p>
 
@@ -653,9 +653,9 @@ we construct matrix like this where the diagonal is rotation matrix (same matrix
 
 <p>Complex plane is simply representing real numbers along the x-axis and imaginary numbers along y (i.e imaginary plane is perpendicular to the real plane)</p>
 
-<p><img src="rope6.jpg" alt="rope6" />
-<img src="rope7.jpg" alt="rope7" />
-<img src="rope8.jpg" alt="rope8" /></p>
+<p><img src="/assets/images/2025-01-15-RoPE/rope6.jpg" alt="rope6" />
+<img src="/assets/images/2025-01-15-RoPE/rope7.jpg" alt="rope7" />
+<img src="/assets/images/2025-01-15-RoPE/rope8.jpg" alt="rope8" /></p>
 
 <p>after completely understanding the notes, now we you may have the notion that we can represent our embedding in complex numbers and then multiply by cos(theta) +i.sin(theta)
 to rotate it by theta.</p>

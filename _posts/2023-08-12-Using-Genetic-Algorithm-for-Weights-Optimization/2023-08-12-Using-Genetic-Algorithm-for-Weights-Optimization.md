@@ -38,7 +38,7 @@ The whole code for this project can be found here:
 
 ## Demo Video
 
-[![Watch the video](thumbnail.png)](https://youtu.be/tD5Z-TlNcYw)
+[![Watch the video](/assets/images/2023-08-12-Using-Genetic-Algorithm-for-Weights-Optimization/thumbnail.png)](https://youtu.be/tD5Z-TlNcYw)
 
 ## Explanation
 
@@ -52,7 +52,7 @@ which you can build easily with simple google search. -->
 
 It is what snake sees at each step while it's playing game. Before performing anything, it has to see and pass it to the brain inorder to process what it has seen. So let's understand what it sees at each step by looking at the video below.
 
-[![Watch the video](snake_structure.png)](https://youtu.be/TxJT7pj5dho)
+[![Watch the video](/assets/images/2023-08-12-Using-Genetic-Algorithm-for-Weights-Optimization/snake_structure.png)](https://youtu.be/TxJT7pj5dho)
 
 Our snake sees in 8 different directions(d1 to d8) as shown in the figure above. And at each direction it sees 3 different things _Wall_, _Food_, _Body_(it's own body)
 
@@ -69,7 +69,7 @@ The figure below contains two parts
 - Snake's eye(descibed above), and
 - Snake's brain
 
-![targets](brain.png)
+![targets](/assets/images/2023-08-12-Using-Genetic-Algorithm-for-Weights-Optimization/brain.png)
 
 ### Input to neural network
 
@@ -100,7 +100,7 @@ currently is to make move in another direction.
 
 **Value for Head Direction:** This is a simple one-hot encoding for the direction.
 
-![head_direction](head_direction.png)
+![head_direction](/assets/images/2023-08-12-Using-Genetic-Algorithm-for-Weights-Optimization/head_direction.png)
 
 #### Brain of Snake
 
@@ -119,7 +119,7 @@ improve weights we will use use Genetic algorithm to improve weights.
 
 Five phases are considered in a genetic algorithm. You should first read these steps below and then you can come back to the video below.
 
-[![Watch the video](genetic_algorithm.png)](https://youtu.be/MGOzTCMiE9A)
+[![Watch the video](/assets/images/2023-08-12-Using-Genetic-Algorithm-for-Weights-Optimization/genetic_algorithm.png)](https://youtu.be/MGOzTCMiE9A)
 
 #### Initial brain (Population)
 
@@ -146,7 +146,7 @@ Steps and Score as variables which will helps the Snake in getting maximum score
 steps. I've used the following fitness function that evaluates fitness of snakes relative
 to score and steps taken.
 
-![fitness_function](fitness_function.png)
+![fitness_function](/assets/images/2023-08-12-Using-Genetic-Algorithm-for-Weights-Optimization/fitness_function.png)
 
 If two snakes have the same score then the snake that achieves the score in less number of
 steps is considered.
@@ -167,7 +167,7 @@ our 50 parents to the population set. This process will preserve the best fit sn
 if the crossover and mutation yield bad set of population. The unifrom crossover can be
 explained likewise.
 
-![crossover](crossover.png)
+![crossover](/assets/images/2023-08-12-Using-Genetic-Algorithm-for-Weights-Optimization/crossover.png)
 
 #### Mutation
 

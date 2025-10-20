@@ -57,17 +57,17 @@
 <p>First, set context_length = T, train, wait for convergence, at some point afterwards set context_length=2T</p>
 
 <p>There seems to be no problem with truncated responses, cause actor learns to produce accurate but shorter responses.
-<img src="skywork-tr.png" alt="skywork-tr" /></p>
+<img src="/assets/images/2025-09-18-RL-papers/skywork-tr.png" alt="skywork-tr" /></p>
 
 <h4 id="high-temperature-sampling">High temperature Sampling</h4>
 
 <p>temperatue 1.0 provides more room for exploration, whereas lower temperature might cause early entropy collapse.
-<img src="temp-sampling.png" alt="temp-sampling.png" /></p>
+<img src="/assets/images/2025-09-18-RL-papers/temp-sampling.png" alt="temp-sampling.png" /></p>
 
 <h4 id="adaptive-entropy-control">Adaptive Entropy Control</h4>
 
 <p>turn off entropy coefficient when entropy is already greater than target entropy else, increase it by del.
-<img src="entropy_control.png" alt="entropy_control" /></p>
+<img src="/assets/images/2025-09-18-RL-papers/entropy_control.png" alt="entropy_control" /></p>
 
 <h3 id="acereason-nemotron-11-advancing-math-and-code-reasoning-through-sft-and-rl-synergy">AceReason-Nemotron 1.1: Advancing Math and Code Reasoning through SFT and RL Synergy</h3>
 
@@ -75,27 +75,27 @@
 
 <p>Generally, large no. of unique prompts is better, but at some point obtaining those become difficult, afterwards, we can include more responses per prompt in our dataset. More epochs helps as well.</p>
 
-<p><img src="ace-nemo.png" alt="ace-nemo" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/ace-nemo.png" alt="ace-nemo" /></p>
 
 <h4 id="is-stage-1-necessary">Is stage-1 necessary?</h4>
 
-<p><img src="overall-trn.png" alt="overall-trn" />
+<p><img src="/assets/images/2025-09-18-RL-papers/overall-trn.png" alt="overall-trn" />
 stage-1 training seems to be necessary cause, it allows the model to compress it’s reasoning at early stage, not doing so results in accuracy that plateaus see fig below.</p>
 
-<p><img src="stage-1.png" alt="stage-1" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/stage-1.png" alt="stage-1" /></p>
 
 <h4 id="exploration-vs-exploitation-ie-temperature-controlled-entropy">Exploration vs exploitation (i.e temperature controlled entropy)</h4>
 
 <p>extremely high temp or low temp cause reward to dampen, thus noisy training.</p>
 
-<p><img src="temp-exp.png" alt="temp-exp" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/temp-exp.png" alt="temp-exp" /></p>
 
 <h4 id="with-overlong-filtering-or-without-overlong-filtering">with overlong filtering or without overlong filtering</h4>
 
 <p>with overlong filtering = don’t use the trajectory for reward calculation
 without overlong filtering = use the trajectory and provide negative reward for truncated responses</p>
 
-<p><img src="overlong.png" alt="overlong" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/overlong.png" alt="overlong" /></p>
 
 <p>overlong filtering helps during first stages (i.e when context lengths are small) otherwise, when context length is sufficient, it doesn’t help.</p>
 
@@ -103,7 +103,7 @@ without overlong filtering = use the trajectory and provide negative reward for 
 
 <p>The performance gain decreases for some benchmarks(AIME25) as we increase K. We can find answer within the SFT model if the K is sufficiently large</p>
 
-<p><img src="passk.png" alt="passk" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/passk.png" alt="passk" /></p>
 
 <h3 id="something">Something</h3>
 
@@ -117,11 +117,11 @@ without overlong filtering = use the trajectory and provide negative reward for 
 
 <p>when problems are too easy for actor, the rewards are almost all correct, the std will be low, division by low std results in high advanrages causing higher gradients (sometimes exploding gradients) but when problems are medium-hard there’s not much of a difference between normalizing by std or just simply subtracting the mean from the reward. (i.e no use of std)</p>
 
-<p><img src="std-use.png" alt="std-use" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/std-use.png" alt="std-use" /></p>
 
 <h4 id="reward-shaping-works-best-when-use-divide-by-global-std">Reward shaping works best when use divide by global std</h4>
 
-<p><img src="global-std.png" alt="global-std" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/global-std.png" alt="global-std" /></p>
 
 <h4 id="liteppo">LitePPO</h4>
 
@@ -183,17 +183,17 @@ exp do rollout of 8 exp, select one randomly as a reference data, pass current a
 <p>First, set context_length = T, train, wait for convergence, at some point afterwards set context_length=2T</p>
 
 <p>There seems to be no problem with truncated responses, cause actor learns to produce accurate but shorter responses.
-<img src="skywork-tr.png" alt="skywork-tr" /></p>
+<img src="/assets/images/2025-09-18-RL-papers/skywork-tr.png" alt="skywork-tr" /></p>
 
 <h4 id="high-temperature-sampling">High temperature Sampling</h4>
 
 <p>temperatue 1.0 provides more room for exploration, whereas lower temperature might cause early entropy collapse.
-<img src="temp-sampling.png" alt="temp-sampling.png" /></p>
+<img src="/assets/images/2025-09-18-RL-papers/temp-sampling.png" alt="temp-sampling.png" /></p>
 
 <h4 id="adaptive-entropy-control">Adaptive Entropy Control</h4>
 
 <p>turn off entropy coefficient when entropy is already greater than target entropy else, increase it by del.
-<img src="entropy_control.png" alt="entropy_control" /></p>
+<img src="/assets/images/2025-09-18-RL-papers/entropy_control.png" alt="entropy_control" /></p>
 
 <h3 id="acereason-nemotron-11-advancing-math-and-code-reasoning-through-sft-and-rl-synergy">AceReason-Nemotron 1.1: Advancing Math and Code Reasoning through SFT and RL Synergy</h3>
 
@@ -201,27 +201,27 @@ exp do rollout of 8 exp, select one randomly as a reference data, pass current a
 
 <p>Generally, large no. of unique prompts is better, but at some point obtaining those become difficult, afterwards, we can include more responses per prompt in our dataset. More epochs helps as well.</p>
 
-<p><img src="ace-nemo.png" alt="ace-nemo" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/ace-nemo.png" alt="ace-nemo" /></p>
 
 <h4 id="is-stage-1-necessary">Is stage-1 necessary?</h4>
 
-<p><img src="overall-trn.png" alt="overall-trn" />
+<p><img src="/assets/images/2025-09-18-RL-papers/overall-trn.png" alt="overall-trn" />
 stage-1 training seems to be necessary cause, it allows the model to compress it’s reasoning at early stage, not doing so results in accuracy that plateaus see fig below.</p>
 
-<p><img src="stage-1.png" alt="stage-1" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/stage-1.png" alt="stage-1" /></p>
 
 <h4 id="exploration-vs-exploitation-ie-temperature-controlled-entropy">Exploration vs exploitation (i.e temperature controlled entropy)</h4>
 
 <p>extremely high temp or low temp cause reward to dampen, thus noisy training.</p>
 
-<p><img src="temp-exp.png" alt="temp-exp" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/temp-exp.png" alt="temp-exp" /></p>
 
 <h4 id="with-overlong-filtering-or-without-overlong-filtering">with overlong filtering or without overlong filtering</h4>
 
 <p>with overlong filtering = don’t use the trajectory for reward calculation
 without overlong filtering = use the trajectory and provide negative reward for truncated responses</p>
 
-<p><img src="overlong.png" alt="overlong" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/overlong.png" alt="overlong" /></p>
 
 <p>overlong filtering helps during first stages (i.e when context lengths are small) otherwise, when context length is sufficient, it doesn’t help.</p>
 
@@ -229,7 +229,7 @@ without overlong filtering = use the trajectory and provide negative reward for 
 
 <p>The performance gain decreases for some benchmarks(AIME25) as we increase K. We can find answer within the SFT model if the K is sufficiently large</p>
 
-<p><img src="passk.png" alt="passk" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/passk.png" alt="passk" /></p>
 
 <h3 id="something">Something</h3>
 
@@ -243,11 +243,11 @@ without overlong filtering = use the trajectory and provide negative reward for 
 
 <p>when problems are too easy for actor, the rewards are almost all correct, the std will be low, division by low std results in high advanrages causing higher gradients (sometimes exploding gradients) but when problems are medium-hard there’s not much of a difference between normalizing by std or just simply subtracting the mean from the reward. (i.e no use of std)</p>
 
-<p><img src="std-use.png" alt="std-use" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/std-use.png" alt="std-use" /></p>
 
 <h4 id="reward-shaping-works-best-when-use-divide-by-global-std">Reward shaping works best when use divide by global std</h4>
 
-<p><img src="global-std.png" alt="global-std" /></p>
+<p><img src="/assets/images/2025-09-18-RL-papers/global-std.png" alt="global-std" /></p>
 
 <h4 id="liteppo">LitePPO</h4>
 

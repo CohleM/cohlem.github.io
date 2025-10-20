@@ -37,8 +37,8 @@ LR decay
 - in short they do a lot of decontamination (using bi-gram overlaps), deduplication, filtering,
 - For smaller models during sft, they filter smoltalk dataset (e.g., function calling) and hard examples from MagPie-Ultra to better align with the models’ capacity and do DPO on UltraFeedback dataset.
 
-![p2](p2.png)
-![p3](p3.png)
+![p2](/assets/images/2025-01-21-paper-summaries/p2.png)
+![p3](/assets/images/2025-01-21-paper-summaries/p3.png)
 
 ### [SWEET-RL: Training Multi-Turn LLM Agents on Collaborative Reasoning Tasks](https://arxiv.org/abs/2503.15478)
 
@@ -48,17 +48,17 @@ generate trajectories from the Train set, sample sequence is like this
 question, agent's answer, human simulator's answer--> agent's answer, human simulator's answer --> end. run the final solution through their 10 sample tests--> record reward. 1 if passed all test else 0. sample 15k of these
 
 now train advantage llm using bradley terry loss.
-![p4](p4.png)
+![p4](/assets/images/2025-01-21-paper-summaries/p4.png)
 $o_t^+$ is from those trajectories which had higher reward,
 
-![p5](p5.png)
+![p5](/assets/images/2025-01-21-paper-summaries/p5.png)
 
 Now train the policy using DPO loss,
 use that 15k samples trajectories and each
 
 for each $o_t$ sample 16 $a_t$ then rate it using advantage llm, take top50% as $a_+$ remaining as $a_-$
 then calculate loss for those actions. $\log \pi (a^+|o_t)$ is the joint probability of all the tokens in $a^+$
-![p6](p6.png)
+![p6](/assets/images/2025-01-21-paper-summaries/p6.png)
 
 Notably, process-only filtering consistently yields the highest accuracy, suggesting that focusing on the procedural aspects of data refinement is more important than the correctness of a training trajectory.
 

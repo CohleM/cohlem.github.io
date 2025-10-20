@@ -16,7 +16,7 @@ We have one addition in this optimizer i.e velocity term, it accumulates the vel
 
 - same learning rate is applied to all the parameters
 - because of which the update to the parameters isn't precise.
-  ![one](one.jpg)
+  ![one](/assets/images/2024-12-27-optimization-algorithms/one.jpg)
 
 ### RMSprop
 
@@ -25,11 +25,11 @@ This optimizer tries to solve the problem of SGD with momentum i.e it tunes the 
 As you can see in the calculation done in left hand side the gradient accumulation i.e v is small so the effect of learning rate is bigger (we take bigger jumps), we take bigger jumps because we don't want our convergence to be too slow or to stagnate, so we take bigger jumps.
 
 But when the gradient accumulation i.e v term is bigger (as shown in right hand side) we take smaller steps, because in those cases if we take a big jump we might miss the global minima, so the effect of learning rate in this case is decreased.
-![two](two.jpg)
+![two](/assets/images/2024-12-27-optimization-algorithms/two.jpg)
 
 ### Adam
 
 This optimizer is simply the combination of both the momentum and RMSprop. It has its own speed determined by momentum and the learning rate adjustment provided by RMSprop.
 
 The only modification is the addition of M hat and V hat i.e we scale of M and V, because initially we set the value of M and V to 0. The explanation about why we this is also provided in the image below.
-![three](three.jpg)
+![three](/assets/images/2024-12-27-optimization-algorithms/three.jpg)

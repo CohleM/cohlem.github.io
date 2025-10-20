@@ -125,7 +125,7 @@ print(loss)
 
     tensor(2.8175, grad_fn=<NllLossBackward0>)
 
-![adam](https://builtin.com/sites/www.builtin.com/files/styles/ckeditor_optimize/public/inline-images/adam-optimization-5.png)
+![adam](/assets/images/2024-12-24-GPT-implementation/adam-optimization-5.png)
 
 #### Adam optimizer Manually
 

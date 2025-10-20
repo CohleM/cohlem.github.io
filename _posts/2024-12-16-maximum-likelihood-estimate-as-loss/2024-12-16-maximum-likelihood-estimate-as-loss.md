@@ -4,10 +4,10 @@ author: cohlem
 tags: [loss-function]
 ---
 
-![one](one.jpg)
+![one](/assets/images/2024-12-16-maximum-likelihood-estimate-as-loss/one.jpg)
 
-![two](two.jpg)
+![two](/assets/images/2024-12-16-maximum-likelihood-estimate-as-loss/two.jpg)
 
-![three](three.jpg)
+![three](/assets/images/2024-12-16-maximum-likelihood-estimate-as-loss/three.jpg)
 
-![four](four.jpg)
+![four](/assets/images/2024-12-16-maximum-likelihood-estimate-as-loss/four.jpg)

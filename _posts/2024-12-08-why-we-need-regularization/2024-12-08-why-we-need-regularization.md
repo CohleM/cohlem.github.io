@@ -8,14 +8,14 @@ tags: [loss-function]
 
 #### How does it penalize the weights?
 
-![one](one.png)
+![one](/assets/images/2024-12-08-why-we-need-regularization/one.png)
 
 Now when we do the backprop and gradient descent.
 
 The gradient of loss w.r.t some weights become
-![one](two.png)
+![one](/assets/images/2024-12-08-why-we-need-regularization/two.png)
 
-![one](three.png)
+![one](/assets/images/2024-12-08-why-we-need-regularization/three.png)
 as we can see it penalizes the weight by reducing the weights's value by some higher amount compared to the some minimial weight update when we only used loss function.
 
 So overall, the model tries to balance the Loss (L) as well as keep the weights small.

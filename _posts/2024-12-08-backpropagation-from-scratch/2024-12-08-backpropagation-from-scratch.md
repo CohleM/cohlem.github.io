@@ -24,7 +24,7 @@ L = d * f; L.label = 'L'
 L
 ```
 
-![backprop](backprop.jpg)
+![backprop](/assets/images/2024-12-08-backpropagation-from-scratch/backprop.jpg)
 The most important thing to note here is the gradient accumulation step (shown at the bottom-left). If a node takes part two times building up to the final node. The gradient for that node is accumulated. For instance, in the figure node b takes part two times. First, it is involved in equation e = a \* b, and another is e = b + m (not in the equation above).
 
 Code

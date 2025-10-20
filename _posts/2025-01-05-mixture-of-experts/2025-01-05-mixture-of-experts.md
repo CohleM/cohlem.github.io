@@ -10,15 +10,15 @@ https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-expert
 ## Basic MoE structure
 
 - Experts are FFNN themselves, instead of passing input representation to only one dense FFNN we now have option to route them to more FFNNs.
-  ![fig1](moefig1.png)
+  ![fig1](/assets/images/2025-01-05-mixture-of-experts/moefig1.png)
 
 Since most LLMs have several decoder blocks, a given text will pass through multiple experts before the text is generated.
 
-![fig2](moefig2.png)
+![fig2](/assets/images/2025-01-05-mixture-of-experts/moefig2.png)
 Down the line it could use multiple experts but at different blocks i.e (layers)
 
 A routing layer is set to choose experts
-![fig3](fig3.png)
+![fig3](/assets/images/2025-01-05-mixture-of-experts/fig3.png)
 
 depending on how many experts are selected MoE are categorized into two i.e dense MoE in which almost all the experts are selected and sparse MoE only some experts are selected.
 
@@ -34,13 +34,13 @@ To balance the importance of experts, we will need to look at the router as it i
 
 By introducing trainable (gaussian) noise, we can prevent the same experts from always being picked. It'll help router to distribute experts and not restrict to some specific experts.
 
-![fig4](fig4.png)
+![fig4](/assets/images/2025-01-05-mixture-of-experts/fig4.png)
 
 ### Capacity Factor
 
 Distributing experts is not enough because distribution of expert happens close to no.of.steps times but there are a lot of batch of tokens that are processed in a single step. An expert could be assigned more than the others but it can also be assigned less tokens as compared to others.
 The solution is to equally divide the number of tokens to all the expert using capacity factor given by this formula.
-![fig5](fig5.png)
+![fig5](/assets/images/2025-01-05-mixture-of-experts/fig5.png)
 
 ## Implementation
 
@@ -102,7 +102,7 @@ class MoE(nn.Module):
 
 Using all the experts for inputs will be computationally expensive. A way to reduce that is to implement noise_gating + topK method specified in the paper [OUTRAGEOUSLY LARGE NEURAL NETWORKS: THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER](https://arxiv.org/pdf/1701.06538)
 
-![fig6](fig6.png)
+![fig6](/assets/images/2025-01-05-mixture-of-experts/fig6.png)
 
 let's understand these equation with reference to the code
 
@@ -328,7 +328,7 @@ class MoE(nn.Module):
 
 #### Auxiliary Loss
 
-![fig7](fig7.png)
+![fig7](/assets/images/2025-01-05-mixture-of-experts/fig7.png)
 
 To encourage models to make expert's probability uniform (choosing all the experts and not restricting to some experts) We add to our main loss another loss term that we get from our MoE layer. It is calculated by first calculating the importance which is simply calculating the batch sum over the inputs for the router's output and calculating the square of the coefficient of variation from the importance and then multiplying with a hand tuned scaling factor called Wimportance.
 
@@ -344,25 +344,25 @@ I did not add the noise term i.e in the equation 4 in the picture above and did 
 
 x axis = no of steps
 y axis = no of tokens assigned to each expert
-![no_noise_no_lossmoe](no_noise_no_lossmoe.png)
+![no_noise_no_lossmoe](/assets/images/2025-01-05-mixture-of-experts/no_noise_no_lossmoe.png)
 
 Even though the plot seems to fluctuate too much, we can see that there is inappropriate distribution of tokens among the experts i.e expert 0 is assigned less tokens and and expert 1 and 3 are assigned more tokens and the curve relatively stays the same because we did not add the loss function too.
 
 #### Noise but no MoE loss
 
-![noise_yes_lossmoe_no](noise_yes_lossmoe_no.png)
+![noise_yes_lossmoe_no](/assets/images/2025-01-05-mixture-of-experts/noise_yes_lossmoe_no.png)
 
 There is relatively small gap between number of tokens assigned to the experts because this time we added gaussian noise which reduces the gap, but the number of tokens assigned to them remains constantly fluctuating.
 
 #### No Noise but MoELoss included
 
-![noise_no_lossmoe_yes](noise_no_lossmoe_yes.png)
+![noise_no_lossmoe_yes](/assets/images/2025-01-05-mixture-of-experts/noise_no_lossmoe_yes.png)
 
 As you can see there was inappropriate distribution of tokens in the beginning but the model seems to have learned to distribute the tokens among the experts after training for some time.
 
 #### Including Noise and MoE Loss
 
-![loss_noisy_topk](loss_noisy_topk.png)
+![loss_noisy_topk](/assets/images/2025-01-05-mixture-of-experts/loss_noisy_topk.png)
 
 it looks similar to the previous one, i.e big variation in the beginning but learns to distribute afterwards, its different from the previous one in that initially the range of tokens assigned to experts are between (150, 350) but in the previous plot it was (100,400). This less variation in this plot can be attributed to the addition of gaussian noise.
 
@@ -388,7 +388,7 @@ https://github.com/CohleM/deep_learning/blob/master/MoE/moe.ipynb
 (out of this paper: discrete operations are not differentiable i.e choosing max from a list, cause derivative of constant is 0 so gradient propagation stops)
 
 Choosing right capacity factor is important as shown in figure below.
-![fig8](fig8.png)
+![fig8](/assets/images/2025-01-05-mixture-of-experts/fig8.png)
 
 as you can see the when CF is 1 only one token is truncated (not evaluated) but is passed through to next layers through residual connection.
 
@@ -397,7 +397,7 @@ as you can see the when CF is 1 only one token is truncated (not evaluated) but 
 - They find ensuring lower rates of dropped tokens are important for the scaling of sparse expert-models.
 
 The auxiliary loss is given by this equation
-![fig9](fig9.png)
+![fig9](/assets/images/2025-01-05-mixture-of-experts/fig9.png)
 
 > Since we seek uniform routing of the batch of tokens across the N experts, we desire both vectors to have values of 1/N
 
@@ -522,13 +522,13 @@ loss
 
     tensor(1.2714)
 
-![fig10](fig10.png)
+![fig10](/assets/images/2025-01-05-mixture-of-experts/fig10.png)
 
 ### DeepSeekMoE ([paper](https://arxiv.org/pdf/2401.06066))
 
 One of the recent MoE paper.
 
-![fig11](fig11.png)
+![fig11](/assets/images/2025-01-05-mixture-of-experts/fig11.png)
 
 There were these limitations.
 
@@ -540,7 +540,7 @@ In this paper, they propose two changes.
 1. Fie-grained Expert Segmentation: i.e divide the hidden dimension of current MoE layer to 1/m and create separate mxN number of experts (total parameters remains the same). Doing so will result in greater possibility of choosing experts for a token and experts can be specialized.
 2. Shared Expert Isolation: There must be expert that should process some general knowledge task. for that reason they separate out some experts for this knowledge sharing. By sharing knowledge, the fine grained experts don't need to acquire extra knowledge, enabling them to specialize in specific tasks.
 
-![fig12](fig12.png)
+![fig12](/assets/images/2025-01-05-mixture-of-experts/fig12.png)
 
 The output representation for a batch, will look like this.
 

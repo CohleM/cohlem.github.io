@@ -20,7 +20,7 @@ for instance, we only consider the loss for the tokens from "assistant" role, an
 
 > We utilize an autoregressive objective and zero-out the loss on tokens from the user prompt, so as a result, we backpropagate only on answer tokens. Finally, we fine-tune the model for 2 epochs.
 
-![pts1](pts1.png)
+![pts1](/assets/images/2025-02-06-post-training-strategies/pts1.png)
 figure: [InstructGPT paper](https://arxiv.org/pdf/2203.02155)
 
 > Supervised fine-tuning (SFT). We fine-tune GPT-3 on our labeler demonstrations using supervised learning. We trained for 16 epochs, using a cosine learning rate decay, and residual dropout of 0.2. We do our final SFT model selection based on the RM score on the validation set. Similarly to Wu et al. (2021), we find that our SFT models overfit on validation loss after 1 epoch; however, we find that training for more epochs helps both the RM score and human preference ratings, despite this overfitting - [InstructGPT paper](https://arxiv.org/pdf/2203.02155)

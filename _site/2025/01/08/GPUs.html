@@ -55,17 +55,17 @@
 <p>let’s first understand the structure of GPU.</p>
 
 <p>Inside a GPU it has a chip named GA102 (depends on architecture, this is for ampere architecture) built from 28.3million transistors (semiconductor device that can <strong>switch</strong> or <strong>amplify</strong> electrical signals)
-<img src="gpusfig1.png" alt="one" />
+<img src="/assets/images/2025-01-08-GPUs/gpusfig1.png" alt="one" />
 and majority area covered by processing cores.
-<img src="gpusfig2.png" alt="two" />
+<img src="/assets/images/2025-01-08-GPUs/gpusfig2.png" alt="two" />
 processing core is divide into seven Graphics processing clusters (GPCs)</p>
 
-<p><img src="gpus3.png" alt="three" /></p>
+<p><img src="/assets/images/2025-01-08-GPUs/gpus3.png" alt="three" /></p>
 
 <p>among each GPC there are 12 Streaming Multiprocessors.
-<img src="gpus4.png" alt="four" />
+<img src="/assets/images/2025-01-08-GPUs/gpus4.png" alt="four" />
 Inside each SM there are 4 warps and 1 Raytracing core
-<img src="gpus5.png" alt="five" />
+<img src="/assets/images/2025-01-08-GPUs/gpus5.png" alt="five" />
 inside a warp there are 32 Cudas and 1 Tensor Core.</p>
 
 <p>Altogether there are</p>
@@ -80,7 +80,7 @@ inside a warp there are 32 Cudas and 1 Tensor Core.</p>
 
 <h3 id="cuda-cores">Cuda Cores</h3>
 
-<p><img src="gpus6.png" alt="six" />
+<p><img src="/assets/images/2025-01-08-GPUs/gpus6.png" alt="six" />
 cuda core is like a basic calculator with multiplication and addition operations.</p>
 
 <ul>
@@ -95,7 +95,7 @@ cuda core is like a basic calculator with multiplication and addition operations
 
 <h3 id="ray-tracing-cores">Ray tracing Cores</h3>
 
-<p><img src="gpus8.png" alt="eight" /></p>
+<p><img src="/assets/images/2025-01-08-GPUs/gpus8.png" alt="eight" /></p>
 
 <ul>
   <li>used for executing ray tracing algorithms</li>
@@ -112,7 +112,7 @@ In order to run the operations of GPU chip</p>
   <li>They must be loaded from SSD to these graphics memory.</li>
   <li>They have certain bandwidth i.e the amount of data they can transfer per second to the GPU chip. They have 1.15 Terbytes/sec bandwidth.</li>
   <li>Similar to HBM memory in AI chips, would look something like this
-<img src="gpus10.png" alt="ten" /></li>
+<img src="/assets/images/2025-01-08-GPUs/gpus10.png" alt="ten" /></li>
 </ul>
 
 <h3 id="how-are-operations-executed">How are operations executed?</h3>
@@ -143,7 +143,7 @@ In order to run the operations of GPU chip</p>
   <li>predominantly used in deep learning calculation.</li>
 </ul>
 
-<p><img src="gpus7.png" alt="seven" /></p>
+<p><img src="/assets/images/2025-01-08-GPUs/gpus7.png" alt="seven" /></p>
 
 <p>First lets start by understanding the precision formats that’s used.</p>
 
@@ -217,7 +217,7 @@ It performs 64 FMA operations per clock.</p>
 
 <p>More details in the picture below.</p>
 
-<p><img src="gpus12.png" alt="twelve" /></p>
+<p><img src="/assets/images/2025-01-08-GPUs/gpus12.png" alt="twelve" /></p>
 
 <p>These TFLOPS are calculated using this formula</p>
 
@@ -284,7 +284,7 @@ It performs 64 FMA operations per clock.</p>
 
 <p>This figure shows the range and precision of each of these.</p>
 
-<p><img src="gpus13.png" alt="thirteen" /></p>
+<p><img src="/assets/images/2025-01-08-GPUs/gpus13.png" alt="thirteen" /></p>
 
 <p>Preferred:</p>
 
@@ -370,17 +370,17 @@ i.e Exponent Bits=Actual Exponent+15=13+15=28</p>
 <p>let’s first understand the structure of GPU.</p>
 
 <p>Inside a GPU it has a chip named GA102 (depends on architecture, this is for ampere architecture) built from 28.3million transistors (semiconductor device that can <strong>switch</strong> or <strong>amplify</strong> electrical signals)
-<img src="gpusfig1.png" alt="one" />
+<img src="/assets/images/2025-01-08-GPUs/gpusfig1.png" alt="one" />
 and majority area covered by processing cores.
-<img src="gpusfig2.png" alt="two" />
+<img src="/assets/images/2025-01-08-GPUs/gpusfig2.png" alt="two" />
 processing core is divide into seven Graphics processing clusters (GPCs)</p>
 
-<p><img src="gpus3.png" alt="three" /></p>
+<p><img src="/assets/images/2025-01-08-GPUs/gpus3.png" alt="three" /></p>
 
 <p>among each GPC there are 12 Streaming Multiprocessors.
-<img src="gpus4.png" alt="four" />
+<img src="/assets/images/2025-01-08-GPUs/gpus4.png" alt="four" />
 Inside each SM there are 4 warps and 1 Raytracing core
-<img src="gpus5.png" alt="five" />
+<img src="/assets/images/2025-01-08-GPUs/gpus5.png" alt="five" />
 inside a warp there are 32 Cudas and 1 Tensor Core.</p>
 
 <p>Altogether there are</p>
@@ -395,7 +395,7 @@ inside a warp there are 32 Cudas and 1 Tensor Core.</p>
 
 <h3 id="cuda-cores">Cuda Cores</h3>
 
-<p><img src="gpus6.png" alt="six" />
+<p><img src="/assets/images/2025-01-08-GPUs/gpus6.png" alt="six" />
 cuda core is like a basic calculator with multiplication and addition operations.</p>
 
 <ul>
@@ -410,7 +410,7 @@ cuda core is like a basic calculator with multiplication and addition operations
 
 <h3 id="ray-tracing-cores">Ray tracing Cores</h3>
 
-<p><img src="gpus8.png" alt="eight" /></p>
+<p><img src="/assets/images/2025-01-08-GPUs/gpus8.png" alt="eight" /></p>
 
 <ul>
   <li>used for executing ray tracing algorithms</li>
@@ -427,7 +427,7 @@ In order to run the operations of GPU chip</p>
   <li>They must be loaded from SSD to these graphics memory.</li>
   <li>They have certain bandwidth i.e the amount of data they can transfer per second to the GPU chip. They have 1.15 Terbytes/sec bandwidth.</li>
   <li>Similar to HBM memory in AI chips, would look something like this
-<img src="gpus10.png" alt="ten" /></li>
+<img src="/assets/images/2025-01-08-GPUs/gpus10.png" alt="ten" /></li>
 </ul>
 
 <h3 id="how-are-operations-executed">How are operations executed?</h3>
@@ -458,7 +458,7 @@ In order to run the operations of GPU chip</p>
   <li>predominantly used in deep learning calculation.</li>
 </ul>
 
-<p><img src="gpus7.png" alt="seven" /></p>
+<p><img src="/assets/images/2025-01-08-GPUs/gpus7.png" alt="seven" /></p>
 
 <p>First lets start by understanding the precision formats that’s used.</p>
 
@@ -532,7 +532,7 @@ It performs 64 FMA operations per clock.</p>
 
 <p>More details in the picture below.</p>
 
-<p><img src="gpus12.png" alt="twelve" /></p>
+<p><img src="/assets/images/2025-01-08-GPUs/gpus12.png" alt="twelve" /></p>
 
 <p>These TFLOPS are calculated using this formula</p>
 
@@ -599,7 +599,7 @@ It performs 64 FMA operations per clock.</p>
 
 <p>This figure shows the range and precision of each of these.</p>
 
-<p><img src="gpus13.png" alt="thirteen" /></p>
+<p><img src="/assets/images/2025-01-08-GPUs/gpus13.png" alt="thirteen" /></p>
 
 <p>Preferred:</p>
 

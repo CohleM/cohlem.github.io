@@ -47,11 +47,11 @@ for instance, for the same matrix image it like it is (4,3) matrix but two of th
 
 let's understand it using an image.
 
-![fig1](sub-notes/Matrix-Visualization/fig1.png)
+![fig1](/assets/images/2024-12-24-Matrix-Visualization/fig1.png)
 as you can see from this size of the view we can mostly see its last two dimensions i.e (4,3).
 
 Let's take another view.
-![fig2](sub-notes/Matrix-Visualization/fig2.png)
+![fig2](/assets/images/2024-12-24-Matrix-Visualization/fig2.png)
 
 as you can see that 2 examples are stacked behind one another.
 

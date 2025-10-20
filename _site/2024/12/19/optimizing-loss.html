@@ -159,7 +159,7 @@ for i in range(max_steps):
 plt.show()
 </code></pre></div></div>
 
-<p><img src="fig1.png" alt="fig1" /></p>
+<p><img src="/assets/images/2024-12-19-optimizing-loss/fig1.png" alt="fig1" /></p>
 
 <p>as you can see the weights are distrubuted from -3 to 3 which is causing the problem, because we want the probability to be around 0, not largely distributed like it is right now.</p>
 
@@ -169,7 +169,7 @@ plt.show()
 </code></pre></div></div>
 
 <p>the distribution becomes
-<img src="fig2.png" alt="fig2" /></p>
+<img src="/assets/images/2024-12-19-optimizing-loss/fig2.png" alt="fig2" /></p>
 
 <p>Now most of the values are around 0, and let see our loss.</p>
 
@@ -200,22 +200,22 @@ plt.show()
 <p>Similarly,</p>
 
 <p>let’s look at the output of our tanh activation.
-<img src="fig3.png" alt="fig3" /></p>
+<img src="/assets/images/2024-12-19-optimizing-loss/fig3.png" alt="fig3" /></p>
 
 <p>as you can see most of our values lie in -1 and -1, why is that ???</p>
 
 <p>as you might remember our tanh works like this, if the x values lie near 0, we get some expressive non linear values, but when the x values lie in the extreme values, say abs(x)&gt; 1 or 2, the output values will be squashed and will be between -1 and 1.</p>
 
-<p><img src="fig4.png" alt="fig4" /></p>
+<p><img src="/assets/images/2024-12-19-optimizing-loss/fig4.png" alt="fig4" /></p>
 
 <p>let’s see what our input values are for tanh that is resulting in most values to be -1 and 1.
-<img src="fig5.png" alt="fig5" />
+<img src="/assets/images/2024-12-19-optimizing-loss/fig5.png" alt="fig5" />
 as you can see the histogram of input values to our tanh function i.e <strong>hpreact</strong> lie in extreme values (i.e not around 0, but is normally distributed between -15 and 15) which is causing the output of tanh function to be -1 and 1. This behaviour holds true for most of the activation functions i.e if input to the activation function is not around 0 and is more extremely distributed, then it will will squashed( i.e most of them will the at extreme ).</p>
 
 <h3 id="so-why-having-activations--1-and-1-a-problem-here">So why having activations -1 and 1 a problem here?</h3>
 
 <p>let’s look at how gradient is calculated for tanh function.
-<img src="fig6.png" alt="fig6" /></p>
+<img src="/assets/images/2024-12-19-optimizing-loss/fig6.png" alt="fig6" /></p>
 
 <p>as you can see t is the tanh activation, the gradient is dependent on t,</p>
 
@@ -233,7 +233,7 @@ as you can see the histogram of input values to our tanh function i.e <strong>hp
 
 <p>The solution is to initialize our initial weights in such a way that the property of our distribution is maintained. i.e having 0 mean and unit std. We want weights that are not 0, and not too extreme.
 If it’s 0 then applying activation doesn’t make any sense.
-<img src="fig7.png" alt="fig7" /></p>
+<img src="/assets/images/2024-12-19-optimizing-loss/fig7.png" alt="fig7" /></p>
 
 <p>as you can see how the x has 0 mean and unit std, but for y it isn’t the same. y takes on more extreme values which will result in vanishing gradients later on, as shown in the previous steps.
 so we want to preserve that distribution the same for our y value.</p>
@@ -244,7 +244,7 @@ so we want to preserve that distribution the same for our y value.</p>
 So the proper initialization technique can be determined by using <strong>Kaiming init</strong></p>
 
 <p>The value with which we can multiply is given by this formula below.
-<img src="fig8.png" alt="fig8" /></p>
+<img src="/assets/images/2024-12-19-optimizing-loss/fig8.png" alt="fig8" /></p>
 
 <p>where different activations have different gains, and in place of fan_mode we can add the input dimension of our weight matrix.</p>
 
@@ -423,7 +423,7 @@ for i in range(max_steps):
 plt.show()
 </code></pre></div></div>
 
-<p><img src="fig1.png" alt="fig1" /></p>
+<p><img src="/assets/images/2024-12-19-optimizing-loss/fig1.png" alt="fig1" /></p>
 
 <p>as you can see the weights are distrubuted from -3 to 3 which is causing the problem, because we want the probability to be around 0, not largely distributed like it is right now.</p>
 
@@ -433,7 +433,7 @@ plt.show()
 </code></pre></div></div>
 
 <p>the distribution becomes
-<img src="fig2.png" alt="fig2" /></p>
+<img src="/assets/images/2024-12-19-optimizing-loss/fig2.png" alt="fig2" /></p>
 
 <p>Now most of the values are around 0, and let see our loss.</p>
 
@@ -464,22 +464,22 @@ plt.show()
 <p>Similarly,</p>
 
 <p>let’s look at the output of our tanh activation.
-<img src="fig3.png" alt="fig3" /></p>
+<img src="/assets/images/2024-12-19-optimizing-loss/fig3.png" alt="fig3" /></p>
 
 <p>as you can see most of our values lie in -1 and -1, why is that ???</p>
 
 <p>as you might remember our tanh works like this, if the x values lie near 0, we get some expressive non linear values, but when the x values lie in the extreme values, say abs(x)&gt; 1 or 2, the output values will be squashed and will be between -1 and 1.</p>
 
-<p><img src="fig4.png" alt="fig4" /></p>
+<p><img src="/assets/images/2024-12-19-optimizing-loss/fig4.png" alt="fig4" /></p>
 
 <p>let’s see what our input values are for tanh that is resulting in most values to be -1 and 1.
-<img src="fig5.png" alt="fig5" />
+<img src="/assets/images/2024-12-19-optimizing-loss/fig5.png" alt="fig5" />
 as you can see the histogram of input values to our tanh function i.e <strong>hpreact</strong> lie in extreme values (i.e not around 0, but is normally distributed between -15 and 15) which is causing the output of tanh function to be -1 and 1. This behaviour holds true for most of the activation functions i.e if input to the activation function is not around 0 and is more extremely distributed, then it will will squashed( i.e most of them will the at extreme ).</p>
 
 <h3 id="so-why-having-activations--1-and-1-a-problem-here">So why having activations -1 and 1 a problem here?</h3>
 
 <p>let’s look at how gradient is calculated for tanh function.
-<img src="fig6.png" alt="fig6" /></p>
+<img src="/assets/images/2024-12-19-optimizing-loss/fig6.png" alt="fig6" /></p>
 
 <p>as you can see t is the tanh activation, the gradient is dependent on t,</p>
 
@@ -497,7 +497,7 @@ as you can see the histogram of input values to our tanh function i.e <strong>hp
 
 <p>The solution is to initialize our initial weights in such a way that the property of our distribution is maintained. i.e having 0 mean and unit std. We want weights that are not 0, and not too extreme.
 If it’s 0 then applying activation doesn’t make any sense.
-<img src="fig7.png" alt="fig7" /></p>
+<img src="/assets/images/2024-12-19-optimizing-loss/fig7.png" alt="fig7" /></p>
 
 <p>as you can see how the x has 0 mean and unit std, but for y it isn’t the same. y takes on more extreme values which will result in vanishing gradients later on, as shown in the previous steps.
 so we want to preserve that distribution the same for our y value.</p>
@@ -508,7 +508,7 @@ so we want to preserve that distribution the same for our y value.</p>
 So the proper initialization technique can be determined by using <strong>Kaiming init</strong></p>
 
 <p>The value with which we can multiply is given by this formula below.
-<img src="fig8.png" alt="fig8" /></p>
+<img src="/assets/images/2024-12-19-optimizing-loss/fig8.png" alt="fig8" /></p>
 
 <p>where different activations have different gains, and in place of fan_mode we can add the input dimension of our weight matrix.</p>
 

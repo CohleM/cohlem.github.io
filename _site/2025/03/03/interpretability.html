@@ -67,10 +67,10 @@ A head which implements the induction behaviour. They allow models to perform in
 <p>Wq,Wk, Wv can be thought of as what we take in(read) from the residual stream and Wo can be though of as what we put into(write) the residual stream. Similar to read/write operation.</p>
 
 <p>QK circuit is represented as combination of
-<img src="i1.png" alt="i1" /></p>
+<img src="/assets/images/2025-03-03-interpretability/i1.png" alt="i1" /></p>
 
 <p>and attention scores are calculated as
-<img src="i2.png" alt="i2" /></p>
+<img src="/assets/images/2025-03-03-interpretability/i2.png" alt="i2" /></p>
 
 <p>it is similar to Q @ K.T</p>
 
@@ -78,7 +78,7 @@ A head which implements the induction behaviour. They allow models to perform in
 
 <h3 id="ov-circuit">OV circuit</h3>
 
-<p><img src="i3.png" alt="i3" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i3.png" alt="i3" /></p>
 
 <ul>
   <li>Conceptually, this matrix (Vi.Wov) tells us <strong>what information is moved from a token</strong>, if that token is attended to.</li>
@@ -98,26 +98,26 @@ Important assumption to keep in mind is subspaces are orthogonal i.e their dot p
 <p><strong>K-composition</strong>
 In K-composition, the output of one attention at layer 0 is used as a key for another attention calculation in layer1.</p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/dhz5bqfuuoujydh89caa.png" alt="matrix" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/dhz5bqfuuoujydh89caa.png" alt="matrix" /></p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/ui0f38ofgdsyr9zzt5ar.png" alt="imag2" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/ui0f38ofgdsyr9zzt5ar.png" alt="imag2" /></p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/voncnaecap3tsw8dt0mn.png" alt="image3" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/voncnaecap3tsw8dt0mn.png" alt="image3" /></p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/tuskojx6dtlzjwoqs9zd.png" alt="image3" />
-<img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/eaongteayjgei7no5ycy.png" alt="image5" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/tuskojx6dtlzjwoqs9zd.png" alt="image3" />
+<img src="/assets/images/2025-03-03-interpretability/eaongteayjgei7no5ycy.png" alt="image5" /></p>
 
 <p>Induction heads are responsible in significant downward loss. It could mainly occur in phase changes, eg. 2B to 4B tokens. Are responsible to ICL but also helps in translation as well as few-shots learning</p>
 
 <h3 id="visualization-of-induction-head">Visualization of induction head</h3>
 
-<p><img src="i4.png" alt="i4" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i4.png" alt="i4" /></p>
 
 <p>the visualization would look like this, for an induction head i.e the destination token attends to token after the previous destination token’s occurance offset by seq_len - 1.</p>
 
 <h3 id="direct-logits-attribution">Direct logits attribution</h3>
 
-<p><img src="i5.png" alt="i5" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i5.png" alt="i5" /></p>
 
 <p>It involves understanding how much each component (e.g., attention heads, layers, or direct paths) contributes to the model’s predictions.</p>
 
@@ -139,11 +139,11 @@ destination token: the token that is looking at other tokens</p>
 
 <p>We pass it through our 2 layer attention-only model</p>
 
-<p>we get attention pattern like this for layer 0 <img src="i6.png" alt="i6" />
+<p>we get attention pattern like this for layer 0 <img src="/assets/images/2025-03-03-interpretability/i6.png" alt="i6" />
 here 7 is a <strong>previous token head</strong></p>
 
 <p>and we get this attention pattern for layer 1
-<img src="i7.png" alt="i7" /></p>
+<img src="/assets/images/2025-03-03-interpretability/i7.png" alt="i7" /></p>
 
 <p>4 and 7 are induction heads, cause we see the activations for seq_len -1 diagonal</p>
 
@@ -169,11 +169,11 @@ to a different subspace than they read from.
 
 <h3 id="paper">Paper</h3>
 
-<p>implement this formula to find which component/layer are important <img src="i8.png" alt="i8" /></p>
+<p>implement this formula to find which component/layer are important <img src="/assets/images/2025-03-03-interpretability/i8.png" alt="i8" /></p>
 
 <p>to find how good they are (faithful) use this equation</p>
 
-<p><img src="i9.png" alt="i9" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i9.png" alt="i9" /></p>
 
 <p>IDENTIFYING ANSWER-PROMOTING COMPONENTS
 train linear probing for each layer, at each position p, find which which layer at which position promote the correct-answer</p>
@@ -280,7 +280,7 @@ but we manually correct the calculation, example 64 - 55 = 100 was corrected to 
 
 <p>logit difference == logprob difference</p>
 
-<p><img src="i10.png" alt="i10" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i10.png" alt="i10" /></p>
 
 <h3 id="things-to-check">Things to check</h3>
 
@@ -329,10 +329,10 @@ A head which implements the induction behaviour. They allow models to perform in
 <p>Wq,Wk, Wv can be thought of as what we take in(read) from the residual stream and Wo can be though of as what we put into(write) the residual stream. Similar to read/write operation.</p>
 
 <p>QK circuit is represented as combination of
-<img src="i1.png" alt="i1" /></p>
+<img src="/assets/images/2025-03-03-interpretability/i1.png" alt="i1" /></p>
 
 <p>and attention scores are calculated as
-<img src="i2.png" alt="i2" /></p>
+<img src="/assets/images/2025-03-03-interpretability/i2.png" alt="i2" /></p>
 
 <p>it is similar to Q @ K.T</p>
 
@@ -340,7 +340,7 @@ A head which implements the induction behaviour. They allow models to perform in
 
 <h3 id="ov-circuit">OV circuit</h3>
 
-<p><img src="i3.png" alt="i3" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i3.png" alt="i3" /></p>
 
 <ul>
   <li>Conceptually, this matrix (Vi.Wov) tells us <strong>what information is moved from a token</strong>, if that token is attended to.</li>
@@ -360,26 +360,26 @@ Important assumption to keep in mind is subspaces are orthogonal i.e their dot p
 <p><strong>K-composition</strong>
 In K-composition, the output of one attention at layer 0 is used as a key for another attention calculation in layer1.</p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/dhz5bqfuuoujydh89caa.png" alt="matrix" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/dhz5bqfuuoujydh89caa.png" alt="matrix" /></p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/ui0f38ofgdsyr9zzt5ar.png" alt="imag2" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/ui0f38ofgdsyr9zzt5ar.png" alt="imag2" /></p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/voncnaecap3tsw8dt0mn.png" alt="image3" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/voncnaecap3tsw8dt0mn.png" alt="image3" /></p>
 
-<p><img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/tuskojx6dtlzjwoqs9zd.png" alt="image3" />
-<img src="https://res.cloudinary.com/lesswrong-2-0/image/upload/v1674002595/mirroredImages/TvrfY4c9eaGLeyDkE/eaongteayjgei7no5ycy.png" alt="image5" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/tuskojx6dtlzjwoqs9zd.png" alt="image3" />
+<img src="/assets/images/2025-03-03-interpretability/eaongteayjgei7no5ycy.png" alt="image5" /></p>
 
 <p>Induction heads are responsible in significant downward loss. It could mainly occur in phase changes, eg. 2B to 4B tokens. Are responsible to ICL but also helps in translation as well as few-shots learning</p>
 
 <h3 id="visualization-of-induction-head">Visualization of induction head</h3>
 
-<p><img src="i4.png" alt="i4" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i4.png" alt="i4" /></p>
 
 <p>the visualization would look like this, for an induction head i.e the destination token attends to token after the previous destination token’s occurance offset by seq_len - 1.</p>
 
 <h3 id="direct-logits-attribution">Direct logits attribution</h3>
 
-<p><img src="i5.png" alt="i5" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i5.png" alt="i5" /></p>
 
 <p>It involves understanding how much each component (e.g., attention heads, layers, or direct paths) contributes to the model’s predictions.</p>
 
@@ -401,11 +401,11 @@ destination token: the token that is looking at other tokens</p>
 
 <p>We pass it through our 2 layer attention-only model</p>
 
-<p>we get attention pattern like this for layer 0 <img src="i6.png" alt="i6" />
+<p>we get attention pattern like this for layer 0 <img src="/assets/images/2025-03-03-interpretability/i6.png" alt="i6" />
 here 7 is a <strong>previous token head</strong></p>
 
 <p>and we get this attention pattern for layer 1
-<img src="i7.png" alt="i7" /></p>
+<img src="/assets/images/2025-03-03-interpretability/i7.png" alt="i7" /></p>
 
 <p>4 and 7 are induction heads, cause we see the activations for seq_len -1 diagonal</p>
 
@@ -431,11 +431,11 @@ to a different subspace than they read from.
 
 <h3 id="paper">Paper</h3>
 
-<p>implement this formula to find which component/layer are important <img src="i8.png" alt="i8" /></p>
+<p>implement this formula to find which component/layer are important <img src="/assets/images/2025-03-03-interpretability/i8.png" alt="i8" /></p>
 
 <p>to find how good they are (faithful) use this equation</p>
 
-<p><img src="i9.png" alt="i9" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i9.png" alt="i9" /></p>
 
 <p>IDENTIFYING ANSWER-PROMOTING COMPONENTS
 train linear probing for each layer, at each position p, find which which layer at which position promote the correct-answer</p>
@@ -542,7 +542,7 @@ but we manually correct the calculation, example 64 - 55 = 100 was corrected to 
 
 <p>logit difference == logprob difference</p>
 
-<p><img src="i10.png" alt="i10" /></p>
+<p><img src="/assets/images/2025-03-03-interpretability/i10.png" alt="i10" /></p>
 
 <h3 id="things-to-check">Things to check</h3>
 

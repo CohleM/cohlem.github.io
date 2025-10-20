@@ -63,7 +63,7 @@
 <ul>
   <li>same learning rate is applied to all the parameters</li>
   <li>because of which the update to the parameters isn’t precise.
-<img src="one.jpg" alt="one" /></li>
+<img src="/assets/images/2024-12-27-optimization-algorithms/one.jpg" alt="one" /></li>
 </ul>
 
 <h3 id="rmsprop">RMSprop</h3>
@@ -73,14 +73,14 @@
 <p>As you can see in the calculation done in left hand side the gradient accumulation i.e v is small so the effect of learning rate is bigger (we take bigger jumps), we take bigger jumps because we don’t want our convergence to be too slow or to stagnate, so we take bigger jumps.</p>
 
 <p>But when the gradient accumulation i.e v term is bigger (as shown in right hand side) we take smaller steps, because in those cases if we take a big jump we might miss the global minima, so the effect of learning rate in this case is decreased.
-<img src="two.jpg" alt="two" /></p>
+<img src="/assets/images/2024-12-27-optimization-algorithms/two.jpg" alt="two" /></p>
 
 <h3 id="adam">Adam</h3>
 
 <p>This optimizer is simply the combination of both the momentum and RMSprop. It has its own speed determined by momentum and the learning rate adjustment provided by RMSprop.</p>
 
 <p>The only modification is the addition of M hat and V hat i.e we scale of M and V, because initially we set the value of M and V to 0. The explanation about why we this is also provided in the image below.
-<img src="three.jpg" alt="three" /></p>
+<img src="/assets/images/2024-12-27-optimization-algorithms/three.jpg" alt="three" /></p>
 
 
 <!-- <article class="blog-post">
@@ -104,7 +104,7 @@
 <ul>
   <li>same learning rate is applied to all the parameters</li>
   <li>because of which the update to the parameters isn’t precise.
-<img src="one.jpg" alt="one" /></li>
+<img src="/assets/images/2024-12-27-optimization-algorithms/one.jpg" alt="one" /></li>
 </ul>
 
 <h3 id="rmsprop">RMSprop</h3>
@@ -114,14 +114,14 @@
 <p>As you can see in the calculation done in left hand side the gradient accumulation i.e v is small so the effect of learning rate is bigger (we take bigger jumps), we take bigger jumps because we don’t want our convergence to be too slow or to stagnate, so we take bigger jumps.</p>
 
 <p>But when the gradient accumulation i.e v term is bigger (as shown in right hand side) we take smaller steps, because in those cases if we take a big jump we might miss the global minima, so the effect of learning rate in this case is decreased.
-<img src="two.jpg" alt="two" /></p>
+<img src="/assets/images/2024-12-27-optimization-algorithms/two.jpg" alt="two" /></p>
 
 <h3 id="adam">Adam</h3>
 
 <p>This optimizer is simply the combination of both the momentum and RMSprop. It has its own speed determined by momentum and the learning rate adjustment provided by RMSprop.</p>
 
 <p>The only modification is the addition of M hat and V hat i.e we scale of M and V, because initially we set the value of M and V to 0. The explanation about why we this is also provided in the image below.
-<img src="three.jpg" alt="three" /></p>
+<img src="/assets/images/2024-12-27-optimization-algorithms/three.jpg" alt="three" /></p>
 </div>
 
   
